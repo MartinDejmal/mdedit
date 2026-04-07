@@ -1,8 +1,5 @@
 /**
  * Toolbar component.
- *
- * Shows file actions (Open / Save) and inline formatting controls that
- * operate directly on the Tiptap editor instance.
  */
 import type { Editor } from "@tiptap/react";
 
@@ -10,12 +7,12 @@ interface ToolbarProps {
   editor: Editor | null;
   onOpen: () => void;
   onSave: () => void;
+  onSaveAs: () => void;
 }
 
-export default function Toolbar({ editor, onOpen, onSave }: ToolbarProps) {
+export default function Toolbar({ editor, onOpen, onSave, onSaveAs }: ToolbarProps) {
   return (
     <div className="toolbar" role="toolbar" aria-label="Editor toolbar">
-      {/* File actions */}
       <div className="toolbar-group">
         <button onClick={onOpen} title="Open Markdown file">
           Open
@@ -23,11 +20,13 @@ export default function Toolbar({ editor, onOpen, onSave }: ToolbarProps) {
         <button onClick={onSave} title="Save file (Ctrl+S)">
           Save
         </button>
+        <button onClick={onSaveAs} title="Save as...">
+          Save As
+        </button>
       </div>
 
       <div className="toolbar-divider" aria-hidden />
 
-      {/* Formatting actions – disabled when editor is not ready */}
       <div className="toolbar-group">
         <button
           onClick={() => editor?.chain().focus().toggleBold().run()}
