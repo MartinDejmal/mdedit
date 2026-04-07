@@ -253,9 +253,21 @@ body {
   white-space: nowrap;
 }
 
-.status-dirty {
+
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   flex-shrink: 0;
   margin-left: 12px;
+}
+
+.status-external-warning {
+  color: var(--color-dirty);
+}
+
+.status-dirty {
+  flex-shrink: 0;
 }
 
 .status-dirty.is-modified {

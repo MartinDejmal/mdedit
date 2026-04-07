@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { basename } from "../../lib/utils";
 import {
   openDocument,
+  reconcileCanonicalFromEditorHtml,
   saveDocument,
   saveDocumentAs,
 } from "../documents/documentService";
@@ -51,19 +52,28 @@ export interface EditorController {
 export function useEditorController(): EditorController {
   const isApplyingRemoteContent = useRef(false);
   const allowCloseRef = useRef(false);
-  const { isDirty, currentFilePath, setDirty } = useDocumentStore();
+  const reconcileRunIdRef = useRef(0);
+  const { isDirty, currentFilePath } = useDocumentStore();
 
   const editor = useEditor({
     extensions: [StarterKit],
     content: WELCOME_HTML,
     onUpdate: ({ editor: nextEditor }) => {
       if (isApplyingRemoteContent.current) return;
-      const html = nextEditor.getHTML();
-      if (html.length > 0) {
-        setDirty(true);
-      }
+
+      const runId = ++reconcileRunIdRef.current;
+      void reconcileCanonicalFromEditorHtml(nextEditor.getHTML()).then(() => {
+        if (runId !== reconcileRunIdRef.current) {
+          return;
+        }
+      });
     },
   });
+
+  const syncCurrentEditorCanonical = useCallback(async () => {
+    if (!editor) return;
+    await reconcileCanonicalFromEditorHtml(editor.getHTML());
+  }, [editor]);
 
   const handleOpen = useCallback(async () => {
     const result = await openDocument({
@@ -81,13 +91,15 @@ export function useEditorController(): EditorController {
 
   const handleSave = useCallback(async () => {
     if (!editor) return;
-    await saveDocument(editor.getHTML());
-  }, [editor]);
+    await syncCurrentEditorCanonical();
+    await saveDocument();
+  }, [editor, syncCurrentEditorCanonical]);
 
   const handleSaveAs = useCallback(async () => {
     if (!editor) return;
-    await saveDocumentAs(editor.getHTML());
-  }, [editor]);
+    await syncCurrentEditorCanonical();
+    await saveDocumentAs();
+  }, [editor, syncCurrentEditorCanonical]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -120,27 +132,75 @@ export function useEditorController(): EditorController {
   useEffect(() => {
     let unlisten: (() => void) | undefined;
 
-    void bridge.onWindowCloseRequested(async (event) => {
-      if (allowCloseRef.current) {
-        return;
-      }
+    void bridge
+      .onWindowCloseRequested(async (event) => {
+        if (allowCloseRef.current) {
+          return;
+        }
 
-      if (!useDocumentStore.getState().isDirty) {
-        return;
-      }
+        if (!useDocumentStore.getState().isDirty) {
+          return;
+        }
 
-      event.preventDefault();
-      const canDiscard = await confirmDiscardUnsavedChanges();
-      if (!canDiscard) return;
+        event.preventDefault();
+        const canDiscard = await confirmDiscardUnsavedChanges();
+        if (!canDiscard) return;
 
-      allowCloseRef.current = true;
-      await bridge.closeCurrentWindow();
-    }).then((cleanup) => {
-      unlisten = cleanup;
-    });
+        allowCloseRef.current = true;
+        await bridge.closeCurrentWindow();
+      })
+      .then((cleanup) => {
+        unlisten = cleanup;
+      });
 
     return () => {
       if (unlisten) unlisten();
+    };
+  }, []);
+
+  useEffect(() => {
+    let isRunning = false;
+
+    const checkExternalChange = async () => {
+      if (isRunning) return;
+
+      const { currentFilePath: activePath, activeDocument, markExternalChangeWarning } =
+        useDocumentStore.getState();
+
+      if (!activePath || activeDocument.fileMtime === null) {
+        return;
+      }
+
+      isRunning = true;
+      try {
+        const metadata = await bridge.getFileMetadata(activePath);
+        if (
+          metadata.modifiedMs !== null &&
+          metadata.modifiedMs !== activeDocument.fileMtime
+        ) {
+          markExternalChangeWarning(new Date().toISOString());
+        }
+      } finally {
+        isRunning = false;
+      }
+    };
+
+    const onFocus = () => {
+      void checkExternalChange();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void checkExternalChange();
+      }
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 

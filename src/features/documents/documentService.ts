@@ -6,7 +6,10 @@
  */
 import { useDocumentStore } from "../../stores/documentStore";
 import * as bridge from "../../services/tauriBridge";
-import { markdownToHtml, htmlToMarkdown } from "../../services/markdownService";
+import {
+  parseMarkdownToEditorContent,
+  serializeEditorToMarkdown,
+} from "../../services/markdownService";
 import type { OpenDocumentResult, SaveDocumentResult } from "../../types";
 
 export type ConfirmDiscardChanges = () => Promise<boolean>;
@@ -35,45 +38,70 @@ export async function openDocument(
     return { kind: "cancelled" };
   }
 
-  const markdown = await bridge.readTextFile(filePath);
-  const html = await markdownToHtml(markdown);
+  const rawMarkdown = await bridge.readTextFile(filePath);
+  const { editorContent, canonicalMarkdown } =
+    await parseMarkdownToEditorContent(rawMarkdown);
+  const metadata = await bridge.getFileMetadata(filePath);
 
-  markLoaded({ markdown, path: filePath });
+  markLoaded({
+    rawMarkdown,
+    canonicalMarkdown,
+    path: filePath,
+    fileMtime: metadata.modifiedMs,
+  });
 
-  return { kind: "opened", html };
+  return { kind: "opened", html: editorContent };
 }
 
-/**
- * Save flow. If no file path exists, falls back to Save As.
- */
-export async function saveDocument(editorHtml: string): Promise<SaveDocumentResult> {
-  const { currentFilePath, markSaved } = useDocumentStore.getState();
+/** Save flow. If no file path exists, falls back to Save As. */
+export async function saveDocument(): Promise<SaveDocumentResult> {
+  const { currentFilePath, currentCanonicalMarkdown, markSaved } =
+    useDocumentStore.getState();
 
   if (!currentFilePath) {
-    return saveDocumentAs(editorHtml);
+    return saveDocumentAs();
   }
 
-  const markdown = await htmlToMarkdown(editorHtml);
-  await bridge.saveTextFile(currentFilePath, markdown);
-  markSaved({ markdown, path: currentFilePath });
+  await bridge.saveTextFile(currentFilePath, currentCanonicalMarkdown);
+  const metadata = await bridge.getFileMetadata(currentFilePath);
+
+  markSaved({
+    canonicalMarkdown: currentCanonicalMarkdown,
+    path: currentFilePath,
+    fileMtime: metadata.modifiedMs,
+  });
 
   return { kind: "saved", path: currentFilePath };
 }
 
-/**
- * Save As flow. Always opens native save dialog.
- */
-export async function saveDocumentAs(
-  editorHtml: string
-): Promise<SaveDocumentResult> {
-  const { markSaved } = useDocumentStore.getState();
-  const markdown = await htmlToMarkdown(editorHtml);
+/** Save As flow. Always opens native save dialog. */
+export async function saveDocumentAs(): Promise<SaveDocumentResult> {
+  const { currentCanonicalMarkdown, markSaved } = useDocumentStore.getState();
 
-  const savedPath = await bridge.saveFileDialog(markdown);
+  const savedPath = await bridge.saveFileDialog(currentCanonicalMarkdown);
   if (!savedPath) {
     return { kind: "cancelled" };
   }
 
-  markSaved({ markdown, path: savedPath });
+  const metadata = await bridge.getFileMetadata(savedPath);
+
+  markSaved({
+    canonicalMarkdown: currentCanonicalMarkdown,
+    path: savedPath,
+    fileMtime: metadata.modifiedMs,
+  });
   return { kind: "saved", path: savedPath };
+}
+
+/**
+ * Helper used by editor controller to synchronise editor content into canonical markdown.
+ */
+export async function reconcileCanonicalFromEditorHtml(
+  editorHtml: string
+): Promise<string> {
+  const canonicalMarkdown = await serializeEditorToMarkdown(editorHtml);
+  useDocumentStore
+    .getState()
+    .reconcileCurrentCanonicalMarkdown(canonicalMarkdown);
+  return canonicalMarkdown;
 }

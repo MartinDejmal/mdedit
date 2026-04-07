@@ -5,24 +5,25 @@ import { basename } from "../lib/utils";
 const EMPTY_DOCUMENT: ActiveDocument = {
   path: null,
   name: null,
-  lastLoadedContent: "",
-  lastSavedContent: "",
+  rawLoadedContent: "",
+  lastSavedCanonicalContent: "",
   lastSavedAt: null,
   fileMtime: null,
   lastKnownPath: null,
+  hasExternalChangeWarning: false,
+  externalChangeDetectedAt: null,
 };
 
 /**
  * Global document state.
- * Tracks active file metadata, markdown content, and unsaved state.
+ * Tracks active file metadata, canonical markdown content, and derived dirty state.
  */
 export const useDocumentStore = create<DocumentStore>((set) => ({
   activeDocument: EMPTY_DOCUMENT,
-  documentContent: "",
+  currentCanonicalMarkdown: "",
   isDirty: false,
   currentFilePath: null,
 
-  setContent: (content) => set({ documentContent: content }),
   setFilePath: (path) =>
     set((state) => ({
       currentFilePath: path,
@@ -33,35 +34,77 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         lastKnownPath: path,
       },
     })),
-  markLoaded: ({ markdown, path }) =>
+  markLoaded: ({ rawMarkdown, canonicalMarkdown, path, fileMtime }) =>
     set(() => ({
-      documentContent: markdown,
+      currentCanonicalMarkdown: canonicalMarkdown,
       currentFilePath: path,
       isDirty: false,
       activeDocument: {
         path,
         name: path ? basename(path) : null,
-        lastLoadedContent: markdown,
-        lastSavedContent: markdown,
+        rawLoadedContent: rawMarkdown,
+        lastSavedCanonicalContent: canonicalMarkdown,
         lastSavedAt: new Date().toISOString(),
-        fileMtime: null,
+        fileMtime,
         lastKnownPath: path,
+        hasExternalChangeWarning: false,
+        externalChangeDetectedAt: null,
       },
     })),
-  markSaved: ({ markdown, path }) =>
+  markSaved: ({ canonicalMarkdown, path, fileMtime }) =>
     set((state) => ({
-      documentContent: markdown,
+      currentCanonicalMarkdown: canonicalMarkdown,
       currentFilePath: path,
       isDirty: false,
       activeDocument: {
         ...state.activeDocument,
         path,
         name: path ? basename(path) : null,
-        lastSavedContent: markdown,
+        lastSavedCanonicalContent: canonicalMarkdown,
         lastSavedAt: new Date().toISOString(),
+        fileMtime,
         lastKnownPath: path,
+        hasExternalChangeWarning: false,
+        externalChangeDetectedAt: null,
       },
     })),
-  setDirty: (dirty) => set({ isDirty: dirty }),
-  resetDirty: () => set({ isDirty: false }),
+  reconcileCurrentCanonicalMarkdown: (markdown) =>
+    set((state) => {
+      const shouldBeDirty =
+        markdown !== state.activeDocument.lastSavedCanonicalContent;
+
+      if (
+        markdown === state.currentCanonicalMarkdown &&
+        shouldBeDirty === state.isDirty
+      ) {
+        return state;
+      }
+
+      return {
+        currentCanonicalMarkdown: markdown,
+        isDirty: shouldBeDirty,
+      };
+    }),
+  markExternalChangeWarning: (detectedAt) =>
+    set((state) => {
+      if (state.activeDocument.hasExternalChangeWarning) {
+        return state;
+      }
+
+      return {
+        activeDocument: {
+          ...state.activeDocument,
+          hasExternalChangeWarning: true,
+          externalChangeDetectedAt: detectedAt,
+        },
+      };
+    }),
+  clearExternalChangeWarning: () =>
+    set((state) => ({
+      activeDocument: {
+        ...state.activeDocument,
+        hasExternalChangeWarning: false,
+        externalChangeDetectedAt: null,
+      },
+    })),
 }));
