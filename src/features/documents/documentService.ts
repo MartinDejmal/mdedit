@@ -22,13 +22,33 @@ interface OpenDocumentOptions {
   confirmDiscardChanges?: ConfirmDiscardChanges;
 }
 
+async function loadPathIntoStore(
+  filePath: string,
+  source: "open" | "reload"
+): Promise<OpenDocumentResult> {
+  const rawMarkdown = await bridge.readTextFile(filePath);
+  const { editorContent, canonicalMarkdown } =
+    await parseMarkdownToEditorContent(rawMarkdown);
+  const metadata = await bridge.getFileMetadata(filePath);
+
+  useDocumentStore.getState().markLoaded({
+    rawMarkdown,
+    canonicalMarkdown,
+    path: filePath,
+    fileMtime: metadata.modifiedMs,
+    source,
+  });
+
+  return { kind: "opened", html: editorContent, path: filePath };
+}
+
 /**
  * Open flow with dirty-check confirmation.
  */
 export async function openDocument(
   options: OpenDocumentOptions = {}
 ): Promise<OpenDocumentResult> {
-  const { isDirty, markLoaded } = useDocumentStore.getState();
+  const { isDirty } = useDocumentStore.getState();
 
   if (isDirty && options.confirmDiscardChanges) {
     const canDiscard = await options.confirmDiscardChanges();
@@ -42,20 +62,31 @@ export async function openDocument(
     return { kind: "cancelled" };
   }
 
-  const rawMarkdown = await bridge.readTextFile(filePath);
-  const { editorContent, canonicalMarkdown } =
-    await parseMarkdownToEditorContent(rawMarkdown);
-  const metadata = await bridge.getFileMetadata(filePath);
+  return loadPathIntoStore(filePath, "open");
+}
 
-  markLoaded({
-    rawMarkdown,
-    canonicalMarkdown,
-    path: filePath,
-    fileMtime: metadata.modifiedMs,
-    source: "open",
-  });
+/** Opens a known path (used by recent files and startup restore). */
+export async function openDocumentFromPath(
+  filePath: string,
+  options: OpenDocumentOptions = {}
+): Promise<OpenDocumentResult> {
+  const { isDirty } = useDocumentStore.getState();
 
-  return { kind: "opened", html: editorContent };
+  if (isDirty && options.confirmDiscardChanges) {
+    const canDiscard = await options.confirmDiscardChanges();
+    if (!canDiscard) {
+      return { kind: "cancelled" };
+    }
+  }
+
+  try {
+    return await loadPathIntoStore(filePath, "open");
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to open selected file.";
+
+    return { kind: "error", message, path: filePath };
+  }
 }
 
 /** Save flow. If no file path exists, falls back to Save As. */
@@ -102,7 +133,7 @@ export async function saveDocumentAs(): Promise<SaveDocumentResult> {
 export async function reloadDocumentFromDisk(
   options: OpenDocumentOptions = {}
 ): Promise<ReloadDocumentResult> {
-  const { currentFilePath, isDirty, markLoaded } = useDocumentStore.getState();
+  const { currentFilePath, isDirty } = useDocumentStore.getState();
 
   if (!currentFilePath) {
     return { kind: "noop" };
@@ -116,20 +147,8 @@ export async function reloadDocumentFromDisk(
   }
 
   try {
-    const rawMarkdown = await bridge.readTextFile(currentFilePath);
-    const { editorContent, canonicalMarkdown } =
-      await parseMarkdownToEditorContent(rawMarkdown);
-    const metadata = await bridge.getFileMetadata(currentFilePath);
-
-    markLoaded({
-      rawMarkdown,
-      canonicalMarkdown,
-      path: currentFilePath,
-      fileMtime: metadata.modifiedMs,
-      source: "reload",
-    });
-
-    return { kind: "reloaded", html: editorContent };
+    const loaded = await loadPathIntoStore(currentFilePath, "reload");
+    return { kind: "reloaded", html: loaded.html };
   } catch (error) {
     const message =
       error instanceof Error

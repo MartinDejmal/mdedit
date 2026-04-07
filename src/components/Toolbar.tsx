@@ -10,10 +10,13 @@ import {
   insertTaskList,
   removeLink,
 } from "../features/editor/editorCommands";
+import { basename } from "../lib/utils";
 
 interface ToolbarProps {
   editor: Editor | null;
   onOpen: () => void;
+  onOpenRecent: (path: string) => void;
+  recentFiles: string[];
   onReload: () => void;
   onSave: () => void;
   onSaveAs: () => void;
@@ -24,6 +27,8 @@ interface ToolbarProps {
 export default function Toolbar({
   editor,
   onOpen,
+  onOpenRecent,
+  recentFiles,
   onReload,
   onSave,
   onSaveAs,
@@ -33,25 +38,43 @@ export default function Toolbar({
   return (
     <div className="toolbar" role="toolbar" aria-label="Editor toolbar">
       <div className="toolbar-group">
-        <button onClick={onOpen} title="Open Markdown file">
+        <button onClick={onOpen} title="Open Markdown file (Ctrl/Cmd+O)">
           Open
         </button>
+        <select
+          className="toolbar-recent-select"
+          value=""
+          onChange={(event) => {
+            const path = event.target.value;
+            if (!path) return;
+            onOpenRecent(path);
+            event.currentTarget.value = "";
+          }}
+          title="Recent files"
+        >
+          <option value="">Recent Files…</option>
+          {recentFiles.map((path) => (
+            <option key={path} value={path}>
+              {basename(path)}
+            </option>
+          ))}
+        </select>
         <button
           onClick={onReload}
           disabled={!canReload}
           className={highlightReload ? "recommended" : ""}
           title={
             canReload
-              ? "Reload current file from disk"
+              ? "Reload current file from disk (Ctrl/Cmd+Alt+R)"
               : "Reload is available only for saved files"
           }
         >
           Reload
         </button>
-        <button onClick={onSave} title="Save file (Ctrl+S)">
+        <button onClick={onSave} title="Save file (Ctrl/Cmd+S)">
           Save
         </button>
-        <button onClick={onSaveAs} title="Save as...">
+        <button onClick={onSaveAs} title="Save as... (Ctrl/Cmd+Shift+S)">
           Save As
         </button>
       </div>

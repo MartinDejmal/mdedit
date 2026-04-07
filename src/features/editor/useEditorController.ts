@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { Menu, Submenu, PredefinedMenuItem } from "@tauri-apps/api/menu";
 
 import {
   ImageNode,
@@ -14,32 +15,25 @@ import {
 } from "./editorExtensions";
 
 import { basename } from "../../lib/utils";
-import {
-  openDocument,
-  reconcileCanonicalFromEditorHtml,
-  reloadDocumentFromDisk,
-  saveDocument,
-  saveDocumentAs,
-} from "../documents/documentService";
 import * as bridge from "../../services/tauriBridge";
 import { useDocumentStore } from "../../stores/documentStore";
+import {
+  getInitialPersistedState,
+  runOpenAction,
+  runOpenRecentAction,
+  runReloadAction,
+  runSaveAction,
+  runSaveAsAction,
+  runStartupReopenAction,
+} from "../documents/fileActionService";
+import { reconcileCanonicalFromEditorHtml } from "../documents/documentService";
 
 const APP_NAME = "mdedit";
+const RELOAD_ACCELERATOR = "CmdOrCtrl+Alt+R";
 
 const WELCOME_HTML = `
 <h1>Welcome to mdedit</h1>
 <p>A lightweight WYSIWYG Markdown editor. Click <strong>Open</strong> in the toolbar to load a <code>.md</code> file, or start typing here.</p>
-<h2>Supported formatting</h2>
-<ul>
-  <li><strong>Bold</strong> and <em>italic</em> text</li>
-  <li>Headings, bullet &amp; ordered lists</li>
-  <li>Blockquotes and code blocks</li>
-  <li>Inline <code>code</code> and horizontal rules</li>
-</ul>
-<blockquote><p>Edit in rich text — save as Markdown.</p></blockquote>
-<pre><code>const hello = "world";</code></pre>
-<hr>
-<p>Use the toolbar above or standard keyboard shortcuts (Ctrl+B, Ctrl+I, …) to format text.</p>
 `;
 
 function buildWindowTitle(path: string | null, isDirty: boolean): string {
@@ -56,7 +50,9 @@ function confirmDiscardUnsavedChanges(): Promise<boolean> {
 
 export interface EditorController {
   editor: Editor | null;
+  recentFiles: string[];
   handleOpen: () => Promise<void>;
+  handleOpenRecent: (path: string) => Promise<void>;
   handleReload: () => Promise<void>;
   handleSave: () => Promise<void>;
   handleSaveAs: () => Promise<void>;
@@ -66,6 +62,8 @@ export function useEditorController(): EditorController {
   const isApplyingRemoteContent = useRef(false);
   const allowCloseRef = useRef(false);
   const reconcileRunIdRef = useRef(0);
+  const startupReopenDoneRef = useRef(false);
+  const [persistedState, setPersistedState] = useState(getInitialPersistedState);
   const { isDirty, currentFilePath } = useDocumentStore();
 
   const editor = useEditor({
@@ -80,18 +78,6 @@ export function useEditorController(): EditorController {
       TableHeaderNode,
       TableCellNode,
     ],
-    editorProps: {
-      handleClick(_view, _pos, event) {
-        const target = event.target as HTMLElement | null;
-        const anchor = target?.closest("a[href]") as HTMLAnchorElement | null;
-
-        if (!anchor) return false;
-        if (!(event.metaKey || event.ctrlKey)) return false;
-
-        window.open(anchor.href, "_blank", "noopener,noreferrer");
-        return true;
-      },
-    },
     content: WELCOME_HTML,
     onUpdate: ({ editor: nextEditor }) => {
       if (isApplyingRemoteContent.current) return;
@@ -105,67 +91,167 @@ export function useEditorController(): EditorController {
     },
   });
 
-  const syncCurrentEditorCanonical = useCallback(async () => {
-    if (!editor) return;
-    await reconcileCanonicalFromEditorHtml(editor.getHTML());
-  }, [editor]);
+  const setEditorHtml = useCallback(
+    (html: string) => {
+      if (!editor) return;
+      isApplyingRemoteContent.current = true;
+      editor.commands.setContent(html, false);
+      isApplyingRemoteContent.current = false;
+    },
+    [editor]
+  );
+
+  const actionContext = useMemo(
+    () => ({
+      getEditorHtml: () => editor?.getHTML() ?? null,
+      setEditorHtml,
+      reconcileCanonicalFromEditorHtml,
+      confirmDiscardChanges: confirmDiscardUnsavedChanges,
+      onStateChanged: setPersistedState,
+    }),
+    [editor, setEditorHtml]
+  );
 
   const handleOpen = useCallback(async () => {
-    const result = await openDocument({
-      confirmDiscardChanges: confirmDiscardUnsavedChanges,
-    });
+    await runOpenAction(actionContext);
+  }, [actionContext]);
 
-    if (result.kind !== "opened" || !result.html || !editor) {
-      return;
-    }
-
-    isApplyingRemoteContent.current = true;
-    editor.commands.setContent(result.html, false);
-    isApplyingRemoteContent.current = false;
-  }, [editor]);
+  const handleOpenRecent = useCallback(
+    async (path: string) => {
+      await runOpenRecentAction(path, actionContext);
+    },
+    [actionContext]
+  );
 
   const handleSave = useCallback(async () => {
-    if (!editor) return;
-    await syncCurrentEditorCanonical();
-    await saveDocument();
-  }, [editor, syncCurrentEditorCanonical]);
+    await runSaveAction(actionContext);
+  }, [actionContext]);
 
   const handleReload = useCallback(async () => {
-    const result = await reloadDocumentFromDisk({
-      confirmDiscardChanges: confirmDiscardUnsavedChanges,
-    });
-
-    if (result.kind === "error") {
-      window.alert(`Reload failed: ${result.message ?? "Unknown error"}`);
-      return;
-    }
-
-    if (result.kind !== "reloaded" || !result.html || !editor) {
-      return;
-    }
-
-    isApplyingRemoteContent.current = true;
-    editor.commands.setContent(result.html, false);
-    isApplyingRemoteContent.current = false;
-  }, [editor]);
+    await runReloadAction(actionContext);
+  }, [actionContext]);
 
   const handleSaveAs = useCallback(async () => {
-    if (!editor) return;
-    await syncCurrentEditorCanonical();
-    await saveDocumentAs();
-  }, [editor, syncCurrentEditorCanonical]);
+    await runSaveAsAction(actionContext);
+  }, [actionContext]);
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-        e.preventDefault();
+    if (!editor || startupReopenDoneRef.current) return;
+    startupReopenDoneRef.current = true;
+    void runStartupReopenAction(actionContext, persistedState);
+  }, [actionContext, editor, persistedState]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const mod = event.ctrlKey || event.metaKey;
+      if (!mod) return;
+
+      const key = event.key.toLowerCase();
+
+      if (key === "o" && !event.shiftKey) {
+        event.preventDefault();
+        void handleOpen();
+      } else if (key === "s" && event.shiftKey) {
+        event.preventDefault();
+        void handleSaveAs();
+      } else if (key === "s") {
+        event.preventDefault();
         void handleSave();
+      } else if (key === "r" && event.altKey) {
+        event.preventDefault();
+        void handleReload();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleSave]);
+  }, [handleOpen, handleReload, handleSave, handleSaveAs]);
+
+  useEffect(() => {
+    let disposed = false;
+
+    const installMenu = async () => {
+      try {
+        const recentMenu = await Submenu.new({
+          text: "Recent Files",
+          items:
+            persistedState.recentFiles.length > 0
+              ? persistedState.recentFiles.map((path, index) => ({
+                  id: `recent-${index}`,
+                  text: basename(path),
+                  action: () => {
+                    void handleOpenRecent(path);
+                  },
+                }))
+              : [{ id: "recent-empty", text: "No recent files", enabled: false }],
+        });
+
+        const fileSubmenu = await Submenu.new({
+          text: "File",
+          items: [
+            {
+              id: "file-open",
+              text: "Open…",
+              accelerator: "CmdOrCtrl+O",
+              action: () => void handleOpen(),
+            },
+            {
+              id: "file-save",
+              text: "Save",
+              accelerator: "CmdOrCtrl+S",
+              action: () => void handleSave(),
+            },
+            {
+              id: "file-save-as",
+              text: "Save As…",
+              accelerator: "CmdOrCtrl+Shift+S",
+              action: () => void handleSaveAs(),
+            },
+            {
+              id: "file-reload",
+              text: "Reload from disk",
+              accelerator: RELOAD_ACCELERATOR,
+              action: () => void handleReload(),
+            },
+            await PredefinedMenuItem.new({ item: "Separator" }),
+            recentMenu,
+            await PredefinedMenuItem.new({ item: "Separator" }),
+            await PredefinedMenuItem.new({ item: "Quit" }),
+          ],
+        });
+
+        const editSubmenu = await Submenu.new({
+          text: "Edit",
+          items: [
+            await PredefinedMenuItem.new({ item: "Undo" }),
+            await PredefinedMenuItem.new({ item: "Redo" }),
+            await PredefinedMenuItem.new({ item: "Separator" }),
+            await PredefinedMenuItem.new({ item: "Cut" }),
+            await PredefinedMenuItem.new({ item: "Copy" }),
+            await PredefinedMenuItem.new({ item: "Paste" }),
+            await PredefinedMenuItem.new({ item: "Separator" }),
+            await PredefinedMenuItem.new({ item: "SelectAll" }),
+          ],
+        });
+
+        const menu = await Menu.new({
+          items: [fileSubmenu, editSubmenu],
+        });
+
+        if (!disposed) {
+          await menu.setAsAppMenu();
+        }
+      } catch {
+        // Menu API is unavailable in browser preview mode.
+      }
+    };
+
+    void installMenu();
+
+    return () => {
+      disposed = true;
+    };
+  }, [handleOpen, handleOpenRecent, handleReload, handleSave, handleSaveAs, persistedState.recentFiles]);
 
   useEffect(() => {
     const title = buildWindowTitle(currentFilePath, isDirty);
@@ -265,7 +351,23 @@ export function useEditorController(): EditorController {
   }, []);
 
   return useMemo(
-    () => ({ editor, handleOpen, handleReload, handleSave, handleSaveAs }),
-    [editor, handleOpen, handleReload, handleSave, handleSaveAs]
+    () => ({
+      editor,
+      recentFiles: persistedState.recentFiles,
+      handleOpen,
+      handleOpenRecent,
+      handleReload,
+      handleSave,
+      handleSaveAs,
+    }),
+    [
+      editor,
+      handleOpen,
+      handleOpenRecent,
+      handleReload,
+      handleSave,
+      handleSaveAs,
+      persistedState.recentFiles,
+    ]
   );
 }

@@ -120,6 +120,16 @@ body {
   cursor: default;
 }
 
+.toolbar-recent-select {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 12px;
+  padding: 4px 6px;
+  color: var(--color-text);
+}
+
+
 /* ============================================================
    Editor area
    ============================================================ */

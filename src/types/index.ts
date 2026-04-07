@@ -76,8 +76,10 @@ export interface DocumentActions {
 }
 
 export interface OpenDocumentResult {
-  kind: "opened" | "cancelled";
+  kind: "opened" | "cancelled" | "error";
   html?: string;
+  path?: string;
+  message?: string;
 }
 
 export interface SaveDocumentResult {
