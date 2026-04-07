@@ -16,6 +16,7 @@ import {
 
 import { basename } from "../../lib/utils";
 import * as bridge from "../../services/tauriBridge";
+import { useAppUx } from "../ux/useAppUx";
 import { useDocumentStore } from "../../stores/documentStore";
 import {
   getInitialPersistedState,
@@ -25,6 +26,7 @@ import {
   runSaveAction,
   runSaveAsAction,
   runStartupReopenAction,
+  createDiscardChangesConfirmOptions,
 } from "../documents/fileActionService";
 import { reconcileCanonicalFromEditorHtml } from "../documents/documentService";
 
@@ -42,11 +44,6 @@ function buildWindowTitle(path: string | null, isDirty: boolean): string {
   return `${prefix}${basename(path)} - ${APP_NAME}`;
 }
 
-function confirmDiscardUnsavedChanges(): Promise<boolean> {
-  return Promise.resolve(
-    window.confirm("You have unsaved changes. Discard them?")
-  );
-}
 
 export interface EditorController {
   editor: Editor | null;
@@ -61,10 +58,12 @@ export interface EditorController {
 export function useEditorController(): EditorController {
   const isApplyingRemoteContent = useRef(false);
   const allowCloseRef = useRef(false);
+  const closeConfirmInFlightRef = useRef(false);
   const reconcileRunIdRef = useRef(0);
   const startupReopenDoneRef = useRef(false);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
   const { isDirty, currentFilePath } = useDocumentStore();
+  const { confirm, notify } = useAppUx();
 
   const editor = useEditor({
     extensions: [
@@ -101,15 +100,20 @@ export function useEditorController(): EditorController {
     [editor]
   );
 
+  const confirmDiscardUnsavedChanges = useCallback(async () => {
+    return confirm(createDiscardChangesConfirmOptions());
+  }, [confirm]);
+
   const actionContext = useMemo(
     () => ({
       getEditorHtml: () => editor?.getHTML() ?? null,
       setEditorHtml,
       reconcileCanonicalFromEditorHtml,
-      confirmDiscardChanges: confirmDiscardUnsavedChanges,
+      confirmDiscardChanges: () => confirmDiscardUnsavedChanges(),
+      notify,
       onStateChanged: setPersistedState,
     }),
-    [editor, setEditorHtml]
+    [confirmDiscardUnsavedChanges, editor, notify, setEditorHtml]
   );
 
   const handleOpen = useCallback(async () => {
@@ -283,11 +287,25 @@ export function useEditorController(): EditorController {
         }
 
         event.preventDefault();
+        if (closeConfirmInFlightRef.current) {
+          return;
+        }
+
+        closeConfirmInFlightRef.current = true;
         const canDiscard = await confirmDiscardUnsavedChanges();
+        closeConfirmInFlightRef.current = false;
         if (!canDiscard) return;
 
         allowCloseRef.current = true;
-        await bridge.closeCurrentWindow();
+        try {
+          await bridge.closeCurrentWindow();
+        } catch (error) {
+          allowCloseRef.current = false;
+          notify.error({
+            title: "Could not close window",
+            message: error instanceof Error ? error.message : "Unknown error.",
+          });
+        }
       })
       .then((cleanup) => {
         unlisten = cleanup;
@@ -296,7 +314,7 @@ export function useEditorController(): EditorController {
     return () => {
       if (unlisten) unlisten();
     };
-  }, []);
+  }, [confirmDiscardUnsavedChanges, notify]);
 
   useEffect(() => {
     let isRunning = false;

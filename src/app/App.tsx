@@ -5,8 +5,9 @@ import StatusBar from "../components/StatusBar";
 
 import { useDocumentStore } from "../stores/documentStore";
 import { useEditorController } from "../features/editor/useEditorController";
+import { AppUxProvider } from "../features/ux/useAppUx";
 
-export default function App() {
+function AppContent() {
   const { isDirty, currentFilePath, activeDocument } = useDocumentStore();
   const {
     editor,
@@ -38,5 +39,13 @@ export default function App() {
         hasExternalChangeWarning={activeDocument.hasExternalChangeWarning}
       />
     </Layout>
+  );
+}
+
+export default function App() {
+  return (
+    <AppUxProvider>
+      <AppContent />
+    </AppUxProvider>
   );
 }
