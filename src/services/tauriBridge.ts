@@ -6,6 +6,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { UnlistenFn } from "@tauri-apps/api/event";
+import type { FileMetadata } from "../types";
 
 /** Shows the OS file-open dialog filtered to Markdown files. */
 export async function openFileDialog(): Promise<string | null> {
@@ -25,6 +26,11 @@ export async function saveTextFile(path: string, content: string): Promise<void>
 /** Shows save dialog, writes `content`, and returns saved path. */
 export async function saveFileDialog(content: string): Promise<string | null> {
   return invoke<string | null>("save_file_dialog", { content });
+}
+
+/** Reads lightweight file metadata used for external-change detection. */
+export async function getFileMetadata(path: string): Promise<FileMetadata> {
+  return invoke<FileMetadata>("get_file_metadata", { path });
 }
 
 /** Updates native window title. */

@@ -1,11 +1,19 @@
 /**
  * Tauri application entry point and command definitions.
  *
- * All four commands form the narrow native bridge between the frontend and
- * the OS.  File dialogs use `rfd` (Rust File Dialog) with its async API so
+ * Commands form the narrow native bridge between the frontend and
+ * the OS. File dialogs use `rfd` with its async API so
  * the GTK/AppKit dialog loop runs on the correct platform thread.
  */
 use rfd::AsyncFileDialog;
+use serde::Serialize;
+use std::time::UNIX_EPOCH;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FileMetadata {
+    modified_ms: Option<u64>,
+}
 
 // ---------------------------------------------------------------------------
 // Tauri commands
@@ -55,6 +63,19 @@ async fn save_file_dialog(content: String) -> Result<Option<String>, String> {
     }
 }
 
+/// Reads file metadata used for lightweight external-change detection.
+#[tauri::command]
+async fn get_file_metadata(path: String) -> Result<FileMetadata, String> {
+    let metadata = std::fs::metadata(path).map_err(|e| e.to_string())?;
+    let modified_ms = metadata
+        .modified()
+        .ok()
+        .and_then(|m| m.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as u64);
+
+    Ok(FileMetadata { modified_ms })
+}
+
 // ---------------------------------------------------------------------------
 // Application bootstrap
 // ---------------------------------------------------------------------------
@@ -67,6 +88,7 @@ pub fn run() {
             read_text_file,
             save_text_file,
             save_file_dialog,
+            get_file_metadata,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
