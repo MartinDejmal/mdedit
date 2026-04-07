@@ -20,3 +20,8 @@ commands.allow = ["save_text_file"]
 identifier = "allow-save-file-dialog"
 description = "Allows invoking the save_file_dialog command."
 commands.allow = ["save_file_dialog"]
+
+[[permission]]
+identifier = "allow-get-file-metadata"
+description = "Allows invoking the get_file_metadata command."
+commands.allow = ["get_file_metadata"]

@@ -7,6 +7,7 @@
     "allow-open-file-dialog",
     "allow-read-text-file",
     "allow-save-text-file",
-    "allow-save-file-dialog"
+    "allow-save-file-dialog",
+    "allow-get-file-metadata"
   ]
 }
