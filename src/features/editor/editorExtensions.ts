@@ -1,5 +1,8 @@
 import { Mark, Node, mergeAttributes } from "@tiptap/core";
 import { tableEditing } from "@tiptap/pm/tables";
+import { CodeBlockWithSyntax } from "./codeBlockSyntax";
+
+export { CodeBlockWithSyntax };
 
 export const LinkMark = Mark.create({
   name: "link",

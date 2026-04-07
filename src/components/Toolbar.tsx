@@ -3,6 +3,7 @@
  */
 import type { Editor } from "@tiptap/react";
 
+import { SUPPORTED_CODE_BLOCK_LANGUAGES } from "../features/editor/codeBlockSyntax";
 import { insertDefaultTable, insertTaskList } from "../features/editor/editorCommands";
 import { basename } from "../lib/utils";
 
@@ -20,6 +21,9 @@ interface ToolbarProps {
   onInsertImage: () => void;
   canReload: boolean;
   highlightReload: boolean;
+  activeCodeBlockLanguage: string | null;
+  onToggleCodeBlock: () => void;
+  onSetCodeBlockLanguage: (language: string) => void;
 }
 
 export default function Toolbar({
@@ -36,7 +40,13 @@ export default function Toolbar({
   onInsertImage,
   canReload,
   highlightReload,
+  activeCodeBlockLanguage,
+  onToggleCodeBlock,
+  onSetCodeBlockLanguage,
 }: ToolbarProps) {
+  const isCodeBlockActive = Boolean(activeCodeBlockLanguage);
+  const languageLabel = activeCodeBlockLanguage ?? "plaintext";
+
   return (
     <div className="toolbar" role="toolbar" aria-label="Editor toolbar">
       <div className="toolbar-group">
@@ -159,13 +169,33 @@ export default function Toolbar({
         </button>
 
         <button
-          onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+          onClick={onToggleCodeBlock}
           className={editor?.isActive("codeBlock") ? "active" : ""}
           disabled={!editor}
           title="Code block"
         >
           {"</>"}
         </button>
+
+        <label className={`code-language-control ${isCodeBlockActive ? "active" : ""}`}>
+          <span>Code:</span>
+          <select
+            value={languageLabel}
+            onChange={(event) => onSetCodeBlockLanguage(event.target.value)}
+            disabled={!editor || !isCodeBlockActive}
+            title={
+              isCodeBlockActive
+                ? "Set active code block language"
+                : "Place caret inside a code block to change language"
+            }
+          >
+            {SUPPORTED_CODE_BLOCK_LANGUAGES.map((language) => (
+              <option key={language} value={language}>
+                {language}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <button
           onClick={onInsertLink}

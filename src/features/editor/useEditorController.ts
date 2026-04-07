@@ -4,6 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { Menu, Submenu, PredefinedMenuItem } from "@tauri-apps/api/menu";
 
 import {
+  CodeBlockWithSyntax,
   ImageNode,
   LinkMark,
   TableCellNode,
@@ -30,7 +31,14 @@ import {
   createDiscardChangesConfirmOptions,
 } from "../documents/fileActionService";
 import { reconcileCanonicalFromEditorHtml } from "../documents/documentService";
-import { insertImage, insertLink, removeLink } from "./editorCommands";
+import {
+  getActiveCodeBlockLanguage,
+  insertImage,
+  insertLink,
+  removeLink,
+  setCodeBlockLanguage,
+  toggleCodeBlock,
+} from "./editorCommands";
 
 const APP_NAME = "mdedit";
 const RELOAD_ACCELERATOR = "CmdOrCtrl+Alt+R";
@@ -63,6 +71,9 @@ export interface EditorController {
   handleInsertLink: () => Promise<void>;
   handleRemoveLink: () => void;
   handleInsertImage: () => Promise<void>;
+  activeCodeBlockLanguage: string | null;
+  handleToggleCodeBlock: () => void;
+  handleSetCodeBlockLanguage: (language: string) => void;
 }
 
 export function useEditorController(): EditorController {
@@ -72,13 +83,17 @@ export function useEditorController(): EditorController {
   const reconcileRunIdRef = useRef(0);
   const startupReopenDoneRef = useRef(false);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
+  const [activeCodeBlockLanguage, setActiveCodeBlockLanguage] = useState<string | null>(null);
   const { isDirty, currentFilePath, isUntitled, hasActiveDocument } =
     useDocumentStore();
   const { confirm, notify, requestInput } = useAppUx();
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false,
+      }),
+      CodeBlockWithSyntax,
       LinkMark,
       ImageNode,
       TaskListNode,
@@ -168,6 +183,41 @@ export function useEditorController(): EditorController {
     if (!editor) return;
     await insertImage(editor, requestInput);
   }, [editor, requestInput]);
+
+  const handleToggleCodeBlock = useCallback(() => {
+    if (!editor) return;
+    toggleCodeBlock(editor);
+    setActiveCodeBlockLanguage(getActiveCodeBlockLanguage(editor));
+  }, [editor]);
+
+  const handleSetCodeBlockLanguage = useCallback(
+    (language: string) => {
+      if (!editor) return;
+      setCodeBlockLanguage(editor, language);
+      setActiveCodeBlockLanguage(getActiveCodeBlockLanguage(editor));
+    },
+    [editor]
+  );
+
+  useEffect(() => {
+    if (!editor) {
+      setActiveCodeBlockLanguage(null);
+      return;
+    }
+
+    const syncLanguage = () => {
+      setActiveCodeBlockLanguage(getActiveCodeBlockLanguage(editor));
+    };
+
+    syncLanguage();
+    editor.on("selectionUpdate", syncLanguage);
+    editor.on("transaction", syncLanguage);
+
+    return () => {
+      editor.off("selectionUpdate", syncLanguage);
+      editor.off("transaction", syncLanguage);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (!editor || startupReopenDoneRef.current) return;
@@ -435,6 +485,9 @@ export function useEditorController(): EditorController {
       handleInsertLink,
       handleRemoveLink,
       handleInsertImage,
+      activeCodeBlockLanguage,
+      handleToggleCodeBlock,
+      handleSetCodeBlockLanguage,
     }),
     [
       editor,
@@ -447,6 +500,9 @@ export function useEditorController(): EditorController {
       handleInsertLink,
       handleRemoveLink,
       handleInsertImage,
+      activeCodeBlockLanguage,
+      handleToggleCodeBlock,
+      handleSetCodeBlockLanguage,
       hasActiveDocument,
       persistedState.recentFiles,
     ]
