@@ -12,6 +12,9 @@ const EMPTY_DOCUMENT: ActiveDocument = {
   lastKnownPath: null,
   hasExternalChangeWarning: false,
   externalChangeDetectedAt: null,
+  lastReloadedAt: null,
+  lastObservedDiskMtime: null,
+  isDiskVersionInSyncWithBaseline: true,
 };
 
 /**
@@ -34,7 +37,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         lastKnownPath: path,
       },
     })),
-  markLoaded: ({ rawMarkdown, canonicalMarkdown, path, fileMtime }) =>
+  markLoaded: ({ rawMarkdown, canonicalMarkdown, path, fileMtime, source }) =>
     set(() => ({
       currentCanonicalMarkdown: canonicalMarkdown,
       currentFilePath: path,
@@ -49,6 +52,10 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         lastKnownPath: path,
         hasExternalChangeWarning: false,
         externalChangeDetectedAt: null,
+        lastReloadedAt:
+          source === "reload" ? new Date().toISOString() : null,
+        lastObservedDiskMtime: fileMtime,
+        isDiskVersionInSyncWithBaseline: true,
       },
     })),
   markSaved: ({ canonicalMarkdown, path, fileMtime }) =>
@@ -66,6 +73,8 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         lastKnownPath: path,
         hasExternalChangeWarning: false,
         externalChangeDetectedAt: null,
+        lastObservedDiskMtime: fileMtime,
+        isDiskVersionInSyncWithBaseline: true,
       },
     })),
   reconcileCurrentCanonicalMarkdown: (markdown) =>
@@ -85,26 +94,24 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         isDirty: shouldBeDirty,
       };
     }),
-  markExternalChangeWarning: (detectedAt) =>
-    set((state) => {
-      if (state.activeDocument.hasExternalChangeWarning) {
-        return state;
-      }
-
-      return {
-        activeDocument: {
-          ...state.activeDocument,
-          hasExternalChangeWarning: true,
-          externalChangeDetectedAt: detectedAt,
-        },
-      };
-    }),
+  markExternalChangeWarning: ({ detectedAt, detectedMtime }) =>
+    set((state) => ({
+      activeDocument: {
+        ...state.activeDocument,
+        hasExternalChangeWarning: true,
+        externalChangeDetectedAt:
+          state.activeDocument.externalChangeDetectedAt ?? detectedAt,
+        lastObservedDiskMtime: detectedMtime,
+        isDiskVersionInSyncWithBaseline: false,
+      },
+    })),
   clearExternalChangeWarning: () =>
     set((state) => ({
       activeDocument: {
         ...state.activeDocument,
         hasExternalChangeWarning: false,
         externalChangeDetectedAt: null,
+        isDiskVersionInSyncWithBaseline: true,
       },
     })),
 }));

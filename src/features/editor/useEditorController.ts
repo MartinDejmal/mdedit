@@ -17,6 +17,7 @@ import { basename } from "../../lib/utils";
 import {
   openDocument,
   reconcileCanonicalFromEditorHtml,
+  reloadDocumentFromDisk,
   saveDocument,
   saveDocumentAs,
 } from "../documents/documentService";
@@ -56,6 +57,7 @@ function confirmDiscardUnsavedChanges(): Promise<boolean> {
 export interface EditorController {
   editor: Editor | null;
   handleOpen: () => Promise<void>;
+  handleReload: () => Promise<void>;
   handleSave: () => Promise<void>;
   handleSaveAs: () => Promise<void>;
 }
@@ -128,6 +130,25 @@ export function useEditorController(): EditorController {
     await saveDocument();
   }, [editor, syncCurrentEditorCanonical]);
 
+  const handleReload = useCallback(async () => {
+    const result = await reloadDocumentFromDisk({
+      confirmDiscardChanges: confirmDiscardUnsavedChanges,
+    });
+
+    if (result.kind === "error") {
+      window.alert(`Reload failed: ${result.message ?? "Unknown error"}`);
+      return;
+    }
+
+    if (result.kind !== "reloaded" || !result.html || !editor) {
+      return;
+    }
+
+    isApplyingRemoteContent.current = true;
+    editor.commands.setContent(result.html, false);
+    isApplyingRemoteContent.current = false;
+  }, [editor]);
+
   const handleSaveAs = useCallback(async () => {
     if (!editor) return;
     await syncCurrentEditorCanonical();
@@ -197,8 +218,11 @@ export function useEditorController(): EditorController {
     const checkExternalChange = async () => {
       if (isRunning) return;
 
-      const { currentFilePath: activePath, activeDocument, markExternalChangeWarning } =
-        useDocumentStore.getState();
+      const {
+        currentFilePath: activePath,
+        activeDocument,
+        markExternalChangeWarning,
+      } = useDocumentStore.getState();
 
       if (!activePath || activeDocument.fileMtime === null) {
         return;
@@ -211,7 +235,10 @@ export function useEditorController(): EditorController {
           metadata.modifiedMs !== null &&
           metadata.modifiedMs !== activeDocument.fileMtime
         ) {
-          markExternalChangeWarning(new Date().toISOString());
+          markExternalChangeWarning({
+            detectedAt: new Date().toISOString(),
+            detectedMtime: metadata.modifiedMs,
+          });
         }
       } finally {
         isRunning = false;
@@ -238,7 +265,7 @@ export function useEditorController(): EditorController {
   }, []);
 
   return useMemo(
-    () => ({ editor, handleOpen, handleSave, handleSaveAs }),
-    [editor, handleOpen, handleSave, handleSaveAs]
+    () => ({ editor, handleOpen, handleReload, handleSave, handleSaveAs }),
+    [editor, handleOpen, handleReload, handleSave, handleSaveAs]
   );
 }

@@ -110,6 +110,11 @@ body {
   color: var(--color-accent);
 }
 
+.toolbar button.recommended {
+  border-color: #f2c078;
+  background: #fff7ea;
+}
+
 .toolbar button:disabled {
   opacity: 0.4;
   cursor: default;

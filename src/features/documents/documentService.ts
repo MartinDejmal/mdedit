@@ -10,7 +10,11 @@ import {
   parseMarkdownToEditorContent,
   serializeEditorToMarkdown,
 } from "../../services/markdownService";
-import type { OpenDocumentResult, SaveDocumentResult } from "../../types";
+import type {
+  OpenDocumentResult,
+  ReloadDocumentResult,
+  SaveDocumentResult,
+} from "../../types";
 
 export type ConfirmDiscardChanges = () => Promise<boolean>;
 
@@ -48,6 +52,7 @@ export async function openDocument(
     canonicalMarkdown,
     path: filePath,
     fileMtime: metadata.modifiedMs,
+    source: "open",
   });
 
   return { kind: "opened", html: editorContent };
@@ -91,6 +96,48 @@ export async function saveDocumentAs(): Promise<SaveDocumentResult> {
     fileMtime: metadata.modifiedMs,
   });
   return { kind: "saved", path: savedPath };
+}
+
+/** Explicit reload flow for the currently open document path. */
+export async function reloadDocumentFromDisk(
+  options: OpenDocumentOptions = {}
+): Promise<ReloadDocumentResult> {
+  const { currentFilePath, isDirty, markLoaded } = useDocumentStore.getState();
+
+  if (!currentFilePath) {
+    return { kind: "noop" };
+  }
+
+  if (isDirty && options.confirmDiscardChanges) {
+    const canDiscard = await options.confirmDiscardChanges();
+    if (!canDiscard) {
+      return { kind: "cancelled" };
+    }
+  }
+
+  try {
+    const rawMarkdown = await bridge.readTextFile(currentFilePath);
+    const { editorContent, canonicalMarkdown } =
+      await parseMarkdownToEditorContent(rawMarkdown);
+    const metadata = await bridge.getFileMetadata(currentFilePath);
+
+    markLoaded({
+      rawMarkdown,
+      canonicalMarkdown,
+      path: currentFilePath,
+      fileMtime: metadata.modifiedMs,
+      source: "reload",
+    });
+
+    return { kind: "reloaded", html: editorContent };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to reload document from disk.";
+
+    return { kind: "error", message };
+  }
 }
 
 /**
