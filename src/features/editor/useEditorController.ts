@@ -2,6 +2,17 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
+import {
+  ImageNode,
+  LinkMark,
+  TableCellNode,
+  TableHeaderNode,
+  TableNode,
+  TableRowNode,
+  TaskItemNode,
+  TaskListNode,
+} from "./editorExtensions";
+
 import { basename } from "../../lib/utils";
 import {
   openDocument,
@@ -56,7 +67,29 @@ export function useEditorController(): EditorController {
   const { isDirty, currentFilePath } = useDocumentStore();
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      LinkMark,
+      ImageNode,
+      TaskListNode,
+      TaskItemNode,
+      TableNode,
+      TableRowNode,
+      TableHeaderNode,
+      TableCellNode,
+    ],
+    editorProps: {
+      handleClick(_view, _pos, event) {
+        const target = event.target as HTMLElement | null;
+        const anchor = target?.closest("a[href]") as HTMLAnchorElement | null;
+
+        if (!anchor) return false;
+        if (!(event.metaKey || event.ctrlKey)) return false;
+
+        window.open(anchor.href, "_blank", "noopener,noreferrer");
+        return true;
+      },
+    },
     content: WELCOME_HTML,
     onUpdate: ({ editor: nextEditor }) => {
       if (isApplyingRemoteContent.current) return;
