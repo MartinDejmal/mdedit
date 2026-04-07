@@ -12,6 +12,8 @@ function AppContent() {
   const {
     editor,
     recentFiles,
+    hasActiveDocument,
+    handleNew,
     handleOpen,
     handleOpenRecent,
     handleReload,
@@ -26,6 +28,7 @@ function AppContent() {
     <Layout>
       <Toolbar
         editor={editor}
+        onNew={() => void handleNew()}
         onOpen={() => void handleOpen()}
         onOpenRecent={(path) => void handleOpenRecent(path)}
         recentFiles={recentFiles}
@@ -38,10 +41,18 @@ function AppContent() {
         canReload={Boolean(currentFilePath)}
         highlightReload={activeDocument.hasExternalChangeWarning}
       />
-      <EditorArea editor={editor} />
+      <EditorArea
+        editor={editor}
+        showEmptyState={!hasActiveDocument}
+        recentFiles={recentFiles}
+        onNew={() => void handleNew()}
+        onOpen={() => void handleOpen()}
+        onOpenRecent={(path) => void handleOpenRecent(path)}
+      />
       <StatusBar
         isDirty={isDirty}
         filePath={currentFilePath}
+        hasActiveDocument={hasActiveDocument}
         hasExternalChangeWarning={activeDocument.hasExternalChangeWarning}
       />
     </Layout>

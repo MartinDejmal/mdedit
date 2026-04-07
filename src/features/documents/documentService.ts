@@ -17,6 +17,8 @@ import type {
 } from "../../types";
 
 export type ConfirmDiscardChanges = () => Promise<boolean>;
+export const EMPTY_UNTITLED_EDITOR_HTML = "<p></p>";
+export const EMPTY_UNTITLED_CANONICAL_MARKDOWN = "\n";
 
 interface OpenDocumentOptions {
   confirmDiscardChanges?: ConfirmDiscardChanges;
@@ -87,6 +89,15 @@ export async function openDocumentFromPath(
 
     return { kind: "error", message, path: filePath };
   }
+}
+
+/** Creates a fresh untitled document baseline. */
+export function createNewUntitledDocument(): { html: string } {
+  useDocumentStore.getState().markNewUntitled({
+    canonicalMarkdown: EMPTY_UNTITLED_CANONICAL_MARKDOWN,
+  });
+
+  return { html: EMPTY_UNTITLED_EDITOR_HTML };
 }
 
 /** Save flow. If no file path exists, falls back to Save As. */

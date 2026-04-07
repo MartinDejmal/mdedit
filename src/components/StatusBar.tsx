@@ -6,15 +6,21 @@ import { basename } from "../lib/utils";
 interface StatusBarProps {
   isDirty: boolean;
   filePath: string | null;
+  hasActiveDocument: boolean;
   hasExternalChangeWarning: boolean;
 }
 
 export default function StatusBar({
   isDirty,
   filePath,
+  hasActiveDocument,
   hasExternalChangeWarning,
 }: StatusBarProps) {
-  const filename = filePath ? basename(filePath) : "Untitled";
+  const filename = filePath
+    ? basename(filePath)
+    : hasActiveDocument
+      ? "Untitled"
+      : "No document";
   const dirtyLabel = isDirty ? "Modified" : "Saved";
 
   return (

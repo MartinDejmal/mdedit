@@ -20,6 +20,7 @@ import { useAppUx } from "../ux/useAppUx";
 import { useDocumentStore } from "../../stores/documentStore";
 import {
   getInitialPersistedState,
+  runNewAction,
   runOpenAction,
   runOpenRecentAction,
   runReloadAction,
@@ -34,22 +35,27 @@ import { insertImage, insertLink, removeLink } from "./editorCommands";
 const APP_NAME = "mdedit";
 const RELOAD_ACCELERATOR = "CmdOrCtrl+Alt+R";
 
-const WELCOME_HTML = `
-<h1>Welcome to mdedit</h1>
-<p>A lightweight WYSIWYG Markdown editor. Click <strong>Open</strong> in the toolbar to load a <code>.md</code> file, or start typing here.</p>
-`;
+const UNTITLED_NAME = "Untitled";
 
-function buildWindowTitle(path: string | null, isDirty: boolean): string {
-  if (!path) return APP_NAME;
+function buildWindowTitle(params: {
+  path: string | null;
+  isDirty: boolean;
+  isUntitled: boolean;
+}): string {
+  const { path, isDirty, isUntitled } = params;
+  if (!path && !isUntitled) return APP_NAME;
+  if (!path && isUntitled) {
+    return `${isDirty ? "*" : ""}${UNTITLED_NAME} - ${APP_NAME}`;
+  }
   const prefix = isDirty ? "*" : "";
-  return `${prefix}${basename(path)} - ${APP_NAME}`;
+  return `${prefix}${basename(path ?? "")} - ${APP_NAME}`;
 }
-
-
 export interface EditorController {
   editor: Editor | null;
   recentFiles: string[];
+  hasActiveDocument: boolean;
   handleOpen: () => Promise<void>;
+  handleNew: () => Promise<void>;
   handleOpenRecent: (path: string) => Promise<void>;
   handleReload: () => Promise<void>;
   handleSave: () => Promise<void>;
@@ -66,7 +72,8 @@ export function useEditorController(): EditorController {
   const reconcileRunIdRef = useRef(0);
   const startupReopenDoneRef = useRef(false);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
-  const { isDirty, currentFilePath } = useDocumentStore();
+  const { isDirty, currentFilePath, isUntitled, hasActiveDocument } =
+    useDocumentStore();
   const { confirm, notify, requestInput } = useAppUx();
 
   const editor = useEditor({
@@ -81,7 +88,7 @@ export function useEditorController(): EditorController {
       TableHeaderNode,
       TableCellNode,
     ],
-    content: WELCOME_HTML,
+    content: "",
     onUpdate: ({ editor: nextEditor }) => {
       if (isApplyingRemoteContent.current) return;
 
@@ -122,6 +129,10 @@ export function useEditorController(): EditorController {
 
   const handleOpen = useCallback(async () => {
     await runOpenAction(actionContext);
+  }, [actionContext]);
+
+  const handleNew = useCallback(async () => {
+    await runNewAction(actionContext);
   }, [actionContext]);
 
   const handleOpenRecent = useCallback(
@@ -171,7 +182,10 @@ export function useEditorController(): EditorController {
 
       const key = event.key.toLowerCase();
 
-      if (key === "o" && !event.shiftKey) {
+      if (key === "n" && !event.shiftKey) {
+        event.preventDefault();
+        void handleNew();
+      } else if (key === "o" && !event.shiftKey) {
         event.preventDefault();
         void handleOpen();
       } else if (key === "s" && event.shiftKey) {
@@ -188,7 +202,7 @@ export function useEditorController(): EditorController {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleOpen, handleReload, handleSave, handleSaveAs]);
+  }, [handleNew, handleOpen, handleReload, handleSave, handleSaveAs]);
 
   useEffect(() => {
     let disposed = false;
@@ -213,6 +227,12 @@ export function useEditorController(): EditorController {
           text: "File",
           items: [
             {
+              id: "file-new",
+              text: "New",
+              accelerator: "CmdOrCtrl+N",
+              action: () => void handleNew(),
+            },
+            {
               id: "file-open",
               text: "Open…",
               accelerator: "CmdOrCtrl+O",
@@ -234,6 +254,7 @@ export function useEditorController(): EditorController {
               id: "file-reload",
               text: "Reload from disk",
               accelerator: RELOAD_ACCELERATOR,
+              enabled: Boolean(currentFilePath),
               action: () => void handleReload(),
             },
             await PredefinedMenuItem.new({ item: "Separator" }),
@@ -274,12 +295,25 @@ export function useEditorController(): EditorController {
     return () => {
       disposed = true;
     };
-  }, [handleOpen, handleOpenRecent, handleReload, handleSave, handleSaveAs, persistedState.recentFiles]);
+  }, [
+    currentFilePath,
+    handleNew,
+    handleOpen,
+    handleOpenRecent,
+    handleReload,
+    handleSave,
+    handleSaveAs,
+    persistedState.recentFiles,
+  ]);
 
   useEffect(() => {
-    const title = buildWindowTitle(currentFilePath, isDirty);
+    const title = buildWindowTitle({
+      path: currentFilePath,
+      isDirty,
+      isUntitled,
+    });
     void bridge.setWindowTitle(title);
-  }, [currentFilePath, isDirty]);
+  }, [currentFilePath, isDirty, isUntitled]);
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -391,7 +425,9 @@ export function useEditorController(): EditorController {
     () => ({
       editor,
       recentFiles: persistedState.recentFiles,
+      hasActiveDocument,
       handleOpen,
+      handleNew,
       handleOpenRecent,
       handleReload,
       handleSave,
@@ -403,6 +439,7 @@ export function useEditorController(): EditorController {
     [
       editor,
       handleOpen,
+      handleNew,
       handleOpenRecent,
       handleReload,
       handleSave,
@@ -410,6 +447,7 @@ export function useEditorController(): EditorController {
       handleInsertLink,
       handleRemoveLink,
       handleInsertImage,
+      hasActiveDocument,
       persistedState.recentFiles,
     ]
   );

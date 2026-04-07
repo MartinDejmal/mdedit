@@ -3,6 +3,7 @@ import type { ActiveDocument, DocumentStore } from "../types";
 import { basename } from "../lib/utils";
 
 const EMPTY_DOCUMENT: ActiveDocument = {
+  kind: "none",
   path: null,
   name: null,
   rawLoadedContent: "",
@@ -15,6 +16,7 @@ const EMPTY_DOCUMENT: ActiveDocument = {
   lastReloadedAt: null,
   lastObservedDiskMtime: null,
   isDiskVersionInSyncWithBaseline: true,
+  hasEverBeenSaved: false,
 };
 
 /**
@@ -26,15 +28,19 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
   currentCanonicalMarkdown: "",
   isDirty: false,
   currentFilePath: null,
+  isUntitled: false,
+  hasActiveDocument: false,
 
   setFilePath: (path) =>
     set((state) => ({
       currentFilePath: path,
       activeDocument: {
         ...state.activeDocument,
+        kind: path ? "file" : state.activeDocument.kind,
         path,
         name: path ? basename(path) : null,
         lastKnownPath: path,
+        hasEverBeenSaved: Boolean(path) || state.activeDocument.hasEverBeenSaved,
       },
     })),
   markLoaded: ({ rawMarkdown, canonicalMarkdown, path, fileMtime, source }) =>
@@ -42,7 +48,10 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
       currentCanonicalMarkdown: canonicalMarkdown,
       currentFilePath: path,
       isDirty: false,
+      isUntitled: false,
+      hasActiveDocument: true,
       activeDocument: {
+        kind: "file",
         path,
         name: path ? basename(path) : null,
         rawLoadedContent: rawMarkdown,
@@ -56,6 +65,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
           source === "reload" ? new Date().toISOString() : null,
         lastObservedDiskMtime: fileMtime,
         isDiskVersionInSyncWithBaseline: true,
+        hasEverBeenSaved: true,
       },
     })),
   markSaved: ({ canonicalMarkdown, path, fileMtime }) =>
@@ -63,8 +73,11 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
       currentCanonicalMarkdown: canonicalMarkdown,
       currentFilePath: path,
       isDirty: false,
+      isUntitled: !path,
+      hasActiveDocument: true,
       activeDocument: {
         ...state.activeDocument,
+        kind: path ? "file" : "untitled",
         path,
         name: path ? basename(path) : null,
         lastSavedCanonicalContent: canonicalMarkdown,
@@ -75,6 +88,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         externalChangeDetectedAt: null,
         lastObservedDiskMtime: fileMtime,
         isDiskVersionInSyncWithBaseline: true,
+        hasEverBeenSaved: Boolean(path) || state.activeDocument.hasEverBeenSaved,
       },
     })),
   reconcileCurrentCanonicalMarkdown: (markdown) =>
@@ -112,6 +126,30 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
         hasExternalChangeWarning: false,
         externalChangeDetectedAt: null,
         isDiskVersionInSyncWithBaseline: true,
+      },
+    })),
+  markNewUntitled: ({ canonicalMarkdown }) =>
+    set((state) => ({
+      currentCanonicalMarkdown: canonicalMarkdown,
+      currentFilePath: null,
+      isDirty: false,
+      isUntitled: true,
+      hasActiveDocument: true,
+      activeDocument: {
+        ...state.activeDocument,
+        kind: "untitled",
+        path: null,
+        name: null,
+        rawLoadedContent: "",
+        lastSavedCanonicalContent: canonicalMarkdown,
+        lastSavedAt: null,
+        fileMtime: null,
+        hasExternalChangeWarning: false,
+        externalChangeDetectedAt: null,
+        lastReloadedAt: null,
+        lastObservedDiskMtime: null,
+        isDiskVersionInSyncWithBaseline: true,
+        hasEverBeenSaved: false,
       },
     })),
 }));
