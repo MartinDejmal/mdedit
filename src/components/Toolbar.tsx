@@ -14,16 +14,39 @@ import {
 interface ToolbarProps {
   editor: Editor | null;
   onOpen: () => void;
+  onReload: () => void;
   onSave: () => void;
   onSaveAs: () => void;
+  canReload: boolean;
+  highlightReload: boolean;
 }
 
-export default function Toolbar({ editor, onOpen, onSave, onSaveAs }: ToolbarProps) {
+export default function Toolbar({
+  editor,
+  onOpen,
+  onReload,
+  onSave,
+  onSaveAs,
+  canReload,
+  highlightReload,
+}: ToolbarProps) {
   return (
     <div className="toolbar" role="toolbar" aria-label="Editor toolbar">
       <div className="toolbar-group">
         <button onClick={onOpen} title="Open Markdown file">
           Open
+        </button>
+        <button
+          onClick={onReload}
+          disabled={!canReload}
+          className={highlightReload ? "recommended" : ""}
+          title={
+            canReload
+              ? "Reload current file from disk"
+              : "Reload is available only for saved files"
+          }
+        >
+          Reload
         </button>
         <button onClick={onSave} title="Save file (Ctrl+S)">
           Save
