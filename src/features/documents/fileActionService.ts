@@ -12,12 +12,21 @@ import {
   saveDocumentAs,
   type ConfirmDiscardChanges,
 } from "./documentService";
+import type { ConfirmOptions, ToastOptions } from "../ux/useAppUx";
+
+interface NotificationApi {
+  info: (options: ToastOptions) => void;
+  success: (options: ToastOptions) => void;
+  warning: (options: ToastOptions) => void;
+  error: (options: ToastOptions) => void;
+}
 
 export interface FileActionContext {
   getEditorHtml: () => string | null;
   setEditorHtml: (html: string) => void;
   reconcileCanonicalFromEditorHtml: (html: string) => Promise<string>;
   confirmDiscardChanges: ConfirmDiscardChanges;
+  notify: NotificationApi;
   onStateChanged: (state: PersistedAppState) => void;
 }
 
@@ -28,19 +37,26 @@ export function getInitialPersistedState(): PersistedAppState {
 export async function runOpenAction(
   context: FileActionContext
 ): Promise<void> {
-  const result = await openDocument({
-    confirmDiscardChanges: context.confirmDiscardChanges,
-  });
+  try {
+    const result = await openDocument({
+      confirmDiscardChanges: context.confirmDiscardChanges,
+    });
 
-  if (result.kind !== "opened" || !result.html) {
-    return;
-  }
+    if (result.kind !== "opened" || !result.html) {
+      return;
+    }
 
-  context.setEditorHtml(result.html);
+    context.setEditorHtml(result.html);
 
-  if (result.path) {
-    const state = pushRecentFile(result.path);
-    context.onStateChanged(state);
+    if (result.path) {
+      const state = pushRecentFile(result.path);
+      context.onStateChanged(state);
+    }
+  } catch (error) {
+    context.notify.error({
+      title: "Open failed",
+      message: error instanceof Error ? error.message : "Unknown error.",
+    });
   }
 }
 
@@ -53,7 +69,10 @@ export async function runOpenRecentAction(
   });
 
   if (result.kind === "error") {
-    window.alert(`Open failed: ${result.message ?? "Unknown error"}`);
+    context.notify.error({
+      title: "Open recent failed",
+      message: result.message ?? "Unknown error.",
+    });
     const state = removeRecentFile(path);
     context.onStateChanged(state);
     return;
@@ -72,12 +91,20 @@ export async function runSaveAction(context: FileActionContext): Promise<void> {
   const editorHtml = context.getEditorHtml();
   if (!editorHtml) return;
 
-  await context.reconcileCanonicalFromEditorHtml(editorHtml);
-  const result = await saveDocument();
+  try {
+    await context.reconcileCanonicalFromEditorHtml(editorHtml);
+    const result = await saveDocument();
 
-  if (result.kind === "saved" && result.path) {
-    const state = pushRecentFile(result.path);
-    context.onStateChanged(state);
+    if (result.kind === "saved" && result.path) {
+      const state = pushRecentFile(result.path);
+      context.onStateChanged(state);
+      context.notify.success({ title: "Saved" });
+    }
+  } catch (error) {
+    context.notify.error({
+      title: "Save failed",
+      message: error instanceof Error ? error.message : "Unknown error.",
+    });
   }
 }
 
@@ -87,12 +114,20 @@ export async function runSaveAsAction(
   const editorHtml = context.getEditorHtml();
   if (!editorHtml) return;
 
-  await context.reconcileCanonicalFromEditorHtml(editorHtml);
-  const result = await saveDocumentAs();
+  try {
+    await context.reconcileCanonicalFromEditorHtml(editorHtml);
+    const result = await saveDocumentAs();
 
-  if (result.kind === "saved" && result.path) {
-    const state = pushRecentFile(result.path);
-    context.onStateChanged(state);
+    if (result.kind === "saved" && result.path) {
+      const state = pushRecentFile(result.path);
+      context.onStateChanged(state);
+      context.notify.success({ title: "Saved as", message: result.path });
+    }
+  } catch (error) {
+    context.notify.error({
+      title: "Save As failed",
+      message: error instanceof Error ? error.message : "Unknown error.",
+    });
   }
 }
 
@@ -104,7 +139,10 @@ export async function runReloadAction(
   });
 
   if (result.kind === "error") {
-    window.alert(`Reload failed: ${result.message ?? "Unknown error"}`);
+    context.notify.error({
+      title: "Reload failed",
+      message: result.message ?? "Unknown error.",
+    });
     return;
   }
 
@@ -113,6 +151,7 @@ export async function runReloadAction(
   }
 
   context.setEditorHtml(result.html);
+  context.notify.info({ title: "Reloaded from disk" });
 }
 
 export async function runStartupReopenAction(
@@ -135,5 +174,21 @@ export async function runStartupReopenAction(
   if (result.kind === "error") {
     const nextState = removeRecentFile(state.lastOpenedFilePath);
     context.onStateChanged(nextState);
+    context.notify.warning({
+      title: "Could not reopen last file",
+      message: result.message ?? "File is no longer available.",
+      timeoutMs: 3200,
+    });
   }
+}
+
+export function createDiscardChangesConfirmOptions(): ConfirmOptions {
+  return {
+    title: "Discard unsaved changes?",
+    message: "Your unsaved edits will be lost.",
+    confirmLabel: "Discard",
+    cancelLabel: "Keep Editing",
+    variant: "danger",
+    confirmOnEnter: false,
+  };
 }
