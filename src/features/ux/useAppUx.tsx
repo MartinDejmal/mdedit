@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type FormEvent,
   type ReactNode,
 } from "react";
 
@@ -26,6 +27,18 @@ export interface ConfirmOptions {
   confirmOnEnter?: boolean;
 }
 
+export interface InputDialogOptions {
+  title: string;
+  message?: string;
+  label?: string;
+  placeholder?: string;
+  initialValue?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  confirmOnEnter?: boolean;
+  validation?: (value: string) => string | null;
+}
+
 interface ToastItem extends ToastOptions {
   id: number;
   kind: ToastKind;
@@ -35,6 +48,14 @@ interface ActiveConfirm extends ConfirmOptions {
   resolve: (value: boolean) => void;
 }
 
+interface ActiveInputDialog extends InputDialogOptions {
+  resolve: (value: string | null) => void;
+}
+
+type ActiveDialogRequest =
+  | { kind: "confirm"; payload: ActiveConfirm }
+  | { kind: "input"; payload: ActiveInputDialog };
+
 interface AppUxContextValue {
   notify: {
     info: (options: ToastOptions) => void;
@@ -43,6 +64,7 @@ interface AppUxContextValue {
     error: (options: ToastOptions) => void;
   };
   confirm: (options: ConfirmOptions) => Promise<boolean>;
+  requestInput: (options: InputDialogOptions) => Promise<string | null>;
 }
 
 const AppUxContext = createContext<AppUxContextValue | null>(null);
@@ -61,9 +83,10 @@ function createNotificationApi(addToast: (kind: ToastKind, options: ToastOptions
 
 export function AppUxProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const [activeConfirm, setActiveConfirm] = useState<ActiveConfirm | null>(null);
+  const [activeDialog, setActiveDialog] = useState<ActiveDialogRequest | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const toastIdRef = useRef(0);
-  const confirmQueueRef = useRef<ActiveConfirm[]>([]);
+  const dialogQueueRef = useRef<ActiveDialogRequest[]>([]);
 
   const dismissToast = useCallback((id: number) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
@@ -82,44 +105,76 @@ export function AppUxProvider({ children }: { children: ReactNode }) {
     }, timeoutMs);
   }, [dismissToast]);
 
-  const showNextConfirm = useCallback(() => {
-    const queued = confirmQueueRef.current.shift() ?? null;
-    setActiveConfirm(queued);
+  const showNextDialog = useCallback(() => {
+    const queued = dialogQueueRef.current.shift() ?? null;
+    setActiveDialog(queued);
+  }, []);
+
+  const enqueueDialog = useCallback((request: ActiveDialogRequest) => {
+    setActiveDialog((current) => {
+      if (current) {
+        dialogQueueRef.current.push(request);
+        return current;
+      }
+
+      return request;
+    });
   }, []);
 
   const confirm = useCallback((options: ConfirmOptions) => {
     return new Promise<boolean>((resolve) => {
-      const request: ActiveConfirm = { ...options, resolve };
-
-      setActiveConfirm((current) => {
-        if (current) {
-          confirmQueueRef.current.push(request);
-          return current;
-        }
-
-        return request;
-      });
+      enqueueDialog({ kind: "confirm", payload: { ...options, resolve } });
     });
-  }, []);
+  }, [enqueueDialog]);
 
-  const resolveConfirm = useCallback(
+  const requestInput = useCallback((options: InputDialogOptions) => {
+    return new Promise<string | null>((resolve) => {
+      enqueueDialog({ kind: "input", payload: { ...options, resolve } });
+    });
+  }, [enqueueDialog]);
+
+  const closeDialog = useCallback(() => {
+    setActiveDialog(null);
+    showNextDialog();
+  }, [showNextDialog]);
+
+  const resolveActiveConfirm = useCallback(
     (value: boolean) => {
-      setActiveConfirm((current) => {
-        if (!current) return null;
-        current.resolve(value);
-        return null;
-      });
-      showNextConfirm();
+      if (activeDialog?.kind !== "confirm") return;
+      activeDialog.payload.resolve(value);
+      closeDialog();
     },
-    [showNextConfirm]
+    [activeDialog, closeDialog]
   );
+
+  const resolveActiveInput = useCallback(
+    (value: string | null) => {
+      if (activeDialog?.kind !== "input") return;
+      activeDialog.payload.resolve(value);
+      closeDialog();
+    },
+    [activeDialog, closeDialog]
+  );
+
+  useEffect(() => {
+    if (!activeDialog) {
+      previousFocusRef.current?.focus();
+      previousFocusRef.current = null;
+      return;
+    }
+
+    previousFocusRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+  }, [activeDialog]);
 
   const value = useMemo<AppUxContextValue>(
     () => ({
       notify: createNotificationApi(addToast),
       confirm,
+      requestInput,
     }),
-    [addToast, confirm]
+    [addToast, confirm, requestInput]
   );
 
   return (
@@ -127,9 +182,14 @@ export function AppUxProvider({ children }: { children: ReactNode }) {
       {children}
       <ToastViewport toasts={toasts} onDismiss={dismissToast} />
       <ConfirmDialogHost
-        activeConfirm={activeConfirm}
-        onCancel={() => resolveConfirm(false)}
-        onConfirm={() => resolveConfirm(true)}
+        activeConfirm={activeDialog?.kind === "confirm" ? activeDialog.payload : null}
+        onCancel={() => resolveActiveConfirm(false)}
+        onConfirm={() => resolveActiveConfirm(true)}
+      />
+      <InputDialogHost
+        activeInput={activeDialog?.kind === "input" ? activeDialog.payload : null}
+        onCancel={() => resolveActiveInput(null)}
+        onConfirm={resolveActiveInput}
       />
     </AppUxContext.Provider>
   );
@@ -230,6 +290,107 @@ function ConfirmDialogHost({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function InputDialogHost({
+  activeInput,
+  onCancel,
+  onConfirm,
+}: {
+  activeInput: ActiveInputDialog | null;
+  onCancel: () => void;
+  onConfirm: (value: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [value, setValue] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!activeInput) {
+      setValue("");
+      setError(null);
+      return;
+    }
+
+    setValue(activeInput.initialValue ?? "");
+    setError(null);
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, [activeInput]);
+
+  useEffect(() => {
+    if (!activeInput) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      onCancel();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeInput, onCancel]);
+
+  if (!activeInput) return null;
+
+  const validate = (candidate: string) => activeInput.validation?.(candidate) ?? null;
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    const nextError = validate(value);
+
+    if (nextError) {
+      setError(nextError);
+      return;
+    }
+
+    onConfirm(value);
+  };
+
+  return (
+    <div className="confirm-overlay" role="presentation">
+      <form
+        className="confirm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="input-title"
+        onSubmit={handleSubmit}
+      >
+        <h2 id="input-title">{activeInput.title}</h2>
+        {activeInput.message ? <p>{activeInput.message}</p> : null}
+
+        <label className="dialog-input-label">
+          {activeInput.label ?? "Value"}
+          <input
+            ref={inputRef}
+            className="dialog-input"
+            placeholder={activeInput.placeholder}
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value);
+              if (error) setError(null);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && activeInput.confirmOnEnter === false) {
+                event.preventDefault();
+              }
+            }}
+          />
+        </label>
+
+        {error ? <p className="dialog-input-error">{error}</p> : null}
+
+        <div className="confirm-actions">
+          <button type="button" onClick={onCancel}>
+            {activeInput.cancelLabel ?? "Cancel"}
+          </button>
+          <button type="submit" className="primary">
+            {activeInput.confirmLabel ?? "Confirm"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

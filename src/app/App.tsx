@@ -17,6 +17,9 @@ function AppContent() {
     handleReload,
     handleSave,
     handleSaveAs,
+    handleInsertLink,
+    handleRemoveLink,
+    handleInsertImage,
   } = useEditorController();
 
   return (
@@ -29,6 +32,9 @@ function AppContent() {
         onReload={() => void handleReload()}
         onSave={() => void handleSave()}
         onSaveAs={() => void handleSaveAs()}
+        onInsertLink={() => void handleInsertLink()}
+        onRemoveLink={handleRemoveLink}
+        onInsertImage={() => void handleInsertImage()}
         canReload={Boolean(currentFilePath)}
         highlightReload={activeDocument.hasExternalChangeWarning}
       />

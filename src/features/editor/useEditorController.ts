@@ -29,6 +29,7 @@ import {
   createDiscardChangesConfirmOptions,
 } from "../documents/fileActionService";
 import { reconcileCanonicalFromEditorHtml } from "../documents/documentService";
+import { insertImage, insertLink, removeLink } from "./editorCommands";
 
 const APP_NAME = "mdedit";
 const RELOAD_ACCELERATOR = "CmdOrCtrl+Alt+R";
@@ -53,6 +54,9 @@ export interface EditorController {
   handleReload: () => Promise<void>;
   handleSave: () => Promise<void>;
   handleSaveAs: () => Promise<void>;
+  handleInsertLink: () => Promise<void>;
+  handleRemoveLink: () => void;
+  handleInsertImage: () => Promise<void>;
 }
 
 export function useEditorController(): EditorController {
@@ -63,7 +67,7 @@ export function useEditorController(): EditorController {
   const startupReopenDoneRef = useRef(false);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
   const { isDirty, currentFilePath } = useDocumentStore();
-  const { confirm, notify } = useAppUx();
+  const { confirm, notify, requestInput } = useAppUx();
 
   const editor = useEditor({
     extensions: [
@@ -138,6 +142,21 @@ export function useEditorController(): EditorController {
   const handleSaveAs = useCallback(async () => {
     await runSaveAsAction(actionContext);
   }, [actionContext]);
+
+  const handleInsertLink = useCallback(async () => {
+    if (!editor) return;
+    await insertLink(editor, requestInput);
+  }, [editor, requestInput]);
+
+  const handleRemoveLink = useCallback(() => {
+    if (!editor) return;
+    removeLink(editor);
+  }, [editor]);
+
+  const handleInsertImage = useCallback(async () => {
+    if (!editor) return;
+    await insertImage(editor, requestInput);
+  }, [editor, requestInput]);
 
   useEffect(() => {
     if (!editor || startupReopenDoneRef.current) return;
@@ -377,6 +396,9 @@ export function useEditorController(): EditorController {
       handleReload,
       handleSave,
       handleSaveAs,
+      handleInsertLink,
+      handleRemoveLink,
+      handleInsertImage,
     }),
     [
       editor,
@@ -385,6 +407,9 @@ export function useEditorController(): EditorController {
       handleReload,
       handleSave,
       handleSaveAs,
+      handleInsertLink,
+      handleRemoveLink,
+      handleInsertImage,
       persistedState.recentFiles,
     ]
   );
