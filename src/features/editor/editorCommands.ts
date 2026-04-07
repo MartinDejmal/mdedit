@@ -1,6 +1,7 @@
 import type { Editor } from "@tiptap/react";
 
 import type { InputDialogOptions } from "../ux/useAppUx";
+import { normalizeCodeBlockLanguage } from "./codeBlockSyntax";
 
 type RequestInput = (options: InputDialogOptions) => Promise<string | null>;
 
@@ -118,6 +119,27 @@ export function insertTaskList(editor: Editor): void {
       ],
     })
     .run();
+}
+
+export function toggleCodeBlock(editor: Editor): void {
+  if (editor.isActive("codeBlock")) {
+    editor.chain().focus().toggleCodeBlock().run();
+    return;
+  }
+
+  editor.chain().focus().setCodeBlock({ language: "plaintext" }).run();
+}
+
+export function getActiveCodeBlockLanguage(editor: Editor): string | null {
+  if (!editor.isActive("codeBlock")) return null;
+  const language = editor.getAttributes("codeBlock").language as string | null | undefined;
+  return normalizeCodeBlockLanguage(language);
+}
+
+export function setCodeBlockLanguage(editor: Editor, language: string): void {
+  if (!editor.isActive("codeBlock")) return;
+  const nextLanguage = normalizeCodeBlockLanguage(language);
+  editor.chain().focus().updateAttributes("codeBlock", { language: nextLanguage }).run();
 }
 
 export function insertDefaultTable(editor: Editor): void {

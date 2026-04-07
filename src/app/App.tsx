@@ -22,6 +22,9 @@ function AppContent() {
     handleInsertLink,
     handleRemoveLink,
     handleInsertImage,
+    activeCodeBlockLanguage,
+    handleToggleCodeBlock,
+    handleSetCodeBlockLanguage,
   } = useEditorController();
 
   return (
@@ -40,6 +43,9 @@ function AppContent() {
         onInsertImage={() => void handleInsertImage()}
         canReload={Boolean(currentFilePath)}
         highlightReload={activeDocument.hasExternalChangeWarning}
+        activeCodeBlockLanguage={activeCodeBlockLanguage}
+        onToggleCodeBlock={handleToggleCodeBlock}
+        onSetCodeBlockLanguage={handleSetCodeBlockLanguage}
       />
       <EditorArea
         editor={editor}

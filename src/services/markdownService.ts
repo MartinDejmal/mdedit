@@ -55,15 +55,57 @@ export async function serializeEditorToMarkdown(
  */
 export function normalizeMarkdown(markdown: string): string {
   const withLf = markdown.replace(/\r\n?/g, "\n");
-  const trimmedTrailingWhitespace = withLf
-    .split("\n")
-    .map((line) => line.replace(/[\t ]+$/g, ""))
-    .join("\n");
-  const collapsedBlankRuns = trimmedTrailingWhitespace.replace(/\n{3,}/g, "\n\n");
-  const normalizedTaskMarkers = collapsedBlankRuns.replace(/\[(X)\]/g, "[x]");
-  const withoutTrailingNewlines = normalizedTaskMarkers.replace(/\n+$/g, "");
+  const lines = withLf.split("\n");
+  const normalized: string[] = [];
+  let inCodeFence = false;
+  let currentFence: "```" | "~~~" | null = null;
+  let pendingBlankLinesOutsideFence = 0;
 
-  return `${withoutTrailingNewlines}\n`;
+  const flushPendingBlankLines = () => {
+    if (pendingBlankLinesOutsideFence > 0) {
+      normalized.push("");
+      pendingBlankLinesOutsideFence = 0;
+    }
+  };
+
+  const toggleFenceState = (line: string): void => {
+    const marker = line.startsWith("```") ? "```" : line.startsWith("~~~") ? "~~~" : null;
+    if (!marker) return;
+
+    if (!inCodeFence) {
+      inCodeFence = true;
+      currentFence = marker;
+      return;
+    }
+
+    if (currentFence === marker) {
+      inCodeFence = false;
+      currentFence = null;
+    }
+  };
+
+  for (const line of lines) {
+    if (inCodeFence) {
+      normalized.push(line);
+      toggleFenceState(line);
+      continue;
+    }
+
+    const trimmed = line.replace(/[\t ]+$/g, "");
+    const normalizedTaskMarker = trimmed.replace(/\[(X)\]/g, "[x]");
+
+    if (!normalizedTaskMarker) {
+      pendingBlankLinesOutsideFence += 1;
+      continue;
+    }
+
+    flushPendingBlankLines();
+    normalized.push(normalizedTaskMarker);
+    toggleFenceState(normalizedTaskMarker);
+  }
+
+  const withoutTrailingBlankLines = normalized.join("\n").replace(/\n+$/g, "");
+  return `${withoutTrailingBlankLines}\n`;
 }
 
 async function markdownToHtml(markdown: string): Promise<string> {
