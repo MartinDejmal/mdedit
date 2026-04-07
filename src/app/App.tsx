@@ -8,14 +8,23 @@ import { useEditorController } from "../features/editor/useEditorController";
 
 export default function App() {
   const { isDirty, currentFilePath, activeDocument } = useDocumentStore();
-  const { editor, handleOpen, handleReload, handleSave, handleSaveAs } =
-    useEditorController();
+  const {
+    editor,
+    recentFiles,
+    handleOpen,
+    handleOpenRecent,
+    handleReload,
+    handleSave,
+    handleSaveAs,
+  } = useEditorController();
 
   return (
     <Layout>
       <Toolbar
         editor={editor}
         onOpen={() => void handleOpen()}
+        onOpenRecent={(path) => void handleOpenRecent(path)}
+        recentFiles={recentFiles}
         onReload={() => void handleReload()}
         onSave={() => void handleSave()}
         onSaveAs={() => void handleSaveAs()}
