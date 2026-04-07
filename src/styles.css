@@ -254,7 +254,14 @@ body {
 }
 
 .status-dirty {
-  color: var(--color-dirty);
   flex-shrink: 0;
   margin-left: 12px;
+}
+
+.status-dirty.is-modified {
+  color: var(--color-dirty);
+}
+
+.status-dirty.is-saved {
+  color: var(--color-text-muted);
 }

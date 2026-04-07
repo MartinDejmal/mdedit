@@ -1,0 +1,151 @@
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEditor, type Editor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+
+import { basename } from "../../lib/utils";
+import {
+  openDocument,
+  saveDocument,
+  saveDocumentAs,
+} from "../documents/documentService";
+import * as bridge from "../../services/tauriBridge";
+import { useDocumentStore } from "../../stores/documentStore";
+
+const APP_NAME = "mdedit";
+
+const WELCOME_HTML = `
+<h1>Welcome to mdedit</h1>
+<p>A lightweight WYSIWYG Markdown editor. Click <strong>Open</strong> in the toolbar to load a <code>.md</code> file, or start typing here.</p>
+<h2>Supported formatting</h2>
+<ul>
+  <li><strong>Bold</strong> and <em>italic</em> text</li>
+  <li>Headings, bullet &amp; ordered lists</li>
+  <li>Blockquotes and code blocks</li>
+  <li>Inline <code>code</code> and horizontal rules</li>
+</ul>
+<blockquote><p>Edit in rich text — save as Markdown.</p></blockquote>
+<pre><code>const hello = "world";</code></pre>
+<hr>
+<p>Use the toolbar above or standard keyboard shortcuts (Ctrl+B, Ctrl+I, …) to format text.</p>
+`;
+
+function buildWindowTitle(path: string | null, isDirty: boolean): string {
+  if (!path) return APP_NAME;
+  const prefix = isDirty ? "*" : "";
+  return `${prefix}${basename(path)} - ${APP_NAME}`;
+}
+
+function confirmDiscardUnsavedChanges(): Promise<boolean> {
+  return Promise.resolve(
+    window.confirm("You have unsaved changes. Discard them?")
+  );
+}
+
+export interface EditorController {
+  editor: Editor | null;
+  handleOpen: () => Promise<void>;
+  handleSave: () => Promise<void>;
+  handleSaveAs: () => Promise<void>;
+}
+
+export function useEditorController(): EditorController {
+  const isApplyingRemoteContent = useRef(false);
+  const allowCloseRef = useRef(false);
+  const { isDirty, currentFilePath, setDirty } = useDocumentStore();
+
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: WELCOME_HTML,
+    onUpdate: ({ editor: nextEditor }) => {
+      if (isApplyingRemoteContent.current) return;
+      const html = nextEditor.getHTML();
+      if (html.length > 0) {
+        setDirty(true);
+      }
+    },
+  });
+
+  const handleOpen = useCallback(async () => {
+    const result = await openDocument({
+      confirmDiscardChanges: confirmDiscardUnsavedChanges,
+    });
+
+    if (result.kind !== "opened" || !result.html || !editor) {
+      return;
+    }
+
+    isApplyingRemoteContent.current = true;
+    editor.commands.setContent(result.html, false);
+    isApplyingRemoteContent.current = false;
+  }, [editor]);
+
+  const handleSave = useCallback(async () => {
+    if (!editor) return;
+    await saveDocument(editor.getHTML());
+  }, [editor]);
+
+  const handleSaveAs = useCallback(async () => {
+    if (!editor) return;
+    await saveDocumentAs(editor.getHTML());
+  }, [editor]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        void handleSave();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [handleSave]);
+
+  useEffect(() => {
+    const title = buildWindowTitle(currentFilePath, isDirty);
+    void bridge.setWindowTitle(title);
+  }, [currentFilePath, isDirty]);
+
+  useEffect(() => {
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!useDocumentStore.getState().isDirty) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+
+    void bridge.onWindowCloseRequested(async (event) => {
+      if (allowCloseRef.current) {
+        return;
+      }
+
+      if (!useDocumentStore.getState().isDirty) {
+        return;
+      }
+
+      event.preventDefault();
+      const canDiscard = await confirmDiscardUnsavedChanges();
+      if (!canDiscard) return;
+
+      allowCloseRef.current = true;
+      await bridge.closeCurrentWindow();
+    }).then((cleanup) => {
+      unlisten = cleanup;
+    });
+
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+  return useMemo(
+    () => ({ editor, handleOpen, handleSave, handleSaveAs }),
+    [editor, handleOpen, handleSave, handleSaveAs]
+  );
+}

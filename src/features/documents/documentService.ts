@@ -1,72 +1,79 @@
 /**
  * Document service.
  *
- * Orchestrates the open/save workflow by combining the Tauri bridge (native
- * I/O), the markdown service (format conversion), and the document store
- * (application state).  React components should call these functions instead
- * of importing the bridge or store directly.
+ * Orchestrates open/save workflow by combining the Tauri bridge (native I/O),
+ * markdown conversion and the document store.
  */
 import { useDocumentStore } from "../../stores/documentStore";
 import * as bridge from "../../services/tauriBridge";
 import { markdownToHtml, htmlToMarkdown } from "../../services/markdownService";
+import type { OpenDocumentResult, SaveDocumentResult } from "../../types";
+
+export type ConfirmDiscardChanges = () => Promise<boolean>;
+
+interface OpenDocumentOptions {
+  confirmDiscardChanges?: ConfirmDiscardChanges;
+}
 
 /**
- * Opens the native file-picker dialog, reads the chosen Markdown file, and
- * returns the HTML string to load into the editor.  Updates the store with
- * the new file path and raw content.
- *
- * Returns `null` if the dialog was cancelled or the file could not be read.
+ * Open flow with dirty-check confirmation.
  */
-export async function openDocument(): Promise<string | null> {
-  const { setContent, setFilePath, resetDirty } =
-    useDocumentStore.getState();
+export async function openDocument(
+  options: OpenDocumentOptions = {}
+): Promise<OpenDocumentResult> {
+  const { isDirty, markLoaded } = useDocumentStore.getState();
+
+  if (isDirty && options.confirmDiscardChanges) {
+    const canDiscard = await options.confirmDiscardChanges();
+    if (!canDiscard) {
+      return { kind: "cancelled" };
+    }
+  }
 
   const filePath = await bridge.openFileDialog();
-  if (!filePath) return null;
+  if (!filePath) {
+    return { kind: "cancelled" };
+  }
 
   const markdown = await bridge.readTextFile(filePath);
   const html = await markdownToHtml(markdown);
 
-  setContent(markdown);
-  setFilePath(filePath);
-  resetDirty();
+  markLoaded({ markdown, path: filePath });
 
-  return html;
+  return { kind: "opened", html };
 }
 
 /**
- * Saves the current editor HTML to the currently open file path as Markdown.
- * Falls back to `saveDocumentAs` when no path is known yet.
+ * Save flow. If no file path exists, falls back to Save As.
  */
-export async function saveDocument(editorHtml: string): Promise<void> {
-  const { currentFilePath, setContent, resetDirty } =
-    useDocumentStore.getState();
+export async function saveDocument(editorHtml: string): Promise<SaveDocumentResult> {
+  const { currentFilePath, markSaved } = useDocumentStore.getState();
 
   if (!currentFilePath) {
-    await saveDocumentAs(editorHtml);
-    return;
+    return saveDocumentAs(editorHtml);
   }
 
   const markdown = await htmlToMarkdown(editorHtml);
   await bridge.saveTextFile(currentFilePath, markdown);
-  setContent(markdown);
-  resetDirty();
+  markSaved({ markdown, path: currentFilePath });
+
+  return { kind: "saved", path: currentFilePath };
 }
 
 /**
- * Shows the native save-file dialog, converts the editor HTML to Markdown,
- * and writes it to the chosen path.  Updates the store on success.
+ * Save As flow. Always opens native save dialog.
  */
-export async function saveDocumentAs(editorHtml: string): Promise<void> {
-  const { setContent, setFilePath, resetDirty } =
-    useDocumentStore.getState();
-
+export async function saveDocumentAs(
+  editorHtml: string
+): Promise<SaveDocumentResult> {
+  const { markSaved } = useDocumentStore.getState();
   const markdown = await htmlToMarkdown(editorHtml);
-  const savedPath = await bridge.saveFileDialog(markdown);
 
-  if (savedPath) {
-    setContent(markdown);
-    setFilePath(savedPath);
-    resetDirty();
+  const savedPath = await bridge.saveFileDialog(markdown);
+  if (!savedPath) {
+    return { kind: "cancelled" };
   }
+
+  markSaved({ markdown, path: savedPath });
+  return { kind: "saved", path: savedPath };
 }
