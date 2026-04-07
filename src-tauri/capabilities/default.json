@@ -1,0 +1,12 @@
+{
+  "identifier": "default",
+  "description": "Default capability granted to the main window.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "allow-open-file-dialog",
+    "allow-read-text-file",
+    "allow-save-text-file",
+    "allow-save-file-dialog"
+  ]
+}

@@ -1,0 +1,22 @@
+# Permissions for the four custom app commands exposed to the frontend.
+# Referenced by src-tauri/capabilities/default.json.
+
+[[permission]]
+identifier = "allow-open-file-dialog"
+description = "Allows invoking the open_file_dialog command."
+commands.allow = ["open_file_dialog"]
+
+[[permission]]
+identifier = "allow-read-text-file"
+description = "Allows invoking the read_text_file command."
+commands.allow = ["read_text_file"]
+
+[[permission]]
+identifier = "allow-save-text-file"
+description = "Allows invoking the save_text_file command."
+commands.allow = ["save_text_file"]
+
+[[permission]]
+identifier = "allow-save-file-dialog"
+description = "Allows invoking the save_file_dialog command."
+commands.allow = ["save_file_dialog"]
