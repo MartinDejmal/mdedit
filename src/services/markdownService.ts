@@ -49,6 +49,7 @@ export async function serializeEditorToMarkdown(
  * - normalises line endings to LF
  * - trims trailing whitespace on each line
  * - heuristically collapses >1 blank line between blocks
+ * - normalises task list marker casing ([X] -> [x])
  * - enforces exactly one trailing newline
  */
 export function normalizeMarkdown(markdown: string): string {
@@ -58,7 +59,8 @@ export function normalizeMarkdown(markdown: string): string {
     .map((line) => line.replace(/[\t ]+$/g, ""))
     .join("\n");
   const collapsedBlankRuns = trimmedTrailingWhitespace.replace(/\n{3,}/g, "\n\n");
-  const withoutTrailingNewlines = collapsedBlankRuns.replace(/\n+$/g, "");
+  const normalizedTaskMarkers = collapsedBlankRuns.replace(/\[(X)\]/g, "[x]");
+  const withoutTrailingNewlines = normalizedTaskMarkers.replace(/\n+$/g, "");
 
   return `${withoutTrailingNewlines}\n`;
 }
@@ -77,7 +79,12 @@ async function htmlToMarkdown(html: string): Promise<string> {
   const result = await unified()
     .use(rehypeParse, { fragment: true })
     .use(rehypeRemark)
-    .use(remarkStringify)
+    .use(remarkStringify, {
+      bullet: "-",
+      fences: true,
+      listItemIndent: "one",
+      strong: "*",
+    })
     .process(html);
 
   return String(result);

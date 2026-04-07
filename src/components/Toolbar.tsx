@@ -3,6 +3,14 @@
  */
 import type { Editor } from "@tiptap/react";
 
+import {
+  insertDefaultTable,
+  insertImage,
+  insertLink,
+  insertTaskList,
+  removeLink,
+} from "../features/editor/editorCommands";
+
 interface ToolbarProps {
   editor: Editor | null;
   onOpen: () => void;
@@ -106,6 +114,49 @@ export default function Toolbar({ editor, onOpen, onSave, onSaveAs }: ToolbarPro
           title="Code block"
         >
           {"</>"}
+        </button>
+
+        <button
+          onClick={() => editor && insertLink(editor)}
+          className={editor?.isActive("link") ? "active" : ""}
+          disabled={!editor}
+          title="Add link"
+        >
+          Link
+        </button>
+
+        <button
+          onClick={() => editor && removeLink(editor)}
+          disabled={!editor || !editor.isActive("link")}
+          title="Remove link"
+        >
+          Unlink
+        </button>
+
+        <button
+          onClick={() => editor && insertTaskList(editor)}
+          className={editor?.isActive("taskList") ? "active" : ""}
+          disabled={!editor}
+          title="Insert task list"
+        >
+          Task List
+        </button>
+
+        <button
+          onClick={() => editor && insertDefaultTable(editor)}
+          className={editor?.isActive("table") ? "active" : ""}
+          disabled={!editor}
+          title="Insert default table"
+        >
+          Table
+        </button>
+
+        <button
+          onClick={() => editor && insertImage(editor)}
+          disabled={!editor}
+          title="Insert image from URL"
+        >
+          Image
         </button>
       </div>
     </div>
