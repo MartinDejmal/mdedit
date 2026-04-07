@@ -3,13 +3,7 @@
  */
 import type { Editor } from "@tiptap/react";
 
-import {
-  insertDefaultTable,
-  insertImage,
-  insertLink,
-  insertTaskList,
-  removeLink,
-} from "../features/editor/editorCommands";
+import { insertDefaultTable, insertTaskList } from "../features/editor/editorCommands";
 import { basename } from "../lib/utils";
 
 interface ToolbarProps {
@@ -20,6 +14,9 @@ interface ToolbarProps {
   onReload: () => void;
   onSave: () => void;
   onSaveAs: () => void;
+  onInsertLink: () => void;
+  onRemoveLink: () => void;
+  onInsertImage: () => void;
   canReload: boolean;
   highlightReload: boolean;
 }
@@ -32,6 +29,9 @@ export default function Toolbar({
   onReload,
   onSave,
   onSaveAs,
+  onInsertLink,
+  onRemoveLink,
+  onInsertImage,
   canReload,
   highlightReload,
 }: ToolbarProps) {
@@ -163,7 +163,7 @@ export default function Toolbar({
         </button>
 
         <button
-          onClick={() => editor && insertLink(editor)}
+          onClick={onInsertLink}
           className={editor?.isActive("link") ? "active" : ""}
           disabled={!editor}
           title="Add link"
@@ -172,7 +172,7 @@ export default function Toolbar({
         </button>
 
         <button
-          onClick={() => editor && removeLink(editor)}
+          onClick={onRemoveLink}
           disabled={!editor || !editor.isActive("link")}
           title="Remove link"
         >
@@ -198,7 +198,7 @@ export default function Toolbar({
         </button>
 
         <button
-          onClick={() => editor && insertImage(editor)}
+          onClick={onInsertImage}
           disabled={!editor}
           title="Insert image from URL"
         >
