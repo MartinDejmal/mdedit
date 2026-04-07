@@ -5,6 +5,7 @@ import {
   type PersistedAppState,
 } from "../../services/appStateService";
 import {
+  createNewUntitledDocument,
   openDocument,
   openDocumentFromPath,
   reloadDocumentFromDisk,
@@ -13,6 +14,7 @@ import {
   type ConfirmDiscardChanges,
 } from "./documentService";
 import type { ConfirmOptions, ToastOptions } from "../ux/useAppUx";
+import { useDocumentStore } from "../../stores/documentStore";
 
 interface NotificationApi {
   info: (options: ToastOptions) => void;
@@ -55,6 +57,27 @@ export async function runOpenAction(
   } catch (error) {
     context.notify.error({
       title: "Open failed",
+      message: error instanceof Error ? error.message : "Unknown error.",
+    });
+  }
+}
+
+export async function runNewAction(context: FileActionContext): Promise<void> {
+  try {
+    const { isDirty } = useDocumentStore.getState();
+
+    if (isDirty) {
+      const canDiscard = await context.confirmDiscardChanges();
+      if (!canDiscard) {
+        return;
+      }
+    }
+
+    const result = createNewUntitledDocument();
+    context.setEditorHtml(result.html);
+  } catch (error) {
+    context.notify.error({
+      title: "New document failed",
       message: error instanceof Error ? error.message : "Unknown error.",
     });
   }

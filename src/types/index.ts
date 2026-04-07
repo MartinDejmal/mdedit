@@ -8,6 +8,8 @@ export interface FileMetadata {
 
 /** Metadata carried with the currently active document. */
 export interface ActiveDocument {
+  /** Current document mode in the single-pane workflow. */
+  kind: "none" | "untitled" | "file";
   /** Absolute path on disk; null for untitled documents. */
   path: string | null;
   /** Basename derived from path, or null for untitled documents. */
@@ -32,6 +34,8 @@ export interface ActiveDocument {
   lastObservedDiskMtime: number | null;
   /** True when current saved baseline is aligned with last known disk version. */
   isDiskVersionInSyncWithBaseline: boolean;
+  /** True after the current document has ever been saved/opened from disk. */
+  hasEverBeenSaved: boolean;
 }
 
 /** State shape managed by the document Zustand store. */
@@ -44,6 +48,10 @@ export interface DocumentState {
   isDirty: boolean;
   /** Absolute path of the file currently open; null if not yet saved. */
   currentFilePath: string | null;
+  /** True when editor currently points to an unsaved untitled document. */
+  isUntitled: boolean;
+  /** True when there is a document shown in editor (file or untitled). */
+  hasActiveDocument: boolean;
 }
 
 /** Mutating actions exposed by the document store. */
@@ -73,6 +81,10 @@ export interface DocumentActions {
   }) => void;
   /** Clear external change warning (e.g. after open/save). */
   clearExternalChangeWarning: () => void;
+  /** Start a new untitled document baseline. */
+  markNewUntitled: (payload: {
+    canonicalMarkdown: string;
+  }) => void;
 }
 
 export interface OpenDocumentResult {

@@ -8,6 +8,7 @@ import { basename } from "../lib/utils";
 
 interface ToolbarProps {
   editor: Editor | null;
+  onNew: () => void;
   onOpen: () => void;
   onOpenRecent: (path: string) => void;
   recentFiles: string[];
@@ -23,6 +24,7 @@ interface ToolbarProps {
 
 export default function Toolbar({
   editor,
+  onNew,
   onOpen,
   onOpenRecent,
   recentFiles,
@@ -38,6 +40,9 @@ export default function Toolbar({
   return (
     <div className="toolbar" role="toolbar" aria-label="Editor toolbar">
       <div className="toolbar-group">
+        <button onClick={onNew} title="New document (Ctrl/Cmd+N)">
+          New
+        </button>
         <button onClick={onOpen} title="Open Markdown file (Ctrl/Cmd+O)">
           Open
         </button>
