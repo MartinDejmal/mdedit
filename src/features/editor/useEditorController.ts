@@ -88,7 +88,6 @@ export interface EditorController {
 
 export function useEditorController(): EditorController {
   const isApplyingRemoteContent = useRef(false);
-  const allowCloseRef = useRef(false);
   const closeConfirmInFlightRef = useRef(false);
   const reconcileRunIdRef = useRef(0);
   const startupReopenDoneRef = useRef(false);
@@ -447,25 +446,10 @@ export function useEditorController(): EditorController {
   }, [currentFilePath, isDirty, isUntitled]);
 
   useEffect(() => {
-    const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (!useDocumentStore.getState().isDirty) return;
-      event.preventDefault();
-      event.returnValue = "";
-    };
-
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, []);
-
-  useEffect(() => {
     let unlisten: (() => void) | undefined;
 
     void bridge
       .onWindowCloseRequested(async (event) => {
-        if (allowCloseRef.current) {
-          return;
-        }
-
         if (!useDocumentStore.getState().isDirty) {
           return;
         }
@@ -480,11 +464,9 @@ export function useEditorController(): EditorController {
         closeConfirmInFlightRef.current = false;
         if (!canDiscard) return;
 
-        allowCloseRef.current = true;
         try {
-          await bridge.closeCurrentWindow();
+          await bridge.destroyCurrentWindow();
         } catch (error) {
-          allowCloseRef.current = false;
           notify.error({
             title: "Could not close window",
             message: error instanceof Error ? error.message : "Unknown error.",
