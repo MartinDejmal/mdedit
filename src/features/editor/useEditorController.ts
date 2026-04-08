@@ -43,6 +43,7 @@ import {
   setCodeBlockLanguage,
   toggleCodeBlock,
 } from "./editorCommands";
+import { useDragDropHandler } from "./useDragDropHandler";
 
 const APP_NAME = "mdedit";
 const RELOAD_ACCELERATOR = "CmdOrCtrl+Alt+R";
@@ -66,6 +67,7 @@ export interface EditorController {
   editor: Editor | null;
   recentFiles: string[];
   hasActiveDocument: boolean;
+  isDragOver: boolean;
   handleOpen: () => Promise<void>;
   handleNew: () => Promise<void>;
   handleOpenRecent: (path: string) => Promise<void>;
@@ -154,6 +156,8 @@ export function useEditorController(): EditorController {
   const handleOpen = useCallback(async () => {
     await runOpenAction(actionContext);
   }, [actionContext]);
+
+  const { isDragOver } = useDragDropHandler(actionContext);
 
   const handleNew = useCallback(async () => {
     await runNewAction(actionContext);
@@ -553,6 +557,7 @@ export function useEditorController(): EditorController {
       editor,
       recentFiles: persistedState.recentFiles,
       hasActiveDocument,
+      isDragOver,
       handleOpen,
       handleNew,
       handleOpenRecent,
@@ -588,6 +593,7 @@ export function useEditorController(): EditorController {
       handleSetCodeBlockLanguage,
       handleToggleOutline,
       hasActiveDocument,
+      isDragOver,
       persistedState.recentFiles,
       persistedState.ui.isOutlineVisible,
     ]

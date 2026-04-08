@@ -21,6 +21,8 @@ import {
 import type { ConfirmOptions, ToastOptions } from "../ux/useAppUx";
 import { useDocumentStore } from "../../stores/documentStore";
 
+const ALLOWED_DROP_EXTENSIONS = [".md", ".markdown", ".txt"];
+
 interface NotificationApi {
   info: (options: ToastOptions) => void;
   success: (options: ToastOptions) => void;
@@ -300,4 +302,47 @@ export function createDiscardChangesConfirmOptions(): ConfirmOptions {
     variant: "danger",
     confirmOnEnter: false,
   };
+}
+
+export async function runDropAction(
+  filePath: string,
+  context: FileActionContext
+): Promise<void> {
+  const lower = filePath.toLowerCase();
+  const isAllowed = ALLOWED_DROP_EXTENSIONS.some((ext) => lower.endsWith(ext));
+
+  if (!isAllowed) {
+    context.notify.error({
+      title: "Unsupported file type",
+      message: "Only Markdown (.md, .markdown) and text (.txt) files can be opened.",
+    });
+    return;
+  }
+
+  try {
+    const result = await openDocumentFromPath(filePath, {
+      confirmDiscardChanges: context.confirmDiscardChanges,
+    });
+
+    if (result.kind === "error") {
+      context.notify.error({
+        title: "Open failed",
+        message: result.message ?? "Unknown error.",
+      });
+      return;
+    }
+
+    if (result.kind !== "opened" || !result.html) {
+      return;
+    }
+
+    context.setEditorHtml(result.html);
+    const state = pushRecentFile(filePath);
+    context.onStateChanged(state);
+  } catch (error) {
+    context.notify.error({
+      title: "Drop failed",
+      message: error instanceof Error ? error.message : "Unknown error.",
+    });
+  }
 }
