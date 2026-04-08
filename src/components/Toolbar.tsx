@@ -2,10 +2,31 @@
  * Toolbar component.
  */
 import type { Editor } from "@tiptap/react";
+import {
+  Bold,
+  CheckSquare,
+  Code,
+  FilePlus,
+  FolderOpen,
+  Heading,
+  Image,
+  Italic,
+  Link,
+  List,
+  ListOrdered,
+  RefreshCw,
+  Save,
+  SaveAll,
+  Table,
+  Unlink,
+} from "lucide-react";
 
 import { SUPPORTED_CODE_BLOCK_LANGUAGES } from "../features/editor/codeBlockSyntax";
 import { insertDefaultTable, insertTaskList } from "../features/editor/editorCommands";
 import { basename } from "../lib/utils";
+import IconButton from "./IconButton";
+
+const ICON_SIZE = 18;
 
 interface ToolbarProps {
   editor: Editor | null;
@@ -49,13 +70,17 @@ export default function Toolbar({
 
   return (
     <div className="toolbar" role="toolbar" aria-label="Editor toolbar">
-      <div className="toolbar-group">
-        <button onClick={onNew} title="New document (Ctrl/Cmd+N)">
-          New
-        </button>
-        <button onClick={onOpen} title="Open Markdown file (Ctrl/Cmd+O)">
-          Open
-        </button>
+      <div className="toolbar-group" aria-label="File actions">
+        <IconButton
+          onClick={onNew}
+          title="New document (Ctrl/Cmd+N)"
+          icon={<FilePlus size={ICON_SIZE} strokeWidth={1.9} />}
+        />
+        <IconButton
+          onClick={onOpen}
+          title="Open Markdown file (Ctrl/Cmd+O)"
+          icon={<FolderOpen size={ICON_SIZE} strokeWidth={1.9} />}
+        />
         <select
           className="toolbar-recent-select"
           value=""
@@ -74,7 +99,7 @@ export default function Toolbar({
             </option>
           ))}
         </select>
-        <button
+        <IconButton
           onClick={onReload}
           disabled={!canReload}
           className={highlightReload ? "recommended" : ""}
@@ -83,99 +108,70 @@ export default function Toolbar({
               ? "Reload current file from disk (Ctrl/Cmd+Alt+R)"
               : "Reload is available only for saved files"
           }
-        >
-          Reload
-        </button>
-        <button onClick={onSave} title="Save file (Ctrl/Cmd+S)">
-          Save
-        </button>
-        <button onClick={onSaveAs} title="Save as... (Ctrl/Cmd+Shift+S)">
-          Save As
-        </button>
+          icon={<RefreshCw size={ICON_SIZE} strokeWidth={1.9} />}
+        />
+        <IconButton
+          onClick={onSave}
+          title="Save file (Ctrl/Cmd+S)"
+          icon={<Save size={ICON_SIZE} strokeWidth={1.9} />}
+        />
+        <IconButton
+          onClick={onSaveAs}
+          title="Save as... (Ctrl/Cmd+Shift+S)"
+          icon={<SaveAll size={ICON_SIZE} strokeWidth={1.9} />}
+        />
       </div>
 
       <div className="toolbar-divider" aria-hidden />
 
-      <div className="toolbar-group">
-        <button
+      <div className="toolbar-group" aria-label="Formatting">
+        <IconButton
           onClick={() => editor?.chain().focus().toggleBold().run()}
-          className={editor?.isActive("bold") ? "active" : ""}
+          active={Boolean(editor?.isActive("bold"))}
           disabled={!editor}
           title="Bold (Ctrl+B)"
-        >
-          <strong>B</strong>
-        </button>
+          icon={<Bold size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
+        <IconButton
           onClick={() => editor?.chain().focus().toggleItalic().run()}
-          className={editor?.isActive("italic") ? "active" : ""}
+          active={Boolean(editor?.isActive("italic"))}
           disabled={!editor}
           title="Italic (Ctrl+I)"
-        >
-          <em>I</em>
-        </button>
+          icon={<Italic size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
-          onClick={() =>
-            editor?.chain().focus().toggleHeading({ level: 1 }).run()
-          }
-          className={
-            editor?.isActive("heading", { level: 1 }) ? "active" : ""
-          }
+        <IconButton
+          onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+          active={Boolean(editor?.isActive("heading"))}
           disabled={!editor}
-          title="Heading 1"
-        >
-          H1
-        </button>
+          title="Heading"
+          icon={<Heading size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
-          onClick={() =>
-            editor?.chain().focus().toggleHeading({ level: 2 }).run()
-          }
-          className={
-            editor?.isActive("heading", { level: 2 }) ? "active" : ""
-          }
-          disabled={!editor}
-          title="Heading 2"
-        >
-          H2
-        </button>
-
-        <button
+        <IconButton
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          className={editor?.isActive("bulletList") ? "active" : ""}
+          active={Boolean(editor?.isActive("bulletList"))}
           disabled={!editor}
-          title="Bullet list"
-        >
-          • List
-        </button>
+          title="List"
+          icon={<List size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
+        <IconButton
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          className={editor?.isActive("orderedList") ? "active" : ""}
+          active={Boolean(editor?.isActive("orderedList"))}
           disabled={!editor}
           title="Ordered list"
-        >
-          1. List
-        </button>
+          icon={<ListOrdered size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
-          onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-          className={editor?.isActive("blockquote") ? "active" : ""}
-          disabled={!editor}
-          title="Blockquote"
-        >
-          ❝
-        </button>
-
-        <button
+        <IconButton
           onClick={onToggleCodeBlock}
-          className={editor?.isActive("codeBlock") ? "active" : ""}
+          active={Boolean(editor?.isActive("codeBlock"))}
           disabled={!editor}
           title="Code block"
-        >
-          {"</>"}
-        </button>
+          icon={<Code size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
         <label className={`code-language-control ${isCodeBlockActive ? "active" : ""}`}>
           <span>Code:</span>
@@ -196,49 +192,48 @@ export default function Toolbar({
             ))}
           </select>
         </label>
+      </div>
 
-        <button
+      <div className="toolbar-divider" aria-hidden />
+
+      <div className="toolbar-group" aria-label="Insert">
+        <IconButton
           onClick={onInsertLink}
-          className={editor?.isActive("link") ? "active" : ""}
+          active={Boolean(editor?.isActive("link"))}
           disabled={!editor}
-          title="Add link"
-        >
-          Link
-        </button>
+          title="Insert link"
+          icon={<Link size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
+        <IconButton
           onClick={onRemoveLink}
           disabled={!editor || !editor.isActive("link")}
           title="Remove link"
-        >
-          Unlink
-        </button>
+          icon={<Unlink size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
+        <IconButton
           onClick={() => editor && insertTaskList(editor)}
-          className={editor?.isActive("taskList") ? "active" : ""}
+          active={Boolean(editor?.isActive("taskList"))}
           disabled={!editor}
           title="Insert task list"
-        >
-          Task List
-        </button>
+          icon={<CheckSquare size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
+        <IconButton
           onClick={() => editor && insertDefaultTable(editor)}
-          className={editor?.isActive("table") ? "active" : ""}
+          active={Boolean(editor?.isActive("table"))}
           disabled={!editor}
-          title="Insert default table"
-        >
-          Table
-        </button>
+          title="Insert table"
+          icon={<Table size={ICON_SIZE} strokeWidth={1.9} />}
+        />
 
-        <button
+        <IconButton
           onClick={onInsertImage}
           disabled={!editor}
           title="Insert image from URL"
-        >
-          Image
-        </button>
+          icon={<Image size={ICON_SIZE} strokeWidth={1.9} />}
+        />
       </div>
     </div>
   );
