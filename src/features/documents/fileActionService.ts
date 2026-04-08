@@ -13,6 +13,11 @@ import {
   saveDocumentAs,
   type ConfirmDiscardChanges,
 } from "./documentService";
+import {
+  exportCurrentDocumentAsHtml,
+  exportCurrentDocumentAsPdf,
+  type ExportResult,
+} from "./exportService";
 import type { ConfirmOptions, ToastOptions } from "../ux/useAppUx";
 import { useDocumentStore } from "../../stores/documentStore";
 
@@ -34,6 +39,25 @@ export interface FileActionContext {
 
 export function getInitialPersistedState(): PersistedAppState {
   return loadAppState();
+}
+
+function notifyExportResult(result: ExportResult, context: FileActionContext): void {
+  if (result.kind === "cancelled") {
+    return;
+  }
+
+  if (result.kind === "error") {
+    context.notify.error({
+      title: "Export failed",
+      message: result.message,
+    });
+    return;
+  }
+
+  context.notify.success({
+    title: `Exported ${result.file.format.toUpperCase()}`,
+    message: result.file.path,
+  });
 }
 
 export async function runOpenAction(
@@ -149,6 +173,42 @@ export async function runSaveAsAction(
   } catch (error) {
     context.notify.error({
       title: "Save As failed",
+      message: error instanceof Error ? error.message : "Unknown error.",
+    });
+  }
+}
+
+export async function runExportHtmlAction(
+  context: FileActionContext
+): Promise<void> {
+  const editorHtml = context.getEditorHtml();
+  if (!editorHtml) return;
+
+  try {
+    await context.reconcileCanonicalFromEditorHtml(editorHtml);
+    const result = await exportCurrentDocumentAsHtml();
+    notifyExportResult(result, context);
+  } catch (error) {
+    context.notify.error({
+      title: "Export failed",
+      message: error instanceof Error ? error.message : "Unknown error.",
+    });
+  }
+}
+
+export async function runExportPdfAction(
+  context: FileActionContext
+): Promise<void> {
+  const editorHtml = context.getEditorHtml();
+  if (!editorHtml) return;
+
+  try {
+    await context.reconcileCanonicalFromEditorHtml(editorHtml);
+    const result = await exportCurrentDocumentAsPdf();
+    notifyExportResult(result, context);
+  } catch (error) {
+    context.notify.error({
+      title: "Export failed",
       message: error instanceof Error ? error.message : "Unknown error.",
     });
   }

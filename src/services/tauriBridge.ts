@@ -28,6 +28,28 @@ export async function saveFileDialog(content: string): Promise<string | null> {
   return invoke<string | null>("save_file_dialog", { content });
 }
 
+/** Shows HTML save dialog, writes `content`, and returns saved path. */
+export async function saveHtmlFileDialog(
+  content: string,
+  suggestedFileName: string
+): Promise<string | null> {
+  return invoke<string | null>("save_html_file_dialog", {
+    content,
+    suggestedFileName,
+  });
+}
+
+/** Shows PDF save dialog, writes generated PDF, and returns saved path. */
+export async function savePdfFileDialog(
+  markdown: string,
+  suggestedFileName: string
+): Promise<string | null> {
+  return invoke<string | null>("save_pdf_file_dialog", {
+    markdown,
+    suggestedFileName,
+  });
+}
+
 /** Reads lightweight file metadata used for external-change detection. */
 export async function getFileMetadata(path: string): Promise<FileMetadata> {
   return invoke<FileMetadata>("get_file_metadata", { path });

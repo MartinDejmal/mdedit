@@ -27,6 +27,8 @@ import {
   runReloadAction,
   runSaveAction,
   runSaveAsAction,
+  runExportHtmlAction,
+  runExportPdfAction,
   runStartupReopenAction,
   createDiscardChangesConfirmOptions,
 } from "../documents/fileActionService";
@@ -68,6 +70,8 @@ export interface EditorController {
   handleReload: () => Promise<void>;
   handleSave: () => Promise<void>;
   handleSaveAs: () => Promise<void>;
+  handleExportHtml: () => Promise<void>;
+  handleExportPdf: () => Promise<void>;
   handleInsertLink: () => Promise<void>;
   handleRemoveLink: () => void;
   handleInsertImage: () => Promise<void>;
@@ -168,6 +172,14 @@ export function useEditorController(): EditorController {
 
   const handleSaveAs = useCallback(async () => {
     await runSaveAsAction(actionContext);
+  }, [actionContext]);
+
+  const handleExportHtml = useCallback(async () => {
+    await runExportHtmlAction(actionContext);
+  }, [actionContext]);
+
+  const handleExportPdf = useCallback(async () => {
+    await runExportPdfAction(actionContext);
   }, [actionContext]);
 
   const handleInsertLink = useCallback(async () => {
@@ -309,6 +321,17 @@ export function useEditorController(): EditorController {
               action: () => void handleReload(),
             },
             await PredefinedMenuItem.new({ item: "Separator" }),
+            {
+              id: "file-export-html",
+              text: "Export as HTML…",
+              action: () => void handleExportHtml(),
+            },
+            {
+              id: "file-export-pdf",
+              text: "Export as PDF…",
+              action: () => void handleExportPdf(),
+            },
+            await PredefinedMenuItem.new({ item: "Separator" }),
             recentMenu,
             await PredefinedMenuItem.new({ item: "Separator" }),
             await PredefinedMenuItem.new({ item: "Quit" }),
@@ -354,6 +377,8 @@ export function useEditorController(): EditorController {
     handleReload,
     handleSave,
     handleSaveAs,
+    handleExportHtml,
+    handleExportPdf,
     persistedState.recentFiles,
   ]);
 
@@ -483,6 +508,8 @@ export function useEditorController(): EditorController {
       handleReload,
       handleSave,
       handleSaveAs,
+      handleExportHtml,
+      handleExportPdf,
       handleInsertLink,
       handleRemoveLink,
       handleInsertImage,
@@ -498,6 +525,8 @@ export function useEditorController(): EditorController {
       handleReload,
       handleSave,
       handleSaveAs,
+      handleExportHtml,
+      handleExportPdf,
       handleInsertLink,
       handleRemoveLink,
       handleInsertImage,

@@ -6,6 +6,8 @@ import {
   Bold,
   CheckSquare,
   Code,
+  FileCode,
+  FileDown,
   FilePlus,
   FolderOpen,
   Heading,
@@ -37,6 +39,8 @@ interface ToolbarProps {
   onReload: () => void;
   onSave: () => void;
   onSaveAs: () => void;
+  onExportHtml: () => void;
+  onExportPdf: () => void;
   onInsertLink: () => void;
   onRemoveLink: () => void;
   onInsertImage: () => void;
@@ -56,6 +60,8 @@ export default function Toolbar({
   onReload,
   onSave,
   onSaveAs,
+  onExportHtml,
+  onExportPdf,
   onInsertLink,
   onRemoveLink,
   onInsertImage,
@@ -119,6 +125,16 @@ export default function Toolbar({
           onClick={onSaveAs}
           title="Save as... (Ctrl/Cmd+Shift+S)"
           icon={<SaveAll size={ICON_SIZE} strokeWidth={1.9} />}
+        />
+        <IconButton
+          onClick={onExportHtml}
+          title="Export as HTML"
+          icon={<FileCode size={ICON_SIZE} strokeWidth={1.9} />}
+        />
+        <IconButton
+          onClick={onExportPdf}
+          title="Export as PDF"
+          icon={<FileDown size={ICON_SIZE} strokeWidth={1.9} />}
         />
       </div>
 
