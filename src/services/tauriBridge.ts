@@ -55,6 +55,11 @@ export async function getFileMetadata(path: string): Promise<FileMetadata> {
   return invoke<FileMetadata>("get_file_metadata", { path });
 }
 
+/** Returns command-line arguments passed to the application (program name excluded). */
+export async function getLaunchArgs(): Promise<string[]> {
+  return invoke<string[]>("get_launch_args");
+}
+
 /** Updates native window title. */
 export async function setWindowTitle(title: string): Promise<void> {
   await getCurrentWindow().setTitle(title);
