@@ -19,6 +19,8 @@ function AppContent() {
     handleReload,
     handleSave,
     handleSaveAs,
+    handleExportHtml,
+    handleExportPdf,
     handleInsertLink,
     handleRemoveLink,
     handleInsertImage,
@@ -38,6 +40,8 @@ function AppContent() {
         onReload={() => void handleReload()}
         onSave={() => void handleSave()}
         onSaveAs={() => void handleSaveAs()}
+        onExportHtml={() => void handleExportHtml()}
+        onExportPdf={() => void handleExportPdf()}
         onInsertLink={() => void handleInsertLink()}
         onRemoveLink={handleRemoveLink}
         onInsertImage={() => void handleInsertImage()}

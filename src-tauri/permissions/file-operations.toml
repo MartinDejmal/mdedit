@@ -1,4 +1,4 @@
-# Permissions for the four custom app commands exposed to the frontend.
+# Permissions for custom app commands exposed to the frontend.
 # Referenced by src-tauri/capabilities/default.json.
 
 [[permission]]
@@ -20,6 +20,16 @@ commands.allow = ["save_text_file"]
 identifier = "allow-save-file-dialog"
 description = "Allows invoking the save_file_dialog command."
 commands.allow = ["save_file_dialog"]
+
+[[permission]]
+identifier = "allow-save-html-file-dialog"
+description = "Allows invoking the save_html_file_dialog command."
+commands.allow = ["save_html_file_dialog"]
+
+[[permission]]
+identifier = "allow-save-pdf-file-dialog"
+description = "Allows invoking the save_pdf_file_dialog command."
+commands.allow = ["save_pdf_file_dialog"]
 
 [[permission]]
 identifier = "allow-get-file-metadata"
