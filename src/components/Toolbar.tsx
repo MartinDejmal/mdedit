@@ -21,6 +21,7 @@ import {
   SaveAll,
   Table,
   Unlink,
+  PanelLeft,
 } from "lucide-react";
 
 import { SUPPORTED_CODE_BLOCK_LANGUAGES } from "../features/editor/codeBlockSyntax";
@@ -49,6 +50,8 @@ interface ToolbarProps {
   activeCodeBlockLanguage: string | null;
   onToggleCodeBlock: () => void;
   onSetCodeBlockLanguage: (language: string) => void;
+  isOutlineVisible: boolean;
+  onToggleOutline: () => void;
 }
 
 export default function Toolbar({
@@ -70,6 +73,8 @@ export default function Toolbar({
   activeCodeBlockLanguage,
   onToggleCodeBlock,
   onSetCodeBlockLanguage,
+  isOutlineVisible,
+  onToggleOutline,
 }: ToolbarProps) {
   const isCodeBlockActive = Boolean(activeCodeBlockLanguage);
   const languageLabel = activeCodeBlockLanguage ?? "plaintext";
@@ -249,6 +254,17 @@ export default function Toolbar({
           disabled={!editor}
           title="Insert image from URL"
           icon={<Image size={ICON_SIZE} strokeWidth={1.9} />}
+        />
+      </div>
+
+      <div className="toolbar-divider" aria-hidden />
+
+      <div className="toolbar-group" aria-label="View">
+        <IconButton
+          onClick={onToggleOutline}
+          active={isOutlineVisible}
+          title="Toggle outline"
+          icon={<PanelLeft size={ICON_SIZE} strokeWidth={1.9} />}
         />
       </div>
     </div>

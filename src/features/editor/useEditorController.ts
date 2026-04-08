@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Menu, Submenu, PredefinedMenuItem } from "@tauri-apps/api/menu";
+import { CheckMenuItem, Menu, PredefinedMenuItem, Submenu } from "@tauri-apps/api/menu";
 
 import {
   CodeBlockWithSyntax,
@@ -16,6 +16,7 @@ import {
 } from "./editorExtensions";
 
 import { basename } from "../../lib/utils";
+import { saveAppState } from "../../services/appStateService";
 import * as bridge from "../../services/tauriBridge";
 import { useAppUx } from "../ux/useAppUx";
 import { useDocumentStore } from "../../stores/documentStore";
@@ -78,6 +79,8 @@ export interface EditorController {
   activeCodeBlockLanguage: string | null;
   handleToggleCodeBlock: () => void;
   handleSetCodeBlockLanguage: (language: string) => void;
+  isOutlineVisible: boolean;
+  handleToggleOutline: () => void;
 }
 
 export function useEditorController(): EditorController {
@@ -211,6 +214,20 @@ export function useEditorController(): EditorController {
     },
     [editor]
   );
+
+  const handleToggleOutline = useCallback(() => {
+    setPersistedState((current) => {
+      const nextState = {
+        ...current,
+        ui: {
+          ...current.ui,
+          isOutlineVisible: !current.ui.isOutlineVisible,
+        },
+      };
+      saveAppState(nextState);
+      return nextState;
+    });
+  }, []);
 
   useEffect(() => {
     if (!editor) {
@@ -352,8 +369,22 @@ export function useEditorController(): EditorController {
           ],
         });
 
+        const viewSubmenu = await Submenu.new({
+          text: "View",
+          items: [
+            await CheckMenuItem.new({
+              id: "view-toggle-outline",
+              text: "Toggle Outline",
+              checked: persistedState.ui.isOutlineVisible,
+              action: () => {
+                handleToggleOutline();
+              },
+            }),
+          ],
+        });
+
         const menu = await Menu.new({
-          items: [fileSubmenu, editSubmenu],
+          items: [fileSubmenu, editSubmenu, viewSubmenu],
         });
 
         if (!disposed) {
@@ -380,6 +411,8 @@ export function useEditorController(): EditorController {
     handleExportHtml,
     handleExportPdf,
     persistedState.recentFiles,
+    persistedState.ui.isOutlineVisible,
+    handleToggleOutline,
   ]);
 
   useEffect(() => {
@@ -516,6 +549,8 @@ export function useEditorController(): EditorController {
       activeCodeBlockLanguage,
       handleToggleCodeBlock,
       handleSetCodeBlockLanguage,
+      isOutlineVisible: persistedState.ui.isOutlineVisible,
+      handleToggleOutline,
     }),
     [
       editor,
@@ -533,8 +568,10 @@ export function useEditorController(): EditorController {
       activeCodeBlockLanguage,
       handleToggleCodeBlock,
       handleSetCodeBlockLanguage,
+      handleToggleOutline,
       hasActiveDocument,
       persistedState.recentFiles,
+      persistedState.ui.isOutlineVisible,
     ]
   );
 }

@@ -2,10 +2,15 @@ export interface AppSettings {
   reopenLastFileOnStartup: boolean;
 }
 
+export interface AppUiState {
+  isOutlineVisible: boolean;
+}
+
 export interface PersistedAppState {
   recentFiles: string[];
   lastOpenedFilePath: string | null;
   settings: AppSettings;
+  ui: AppUiState;
 }
 
 const STORAGE_KEY = "mdedit.appState.v1";
@@ -16,6 +21,9 @@ const DEFAULT_STATE: PersistedAppState = {
   lastOpenedFilePath: null,
   settings: {
     reopenLastFileOnStartup: true,
+  },
+  ui: {
+    isOutlineVisible: true,
   },
 };
 
@@ -30,6 +38,7 @@ function normalizeState(candidate: unknown): PersistedAppState {
 
   const draft = candidate as Partial<PersistedAppState> & {
     settings?: Partial<AppSettings>;
+    ui?: Partial<AppUiState>;
   };
 
   return {
@@ -42,6 +51,10 @@ function normalizeState(candidate: unknown): PersistedAppState {
       reopenLastFileOnStartup:
         draft.settings?.reopenLastFileOnStartup ??
         DEFAULT_STATE.settings.reopenLastFileOnStartup,
+    },
+    ui: {
+      isOutlineVisible:
+        draft.ui?.isOutlineVisible ?? DEFAULT_STATE.ui.isOutlineVisible,
     },
   };
 }
