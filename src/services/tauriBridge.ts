@@ -80,6 +80,11 @@ export async function closeCurrentWindow(): Promise<void> {
   await getCurrentWindow().close();
 }
 
+/** Destroys the current window immediately without re-emitting close-requested. */
+export async function destroyCurrentWindow(): Promise<void> {
+  await getCurrentWindow().destroy();
+}
+
 /** Registers a Tauri drag-drop event listener for the current window. */
 export async function onDragDropEvent(
   handler: (event: { payload: DragDropEvent }) => void
