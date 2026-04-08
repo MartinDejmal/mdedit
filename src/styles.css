@@ -158,6 +158,69 @@ body {
    Editor area
    ============================================================ */
 
+
+.editor-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.outline-sidebar {
+  width: clamp(190px, 19vw, 280px);
+  border-right: 1px solid var(--color-border);
+  background: #fafafa;
+  padding: 10px 8px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.outline-sidebar h2 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 4px 8px 10px;
+}
+
+.outline-empty {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  padding: 6px 8px;
+}
+
+.outline-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.outline-item {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  color: var(--color-text);
+  padding: 6px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outline-item:hover {
+  background: #f0f3f8;
+}
+
+.outline-item.active {
+  background: var(--color-btn-active-bg);
+  border-color: #d4e2f5;
+  color: #1f4d86;
+}
+
 .editor-wrapper {
   flex: 1;
   overflow-y: auto;

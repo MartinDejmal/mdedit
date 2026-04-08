@@ -5,9 +5,18 @@
  * created in App so it can be shared with the Toolbar without prop-drilling
  * through extra wrapper components.
  */
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FilePlus, FolderOpen, Sparkles } from "lucide-react";
 import { EditorContent, type Editor } from "@tiptap/react";
 import { basename } from "../../lib/utils";
+import OutlineSidebar from "../../components/OutlineSidebar";
+import {
+  areOutlineHeadingsEqual,
+  extractOutlineFromDoc,
+  getActiveHeadingId,
+  navigateToHeading,
+  type OutlineHeading,
+} from "./outline";
 
 interface EditorProps {
   editor: Editor | null;
@@ -16,6 +25,7 @@ interface EditorProps {
   onNew: () => void;
   onOpen: () => void;
   onOpenRecent: (path: string) => void;
+  isOutlineVisible: boolean;
 }
 
 export default function EditorArea({
@@ -25,7 +35,66 @@ export default function EditorArea({
   onNew,
   onOpen,
   onOpenRecent,
+  isOutlineVisible,
 }: EditorProps) {
+  const [outlineHeadings, setOutlineHeadings] = useState<OutlineHeading[]>([]);
+  const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
+  const outlineRef = useRef<OutlineHeading[]>([]);
+
+  const updateOutline = useCallback(() => {
+    if (!editor) {
+      outlineRef.current = [];
+      setOutlineHeadings([]);
+      setActiveHeadingId(null);
+      return;
+    }
+
+    const nextOutline = extractOutlineFromDoc(editor.state.doc);
+    outlineRef.current = nextOutline;
+
+    setOutlineHeadings((previous) =>
+      areOutlineHeadingsEqual(previous, nextOutline) ? previous : nextOutline
+    );
+    setActiveHeadingId(getActiveHeadingId(nextOutline, editor.state.selection.from));
+  }, [editor]);
+
+  const updateActiveHeading = useCallback(() => {
+    if (!editor) {
+      setActiveHeadingId(null);
+      return;
+    }
+
+    setActiveHeadingId(
+      getActiveHeadingId(outlineRef.current, editor.state.selection.from)
+    );
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) {
+      updateOutline();
+      return;
+    }
+
+    updateOutline();
+
+    editor.on("update", updateOutline);
+    editor.on("selectionUpdate", updateActiveHeading);
+
+    return () => {
+      editor.off("update", updateOutline);
+      editor.off("selectionUpdate", updateActiveHeading);
+    };
+  }, [editor, updateActiveHeading, updateOutline]);
+
+  const handleSelectHeading = useCallback(
+    (heading: OutlineHeading) => {
+      if (!editor) return;
+      navigateToHeading(editor, heading.pos);
+      setActiveHeadingId(heading.id);
+    },
+    [editor]
+  );
+
   if (showEmptyState) {
     return (
       <div className="editor-wrapper empty-state-shell">
@@ -66,8 +135,17 @@ export default function EditorArea({
   }
 
   return (
-    <div className="editor-wrapper">
-      <EditorContent editor={editor} className="editor-content" />
+    <div className="editor-main">
+      {isOutlineVisible ? (
+        <OutlineSidebar
+          headings={outlineHeadings}
+          activeHeadingId={activeHeadingId}
+          onSelectHeading={handleSelectHeading}
+        />
+      ) : null}
+      <div className="editor-wrapper">
+        <EditorContent editor={editor} className="editor-content" />
+      </div>
     </div>
   );
 }

@@ -27,6 +27,8 @@ function AppContent() {
     activeCodeBlockLanguage,
     handleToggleCodeBlock,
     handleSetCodeBlockLanguage,
+    isOutlineVisible,
+    handleToggleOutline,
   } = useEditorController();
 
   return (
@@ -50,6 +52,8 @@ function AppContent() {
         activeCodeBlockLanguage={activeCodeBlockLanguage}
         onToggleCodeBlock={handleToggleCodeBlock}
         onSetCodeBlockLanguage={handleSetCodeBlockLanguage}
+        isOutlineVisible={isOutlineVisible}
+        onToggleOutline={handleToggleOutline}
       />
       <EditorArea
         editor={editor}
@@ -58,6 +62,7 @@ function AppContent() {
         onNew={() => void handleNew()}
         onOpen={() => void handleOpen()}
         onOpenRecent={(path) => void handleOpenRecent(path)}
+        isOutlineVisible={isOutlineVisible}
       />
       <StatusBar
         isDirty={isDirty}
