@@ -85,6 +85,14 @@ export const TaskItemNode = Node.create({
     return ["li", mergeAttributes(HTMLAttributes, { "data-type": "taskItem" }), 0];
   },
 
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => this.editor.commands.splitListItem(this.name),
+      Tab: () => this.editor.commands.sinkListItem(this.name),
+      "Shift-Tab": () => this.editor.commands.liftListItem(this.name),
+    };
+  },
+
   addNodeView() {
     return ({ node, getPos, editor }) => {
       const li = document.createElement("li");
