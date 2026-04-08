@@ -5,6 +5,7 @@
  * created in App so it can be shared with the Toolbar without prop-drilling
  * through extra wrapper components.
  */
+import { FilePlus, FolderOpen, Sparkles } from "lucide-react";
 import { EditorContent, type Editor } from "@tiptap/react";
 import { basename } from "../../lib/utils";
 
@@ -29,11 +30,20 @@ export default function EditorArea({
     return (
       <div className="editor-wrapper empty-state-shell">
         <div className="empty-state-panel">
-          <h1>mdedit</h1>
+          <div className="empty-state-title-row">
+            <Sparkles size={16} strokeWidth={1.8} aria-hidden />
+            <h1>mdedit</h1>
+          </div>
           <p>Start a new document or open an existing Markdown file.</p>
           <div className="empty-state-actions">
-            <button onClick={onNew}>New</button>
-            <button onClick={onOpen}>Open</button>
+            <button className="empty-state-primary" onClick={onNew}>
+              <FilePlus size={16} strokeWidth={1.9} aria-hidden />
+              New
+            </button>
+            <button className="empty-state-primary" onClick={onOpen}>
+              <FolderOpen size={16} strokeWidth={1.9} aria-hidden />
+              Open
+            </button>
           </div>
           {recentFiles.length > 0 ? (
             <ul className="empty-state-recent-list" aria-label="Recent files">
