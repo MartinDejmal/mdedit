@@ -35,3 +35,8 @@ commands.allow = ["save_pdf_file_dialog"]
 identifier = "allow-get-file-metadata"
 description = "Allows invoking the get_file_metadata command."
 commands.allow = ["get_file_metadata"]
+
+[[permission]]
+identifier = "allow-get-launch-args"
+description = "Allows invoking the get_launch_args command."
+commands.allow = ["get_launch_args"]

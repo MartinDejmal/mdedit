@@ -31,6 +31,7 @@ import {
   runExportHtmlAction,
   runExportPdfAction,
   runStartupReopenAction,
+  runOpenFromArgAction,
   createDiscardChangesConfirmOptions,
 } from "../documents/fileActionService";
 import { reconcileCanonicalFromEditorHtml } from "../documents/documentService";
@@ -252,7 +253,24 @@ export function useEditorController(): EditorController {
   useEffect(() => {
     if (!editor || startupReopenDoneRef.current) return;
     startupReopenDoneRef.current = true;
-    void runStartupReopenAction(actionContext, persistedState);
+
+    const handleStartup = async () => {
+      // Check for a file path passed as a command-line argument (e.g. "Open With" on Windows).
+      try {
+        const args = await bridge.getLaunchArgs();
+        const filePath = args.find((arg) => !arg.startsWith("-"));
+        if (filePath) {
+          const opened = await runOpenFromArgAction(filePath, actionContext);
+          if (opened) return; // Arg-driven open succeeded; skip startup reopen.
+        }
+      } catch {
+        // getLaunchArgs unavailable in browser preview or other environments; fall through.
+      }
+
+      await runStartupReopenAction(actionContext, persistedState);
+    };
+
+    void handleStartup();
   }, [actionContext, editor, persistedState]);
 
   useEffect(() => {

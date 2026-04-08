@@ -237,6 +237,32 @@ export async function runReloadAction(
   context.notify.info({ title: "Reloaded from disk" });
 }
 
+export async function runOpenFromArgAction(
+  filePath: string,
+  context: FileActionContext
+): Promise<boolean> {
+  const result = await openDocumentFromPath(filePath, {
+    confirmDiscardChanges: context.confirmDiscardChanges,
+  });
+
+  if (result.kind === "error") {
+    context.notify.error({
+      title: "Could not open file",
+      message: result.message ?? "File not found.",
+    });
+    return false;
+  }
+
+  if (result.kind !== "opened" || !result.html) {
+    return false;
+  }
+
+  context.setEditorHtml(result.html);
+  const state = pushRecentFile(filePath);
+  context.onStateChanged(state);
+  return true;
+}
+
 export async function runStartupReopenAction(
   context: FileActionContext,
   state: PersistedAppState

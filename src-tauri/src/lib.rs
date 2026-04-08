@@ -226,6 +226,11 @@ async fn save_pdf_file_dialog(
 }
 
 #[tauri::command]
+fn get_launch_args() -> Vec<String> {
+    std::env::args().skip(1).collect()
+}
+
+#[tauri::command]
 async fn get_file_metadata(path: String) -> Result<FileMetadata, String> {
     let metadata = std::fs::metadata(path).map_err(|e| e.to_string())?;
     let modified_ms = metadata
@@ -241,6 +246,7 @@ async fn get_file_metadata(path: String) -> Result<FileMetadata, String> {
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            get_launch_args,
             open_file_dialog,
             read_text_file,
             save_text_file,
