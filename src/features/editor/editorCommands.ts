@@ -105,20 +105,12 @@ export async function insertImage(editor: Editor, requestInput: RequestInput): P
 }
 
 export function insertTaskList(editor: Editor): void {
-  editor
-    .chain()
-    .focus()
-    .insertContent({
-      type: "taskList",
-      content: [
-        {
-          type: "taskItem",
-          attrs: { checked: false },
-          content: [{ type: "paragraph" }],
-        },
-      ],
-    })
-    .run();
+  if (editor.isActive("taskList")) {
+    editor.chain().focus().liftListItem("taskItem").run();
+    return;
+  }
+
+  editor.chain().focus().wrapInList("taskList").run();
 }
 
 export function toggleCodeBlock(editor: Editor): void {

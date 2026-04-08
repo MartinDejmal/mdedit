@@ -10,6 +10,7 @@
     "allow-save-file-dialog",
     "allow-save-html-file-dialog",
     "allow-save-pdf-file-dialog",
-    "allow-get-file-metadata"
+    "allow-get-file-metadata",
+    "allow-get-launch-args"
   ]
 }
