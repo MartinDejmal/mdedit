@@ -6,7 +6,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { UnlistenFn } from "@tauri-apps/api/event";
+import type { DragDropEvent } from "@tauri-apps/api/webview";
 import type { FileMetadata } from "../types";
+
+export type { DragDropEvent };
 
 /** Shows the OS file-open dialog filtered to Markdown files. */
 export async function openFileDialog(): Promise<string | null> {
@@ -75,4 +78,11 @@ export async function onWindowCloseRequested(
 /** Closes current window (used after explicit discard confirmation). */
 export async function closeCurrentWindow(): Promise<void> {
   await getCurrentWindow().close();
+}
+
+/** Registers a Tauri drag-drop event listener for the current window. */
+export async function onDragDropEvent(
+  handler: (event: { payload: DragDropEvent }) => void
+): Promise<UnlistenFn> {
+  return getCurrentWindow().onDragDropEvent(handler);
 }

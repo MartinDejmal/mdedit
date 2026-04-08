@@ -13,6 +13,7 @@ function AppContent() {
     editor,
     recentFiles,
     hasActiveDocument,
+    isDragOver,
     handleNew,
     handleOpen,
     handleOpenRecent,
@@ -32,7 +33,7 @@ function AppContent() {
   } = useEditorController();
 
   return (
-    <Layout>
+    <Layout isDragOver={isDragOver}>
       <Toolbar
         editor={editor}
         onNew={() => void handleNew()}
