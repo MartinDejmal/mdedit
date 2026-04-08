@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 
 import { SUPPORTED_CODE_BLOCK_LANGUAGES } from "../features/editor/codeBlockSyntax";
-import { insertDefaultTable, insertTaskList } from "../features/editor/editorCommands";
+import { cycleHeading, insertDefaultTable, insertTaskList } from "../features/editor/editorCommands";
 import { basename } from "../lib/utils";
 import IconButton from "./IconButton";
 
@@ -163,10 +163,18 @@ export default function Toolbar({
         />
 
         <IconButton
-          onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+          onClick={() => editor && cycleHeading(editor)}
           active={Boolean(editor?.isActive("heading"))}
           disabled={!editor}
-          title="Heading"
+          title={
+            editor?.isActive("heading", { level: 1 })
+              ? "Heading: H1 → H2"
+              : editor?.isActive("heading", { level: 2 })
+                ? "Heading: H2 → H3"
+                : editor?.isActive("heading", { level: 3 })
+                  ? "Heading: H3 → Normal"
+                  : "Heading: Normal → H1"
+          }
           icon={<Heading size={ICON_SIZE} strokeWidth={1.9} />}
         />
 

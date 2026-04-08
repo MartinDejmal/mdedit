@@ -134,6 +134,18 @@ export function setCodeBlockLanguage(editor: Editor, language: string): void {
   editor.chain().focus().updateAttributes("codeBlock", { language: nextLanguage }).run();
 }
 
+export function cycleHeading(editor: Editor): void {
+  if (editor.isActive("heading", { level: 1 })) {
+    editor.chain().focus().setHeading({ level: 2 }).run();
+  } else if (editor.isActive("heading", { level: 2 })) {
+    editor.chain().focus().setHeading({ level: 3 }).run();
+  } else if (editor.isActive("heading", { level: 3 })) {
+    editor.chain().focus().setParagraph().run();
+  } else {
+    editor.chain().focus().setHeading({ level: 1 }).run();
+  }
+}
+
 export function insertDefaultTable(editor: Editor): void {
   editor
     .chain()
