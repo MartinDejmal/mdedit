@@ -1,152 +1,158 @@
 # mdedit
 
-A lightweight cross-platform WYSIWYG Markdown editor built with **Tauri 2**, **React**, **TypeScript**, and **Tiptap** (Typora-inspired single-pane editing).
+Lehký multiplatformní WYSIWYG Markdown editor inspirovaný Typorou. Projekt běží jako desktop aplikace nad **Tauri 2 + React 18 + TypeScript + Tiptap**.
 
-## What the app does today
+## Aktuální stav projektu (k 9. 4. 2026)
 
-- Open Markdown files (`.md`, `.markdown`, `.txt`) via native OS dialog.
-- Edit in a clean, single-pane WYSIWYG editor.
-- Save to the same path or via **Save As**.
-- Track dirty state (Saved/Modified) and show the active filename in the status bar.
-- Update the native window title (`*filename - mdedit` when modified).
-- Confirm before discarding unsaved changes (open/reload/close flow).
-- Detect external file changes (mtime check on app focus/visibility change) and highlight reload.
-- Keep a **Recent Files** list and reopen last file on startup (persisted in `localStorage`).
-- Provide toast notifications for open/save/reload flows and errors.
-- Offer toolbar actions for:
-  - Bold, italic, headings, ordered/bullet lists, blockquote, code block
-  - Links (insert/remove)
-  - Task list insertion
-  - Table insertion
-  - Image insertion via URL
-- Provide app menu items for File/Edit actions.
+mdedit je funkční desktopový editor zaměřený na rychlé psaní Markdownu bez přepínání mezi „edit/preview“ režimem. Aktuální větev obsahuje produkčně použitelný základ s otevřením, editací, uložením, exportem a správou stavu dokumentu.
 
-## Keyboard shortcuts
+### Co je hotové
 
+- Otevření souborů `.md`, `.markdown`, `.txt` přes nativní dialog.
+- Vytvoření **nového nepojmenovaného dokumentu** (`Untitled`).
+- Otevření souboru i přes **CLI argument** (např. „Open With“ z OS).
+- Drag-and-drop otevření podporovaných textových/markdown souborů.
+- Uložení (`Save`) i `Save As`.
+- Sledování `dirty` stavu a ochrana proti zahození neuložených změn.
+- Potvrzení při zavírání okna, pokud jsou neuložené změny.
+- Detekce externí změny souboru na disku (focus/visibility check + zvýrazněný reload).
+- Nativní title okna s indikací změn (`*` prefix při neuloženém stavu).
+- Persistovaný seznam „Recent Files“ + obnovení posledního souboru po startu.
+- Panel osnovy (outline sidebar) s navigací podle nadpisů.
+- Export do **HTML** a **PDF**.
+- Toolbar akce pro běžné formátování (bold/italic, nadpisy, seznamy, task list, tabulka, odkazy, obrázky URL, code block).
+- Výběr jazyka aktivního code blocku.
+- Aplikační menu (File/Edit/View) s klávesovými zkratkami.
+- Toast notifikace a potvrzovací dialogy pro hlavní workflow.
+
+### Známá omezení / další směr
+
+- Markdown ↔ HTML převod je praktický (MVP), ne plně bezztrátový pro všechny edge casy.
+- Obrázky jsou aktuálně vkládány primárně přes URL (bez kompletního asset pipeline).
+- Chybí robustnější sada automatických testů (unit/integration/e2e).
+- Témování (light/dark) a další UX polish je stále otevřené téma.
+
+## Přehled repozitáře
+
+### Struktura
+
+```text
+src/
+├── app/                    # Root kompozice aplikace
+├── components/             # Layout, toolbar, status bar, outline UI
+├── features/
+│   ├── documents/          # Open/save/reload/export orchestrace
+│   ├── editor/             # Tiptap editor + extensions + controller
+│   └── ux/                 # Toast + confirm dialog systém
+├── services/               # Tauri bridge, markdown pipeline, persisted app state
+├── stores/                 # Zustand dokumentový store
+├── types/                  # Sdílené typy
+└── lib/                    # Utility
+
+src-tauri/
+├── src/
+│   ├── main.rs             # Binární vstup
+│   └── lib.rs              # Tauri commandy (file ops, metadata, export PDF...)
+├── capabilities/           # Tauri v2 capability granty
+├── permissions/            # Vlastní command permissions
+└── tauri.conf.json         # Konfigurace aplikace
+```
+
+### Technologie
+
+| Vrstva | Technologie |
+|---|---|
+| Desktop shell | Tauri 2 |
+| UI | React 18 + TypeScript |
+| Build | Vite 5 |
+| Editor | Tiptap + StarterKit + vlastní extension vrstva |
+| Stav | Zustand |
+| Markdown pipeline | unified / remark / rehype |
+| Nativní bridge | Tauri commandy v Rustu + rfd |
+
+## Klávesové zkratky
+
+- `Ctrl/Cmd + N` → New
 - `Ctrl/Cmd + O` → Open
 - `Ctrl/Cmd + S` → Save
 - `Ctrl/Cmd + Shift + S` → Save As
 - `Ctrl/Cmd + Alt + R` → Reload from disk
 
-## Tech stack
+## Build a spuštění
 
-| Layer | Technology |
-|---|---|
-| Desktop shell | Tauri 2 |
-| UI | React 18 + TypeScript |
-| Build | Vite 5 |
-| Editor | Tiptap + StarterKit + custom extensions |
-| App state | Zustand |
-| Markdown pipeline | unified / remark / rehype |
-| Native bridge | Custom Tauri commands + rfd |
+### Předpoklady
 
-## Prerequisites
-
-- [Node.js](https://nodejs.org/) ≥ 18
-- [Rust](https://rustup.rs/) (stable toolchain)
-- **Linux only:** GTK 3 and WebKitGTK 4.1 development headers
+- Node.js >= 18
+- Rust (stable toolchain)
+- Linux: `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libssl-dev`
 
 ```bash
 # Ubuntu / Debian
 sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev libssl-dev
 ```
 
-## Getting started
+### Vývoj
 
 ```bash
-# 1) Install JS dependencies
 npm install
-
-# 2) Run Vite + Tauri desktop app
 npm run tauri dev
 ```
 
-First run also compiles the Rust backend, which can take a few minutes.
-
-## Build
+### Build
 
 ```bash
-# Frontend production build
 npm run build
-
-# (optional) Full desktop bundle
 npm run tauri build
 ```
 
-## Project structure
+## Stav commitů a pull requestů
 
-```text
-src/
-├── app/                    # Root app composition
-├── components/             # Layout, Toolbar, StatusBar
-├── features/
-│   ├── documents/          # Open/save/reload orchestrators
-│   ├── editor/             # Tiptap editor + extensions + controller
-│   └── ux/                 # Toast + confirm dialog system
-├── services/               # Tauri bridge, markdown transform, app state storage
-├── stores/                 # Zustand document state
-├── types/                  # Shared app types
-└── lib/                    # Utility helpers
+### Souhrn historie
 
-src-tauri/
-├── src/
-│   ├── main.rs             # Binary entrypoint
-│   └── lib.rs              # Tauri command handlers + bootstrap
-├── capabilities/           # Tauri v2 capability grants
-├── permissions/            # Custom command permissions
-└── tauri.conf.json         # Tauri app configuration
-```
+- Celkem commitů: **67**
+- Merge commitů (včetně PR merge): **26**
+- Nemerge commitů: **41**
+- Hlavní autoři dle `git shortlog`: 
+  - Martin Dejmal (44)
+  - copilot-swe-agent[bot] (23)
 
-## Architecture overview
+### Mergované Pull Requesty (chronologicky)
 
-```text
-┌──────────────────────────────────────────────────────┐
-│ UI / Presentation                                    │
-│ App · Toolbar · EditorArea · StatusBar · UX dialogs │
-├──────────────────────────────────────────────────────┤
-│ Application layer                                    │
-│ useEditorController · fileActionService             │
-│ documentService · appStateService                   │
-├──────────────────────────────────────────────────────┤
-│ State + conversion                                   │
-│ documentStore (Zustand) · markdownService           │
-├──────────────────────────────────────────────────────┤
-│ Native bridge (Tauri)                                │
-│ tauriBridge.ts → Rust commands (open/read/save/...) │
-└──────────────────────────────────────────────────────┘
-```
+| Datum | PR | Název |
+|---|---:|---|
+| 2026-04-07 | #1 | create-initial-project-structure |
+| 2026-04-07 | #2 | refactor-document-lifecycle-and-save-flow |
+| 2026-04-07 | #3 | implement-canonical-markdown-lifecycle |
+| 2026-04-07 | #4 | enhance-markdown-editor-with-new-features |
+| 2026-04-07 | #6 | fix-open-file-functionality |
+| 2026-04-07 | #7 | implement-external-change-handling-workflow |
+| 2026-04-07 | #8 | add-desktop-ergonomics-features |
+| 2026-04-07 | #10 | fix-save-command-issue |
+| 2026-04-07 | #11 | implement-notification-and-confirm-dialog-system |
+| 2026-04-08 | #12 | update-readme.md-next-steps-section |
+| 2026-04-08 | #13 | implement-reusable-input-dialog-for-links-and-images |
+| 2026-04-08 | #14 | implement-untitled-document-workflow |
+| 2026-04-08 | #15 | add-syntax-highlighting-for-code-blocks |
+| 2026-04-08 | #17 | fix-cannot-enter-text-in-document |
+| 2026-04-08 | #18 | add-export-workflows-for-html-and-pdf |
+| 2026-04-08 | #19 | polish-toolbar-ux-and-icons |
+| 2026-04-08 | #20 | add-navigation-sidebar-for-document-outline |
+| 2026-04-08 | #22 | handle-argument-driven-file-opening |
+| 2026-04-08 | #27 | fix-task-list-tool-issues |
+| 2026-04-08 | #28 | update-toolbar-heading-levels |
+| 2026-04-08 | #29 | add-drag-and-drop-document-opening |
+| 2026-04-09 | #31 | fix-close-window-issue |
+| 2026-04-09 | #33 | fix-outline-pane-generation |
+| 2026-04-09 | #34 | upgrade-pdf-export-to-match-html-layout |
 
-## Markdown processing model
+> Pozn.: V historii jsou i 2 technické merge commity z `main` bez PR čísla (`17425b3`, `fe0a4e0`).
 
-The editor flow uses three representations:
+### Poslední změny (nejnovější PR)
 
-1. **Raw markdown** loaded from disk.
-2. **Editor HTML** rendered in Tiptap.
-3. **Canonical markdown** generated from editor HTML and used for dirty checks + save.
+- **#34 (2026-04-09):** vylepšení PDF exportu na HTML-based multipage pipeline.
+- **#33 (2026-04-09):** oprava negenerování outline panelu při otevření dokumentu.
+- **#31 (2026-04-09):** oprava zavírání okna přes systémové close tlačítko.
 
-> Note: current HTML ↔ Markdown conversion is intentionally practical for MVP, not fully lossless for every markdown edge case.
+## Licence
 
-## Persistence behavior
-
-App-level state is stored in browser storage (`localStorage`) under `mdedit.appState.v1`:
-
-- recent files list (deduplicated, max 10)
-- last opened path
-- startup behavior flag (`reopenLastFileOnStartup`)
-
-## TODO
-
-- [x] **Window title** – reflect open filename and dirty state in the OS title bar
-- [x] **Close / quit confirmation** – prompt when quitting with unsaved changes
-- [x] **Recent files** – persist a list of recently opened paths
-- [ ] **Code block syntax highlighting** – add `@tiptap/extension-code-block-lowlight` with lowlight
-- [ ] **Image support** – improve beyond URL insertion (e.g., drag-and-drop/paste + local asset handling)
-- [ ] **Lossless Markdown roundtrip** – investigate Tiptap's `@tiptap/extension-markdown` for better serialisation
-- [x] **Keyboard shortcuts** – additional shortcuts (Open/Save/Save As/Reload)
-- [ ] **Theming** – light/dark mode toggle
-- [ ] **App icons** – replace the empty icon array with proper platform icons
-- [ ] **Tests** – add Vitest for service-layer unit tests
-
-## License
-
-MIT (see `LICENSE`).
+MIT (viz `LICENSE`).
