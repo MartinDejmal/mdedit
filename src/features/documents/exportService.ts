@@ -80,8 +80,15 @@ export async function exportCurrentDocumentAsHtml(): Promise<ExportResult> {
 export async function exportCurrentDocumentAsPdf(): Promise<ExportResult> {
   try {
     const context = buildExportContext();
+    const bodyHtml = await renderMarkdownToExportHtml(context.markdown);
+    const htmlDocument = buildHtmlDocument({
+      title: context.title,
+      bodyHtml,
+      printFriendly: true,
+    });
+
     const exportedPath = await bridge.savePdfFileDialog(
-      context.markdown,
+      htmlDocument,
       `${context.suggestedBaseName}.pdf`
     );
 

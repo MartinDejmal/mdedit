@@ -44,11 +44,11 @@ export async function saveHtmlFileDialog(
 
 /** Shows PDF save dialog, writes generated PDF, and returns saved path. */
 export async function savePdfFileDialog(
-  markdown: string,
+  htmlDocument: string,
   suggestedFileName: string
 ): Promise<string | null> {
   return invoke<string | null>("save_pdf_file_dialog", {
-    markdown,
+    htmlDocument,
     suggestedFileName,
   });
 }
