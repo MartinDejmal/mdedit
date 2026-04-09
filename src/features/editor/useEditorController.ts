@@ -129,7 +129,7 @@ export function useEditorController(): EditorController {
     (html: string) => {
       if (!editor) return;
       isApplyingRemoteContent.current = true;
-      editor.commands.setContent(html, false);
+      editor.commands.setContent(html, true);
       isApplyingRemoteContent.current = false;
       editor.commands.focus("start");
     },
