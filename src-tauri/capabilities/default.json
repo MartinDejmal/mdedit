@@ -4,6 +4,7 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:window:allow-destroy",
     "allow-open-file-dialog",
     "allow-read-text-file",
     "allow-save-text-file",
