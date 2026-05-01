@@ -45,7 +45,8 @@ import {
 } from "./editorCommands";
 import { useDragDropHandler } from "./useDragDropHandler";
 
-const APP_NAME = "mdedit";
+const APP_VERSION = __APP_VERSION__;
+const APP_NAME = `mdedit v${APP_VERSION}`;
 const RELOAD_ACCELERATOR = "CmdOrCtrl+Alt+R";
 
 const UNTITLED_NAME = "Untitled";

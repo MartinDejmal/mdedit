@@ -1,13 +1,19 @@
 {
   "name": "mdedit",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "sync:version": "node scripts/sync-version.mjs",
+    "release": "node scripts/release.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major",
+    "release:set": "node scripts/release.mjs set",
+    "build": "npm run sync:version && tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "npm run sync:version && tauri"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
