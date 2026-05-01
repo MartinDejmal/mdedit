@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mdedit – Uživatelská dokumentace</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-alt: #f8f9fa;
+      --bg-code: #f3f4f6;
+      --border: #e0e0e0;
+      --text: #1a1a2e;
+      --text-muted: #6b7280;
+      --accent: #4a90d9;
+      --accent-dark: #2e6da4;
+      --accent-light: #dbeafe;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --sidebar-w: 260px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+      display: flex;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      background: var(--bg-alt);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 24px 0 40px;
+      z-index: 100;
+    }
+
+    #sidebar .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+      text-decoration: none;
+    }
+
+    #sidebar .logo-icon {
+      width: 34px; height: 34px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    #sidebar .logo-text { font-weight: 700; font-size: 16px; color: var(--text); }
+    #sidebar .logo-sub  { font-size: 11px; color: var(--text-muted); margin-top: -2px; }
+
+    #sidebar nav { padding: 0 8px; }
+
+    #sidebar nav a {
+      display: block;
+      padding: 5px 12px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: background .15s, color .15s;
+    }
+    #sidebar nav a:hover   { background: #e9edf2; color: var(--text); }
+    #sidebar nav a.active  { background: var(--accent-light); color: var(--accent-dark); font-weight: 600; }
+
+    #sidebar nav .section-heading {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      padding: 14px 12px 4px;
+    }
+
+    #sidebar nav a.sub { padding-left: 24px; font-size: 13px; }
+
+    /* ── Main content ─────────────────────────────────────────── */
+    #content {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      min-width: 0;
+      padding: 48px 56px 80px;
+      max-width: calc(var(--sidebar-w) + 860px);
+    }
+
+    /* ── Typography ───────────────────────────────────────────── */
+    h1 { font-size: 2.1rem; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin: 52px 0 16px; padding-top: 52px;
+         border-top: 1px solid var(--border); }
+    h3 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 10px; color: var(--accent-dark); }
+    h4 { font-size: .95rem; font-weight: 700; margin: 20px 0 6px; }
+    p  { margin-bottom: 12px; }
+
+    .lead { font-size: 1.05rem; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
+
+    /* ── Links ────────────────────────────────────────────────── */
+    a { color: var(--accent-dark); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Code ─────────────────────────────────────────────────── */
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: .85em;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+    }
+
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      line-height: 1.5;
+    }
+    pre code { background: none; border: none; padding: 0; font-size: .88em; }
+
+    /* ── Tables ───────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 14px;
+    }
+    thead { background: var(--bg-alt); }
+    th, td { border: 1px solid var(--border); padding: 9px 14px; text-align: left; }
+    th { font-weight: 600; }
+    tr:nth-child(even) td { background: #fbfcfd; }
+
+    /* ── Callouts ─────────────────────────────────────────────── */
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-light);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin: 16px 0 24px;
+    }
+    .callout.tip    { border-color: var(--success); background: #f0fdf4; }
+    .callout.warn   { border-color: var(--warning); background: #fffbeb; }
+    .callout.danger { border-color: var(--danger);  background: #fef2f2; }
+    .callout strong { display: block; margin-bottom: 4px; font-size: .85rem;
+                      text-transform: uppercase; letter-spacing: .06em; }
+    .callout.tip    strong { color: var(--success); }
+    .callout.warn   strong { color: var(--warning); }
+    .callout.danger strong { color: var(--danger); }
+
+    /* ── Lists ────────────────────────────────────────────────── */
+    ul, ol { padding-left: 22px; margin-bottom: 14px; }
+    li { margin-bottom: 4px; }
+    li > ul, li > ol { margin-bottom: 4px; margin-top: 4px; }
+
+    /* ── KBD ──────────────────────────────────────────────────── */
+    kbd {
+      display: inline-block;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .78em;
+      background: #fff;
+      border: 1px solid #c8d0da;
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      padding: 1px 7px;
+      white-space: nowrap;
+      color: var(--text);
+    }
+
+    /* ── Badges / pills ───────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      font-size: .72em;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      vertical-align: middle;
+    }
+    .badge-blue   { background: var(--accent-light); color: var(--accent-dark); }
+    .badge-green  { background: #dcfce7; color: #15803d; }
+    .badge-orange { background: #ffedd5; color: #c2410c; }
+    .badge-gray   { background: #f3f4f6; color: #4b5563; }
+
+    /* ── Feature grid ─────────────────────────────────────────── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 20px 0 28px;
+    }
+
+    .feature-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: var(--bg-alt);
+    }
+    .feature-card .icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .feature-card h4    { margin: 0 0 5px; font-size: .92rem; }
+    .feature-card p     { font-size: .82rem; color: var(--text-muted); margin: 0; line-height: 1.5; }
+
+    /* ── Screenshot placeholder ───────────────────────────────── */
+    .ui-diagram {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.65;
+      margin: 16px 0 24px;
+      overflow-x: auto;
+      white-space: pre;
+      color: var(--text-muted);
+    }
+    .ui-diagram .hi { color: var(--accent-dark); font-weight: 700; }
+
+    /* ── Section anchor offset ────────────────────────────────── */
+    h2[id], h3[id] { scroll-margin-top: 24px; }
+
+    /* ── Divider ──────────────────────────────────────────────── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+    /* ── Footer ───────────────────────────────────────────────── */
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 760px) {
+      :root { --sidebar-w: 0px; }
+      #sidebar { display: none; }
+      #content { padding: 28px 20px 60px; }
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<aside id="sidebar">
+  <a class="logo" href="#uvod">
+    <div class="logo-icon">md</div>
+    <div>
+      <div class="logo-text">mdedit</div>
+      <div class="logo-sub">Uživatelská dokumentace</div>
+    </div>
+  </a>
+
+  <nav>
+    <div class="section-heading">Začínáme</div>
+    <a href="#uvod">Úvod</a>
+    <a href="#rozhrani">Rozhraní editoru</a>
+
+    <div class="section-heading">Práce se soubory</div>
+    <a href="#novy-dokument">Nový dokument</a>
+    <a href="#otevreni">Otevření souboru</a>
+    <a href="#ulozeni">Uložení souboru</a>
+    <a href="#export">Export</a>
+    <a href="#posledni-soubory">Poslední soubory</a>
+
+    <div class="section-heading">Editace textu</div>
+    <a href="#formatovani">Formátování textu</a>
+    <a href="#nadpisy">Nadpisy</a>
+    <a href="#seznamy">Seznamy</a>
+    <a href="#tabulky">Tabulky</a>
+    <a href="#code">Kód a bloky kódu</a>
+    <a href="#odkazy">Odkazy a obrázky</a>
+    <a href="#ostatni-bloky">Ostatní blokové prvky</a>
+
+    <div class="section-heading">UI komponenty</div>
+    <a href="#toolbar">Nástrojová lišta</a>
+    <a href="#osnova">Panel osnovy</a>
+    <a href="#statusbar">Stavový řádek</a>
+    <a href="#notifikace">Notifikace</a>
+    <a href="#dialogy">Dialogy</a>
+
+    <div class="section-heading">Pokročilé</div>
+    <a href="#klávesové-zkratky">Klávesové zkratky</a>
+    <a href="#markdown">Podporovaný Markdown</a>
+    <a href="#drag-drop">Drag &amp; Drop</a>
+    <a href="#externi-zmeny">Detekce externích změn</a>
+    <a href="#otevreni-argumentem">Otevření argumentem</a>
+  </nav>
+</aside>
+
+<!-- ═══════════════════════ CONTENT ═══════════════════════ -->
+<main id="content">
+
+  <!-- ── Úvod ─────────────────────────────────────── -->
+  <section id="uvod">
+    <h1>mdedit – Uživatelská dokumentace</h1>
+    <p class="lead">
+      mdedit je lehký desktopový editor Markdown dokumentů s přímým WYSIWYG editováním.
+      Nevyžaduje přepínání mezi režimem editace a náhledu – formátování vidíte ihned při psaní.
+    </p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">✏️</div>
+        <h4>WYSIWYG editace</h4>
+        <p>Píšete přímo naformátovaný text, bez nutnosti zobrazovat raw Markdown syntaxi.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💾</div>
+        <h4>Ukládání do .md</h4>
+        <p>Dokumenty se ukládají jako čisté Markdown soubory kompatibilní s libovolným editorem.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📤</div>
+        <h4>Export HTML &amp; PDF</h4>
+        <p>Jedním klikem exportujete dokument do HTML nebo PDF s profesionálním formátováním.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🖥️</div>
+        <h4>Multiplatformní</h4>
+        <p>Funguje nativně na Windows, macOS i Linuxu díky technologii Tauri.</p>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <strong>Technologie</strong>
+      mdedit je postaven na <strong>Tauri 2</strong> (Rust backend), <strong>React 18</strong> a <strong>Tiptap</strong> (WYSIWYG editor). Markdown soubory jsou standardní GFM (GitHub Flavored Markdown).
+    </div>
+  </section>
+
+  <!-- ── Rozhraní editoru ───────────────────────── -->
+  <section id="rozhrani">
+    <h2>Rozhraní editoru</h2>
+    <p>Hlavní okno aplikace se skládá ze čtyř oblastí:</p>
+
+    <div class="ui-diagram"><span class="hi">┌──────────────────────────────────────────────────────────────────┐
+│                        NÁSTROJOVÁ LIŠTA                          │
+│  [Soubor]  [Formátování]  [Vložení]  [Zobrazení]                 │
+├──────────────────┬───────────────────────────────────────────────┤
+│                  │                                               │
+│   PANEL OSNOVY   │            EDITOR (WYSIWYG)                   │
+│   (volitelný)    │                                               │
+│                  │     Psaný obsah dokumentu – max. 780 px       │
+│   H1 Nadpis 1    │                                               │
+│     H2 Nadpis 2  │                                               │
+│       H3 Pod     │                                               │
+│                  │                                               │
+├──────────────────┴───────────────────────────────────────────────┤
+│  STAVOVÝ ŘÁDEK  |  název souboru  |  stav uložení / upozornění  │
+└──────────────────────────────────────────────────────────────────┘</span></div>
+
+    <h3 id="prazdny-stav">Prázdný stav (žádný otevřený dokument)</h3>
+    <p>
+      Pokud není otevřen žádný dokument, zobrazí se centrovaná uvítací obrazovka s logem aplikace,
+      tlačítky <strong>Nový</strong> a <strong>Otevřít</strong> a rychlým přístupem k naposledy
+      otevřeným souborům (max. 5 položek).
+    </p>
+  </section>
+
+  <!-- ── Nový dokument ──────────────────────────── -->
+  <section id="novy-dokument">
+    <h2>Nový dokument</h2>
+    <p>
+      Vytvoří prázdný nepojmenovaný dokument s názvem <em>Untitled</em>.
+      Dokument není uložen na disk dokud nezvolíte <strong>Uložit jako…</strong>.
+    </p>
+
+    <h4>Jak vytvořit nový dokument</h4>
+    <ul>
+      <li>Klávesová zkratka <kbd>Ctrl</kbd>+<kbd>N</kbd> (Windows/Linux) nebo <kbd>⌘</kbd>+<kbd>N</kbd> (macOS)</li>
+      <li>Tlačítko <strong>Nový dokument</strong> (ikona <em>FilePlus</em>) v nástrojové liště</li>
+      <li>Nabídka <strong>Soubor → Nový</strong></li>
+      <li>Tlačítko <strong>Nový</strong> na uvítací obrazovce</li>
+    </ul>
+
+    <div class="callout warn">
+      <strong>Upozornění</strong>
+      Pokud máte otevřený dokument s neuloženými změnami, zobrazí se potvrzovací dialog. Změny budou zahozeny teprve po vašem souhlasu.
+    </div>
+  </section>
+
+  <!-- ── Otevření souboru ───────────────────────── -->
+  <section id="otevreni">
+    <h2>Otevření souboru</h2>
+    <p>mdedit umí otevírat soubory ve formátech <code>.md</code>, <code>.markdown</code> a <code>.txt</code>.</p>
+
+    <h3>Způsoby otevření</h3>
+
+    <h4>Dialogové okno systému</h4>
+    <ul>
+      <li>Klávesová zkratka <kbd>Ctrl</kbd>+<kbd>O</kbd> / <kbd>⌘</kbd>+<kbd>O</kbd></li>
+      <li>Tlačítko <strong>Otevřít soubor</strong> (ikona <em>FolderOpen</em>) v nástrojové liště</li>
+      <li>Nabídka <strong>Soubor → Otevřít…</strong></li>
+      <li>Tlačítko <strong>Otevřít</strong> na uvítací obrazovce</li>
+    </ul>
+
+    <h4 id="drag-drop">Přetažení souboru (Drag &amp; Drop)</h4>
+    <p>
+      Přetáhněte soubor <code>.md</code>, <code>.markdown</code> nebo <code>.txt</code>
+      přímo na okno aplikace. Při přetahování se zobrazí modrý překryvný rámeček
+      s textem <em>„Drop to open file"</em>. Po puštění se soubor otevře.
+    </p>
+    <div class="callout">
+      <strong>Poznámka</strong>
+      Pokud přetáhnete soubor v nepodporovaném formátu, zobrazí se chybová notifikace.
+      Při přetažení více souborů se otevře pouze první z nich.
+    </div>
+
+    <h4 id="otevreni-argumentem">Otevření z příkazové řádky / „Otevřít v programu"</h4>
+    <p>
+      mdedit podporuje otevírání souborů předaných jako argument při spuštění aplikace.
+      Funguje to při:
+    </p>
+    <ul>
+      <li>Spuštění z příkazové řádky s cestou k souboru jako argumentem</li>
+      <li>Systémovém „Otevřít v programu" (pravé tlačítko → Otevřít pomocí → mdedit)</li>
+    </ul>
+    <p>
+      Pokud je při spuštění předán soubor tímto způsobem, automatické znovuotevření
+      naposledy editovaného souboru se přeskočí.
+    </p>
+  </section>
+
+  <!-- ── Uložení souboru ───────────────────────── -->
+  <section id="ulozeni">
+    <h2>Uložení souboru</h2>
+
+    <h3>Uložit (Save)</h3>
+    <p>
+      Uloží aktuální dokument na stejné místo, odkud byl otevřen.
+      Pokud jde o nový nepojmenovaný dokument, chování je stejné jako <em>Uložit jako…</em>.
+    </p>
+    <ul>
+      <li><kbd>Ctrl</kbd>+<kbd>S</kbd> / <kbd>⌘</kbd>+<kbd>S</kbd></li>
+      <li>Tlačítko <strong>Uložit</strong> (ikona <em>Save</em>) v nástrojové liště</li>
+      <li>Nabídka <strong>Soubor → Uložit</strong></li>
+    </ul>
+
+    <h3>Uložit jako… (Save As)</h3>
+    <p>
+      Vždy otevře systémový dialog pro výběr umístění a názvu souboru.
+      Výchozí přípona je <code>.md</code>.
+    </p>
+    <ul>
+      <li><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> / <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd></li>
+      <li>Tlačítko <strong>Uložit jako</strong> (ikona <em>SaveAll</em>) v nástrojové liště</li>
+      <li>Nabídka <strong>Soubor → Uložit jako…</strong></li>
+    </ul>
+
+    <h3>Opětovné načtení ze disku (Reload)</h3>
+    <p>
+      Znovu načte aktuálně otevřený soubor z disku a zahodí všechny neuložené změny.
+      Tlačítko je dostupné pouze tehdy, pokud byl soubor dříve uložen.
+    </p>
+    <ul>
+      <li><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> / <kbd>⌘</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd></li>
+      <li>Tlačítko <strong>Obnovit ze disku</strong> (ikona <em>RefreshCw</em>) v nástrojové liště</li>
+      <li>Nabídka <strong>Soubor → Reload from disk</strong></li>
+    </ul>
+
+    <h3>Indikátor neuložených změn</h3>
+    <p>
+      Pokud máte neuložené změny, zobrazuje se:
+    </p>
+    <ul>
+      <li>Hvězdička (<code>*</code>) v záhlaví okna vedle názvu souboru</li>
+      <li>Text <strong>Modified</strong> (oranžově) ve stavovém řádku</li>
+    </ul>
+    <p>Po uložení se zobrazí zelená notifikace <em>„Saved"</em> a indikátor zmizí.</p>
+  </section>
+
+  <!-- ── Export ──────────────────────────────────── -->
+  <section id="export">
+    <h2>Export dokumentu</h2>
+    <p>mdedit umožňuje exportovat dokument do dvou formátů, přístupných z nástrojové lišty nebo nabídky <strong>Soubor</strong>.</p>
+
+    <h3>Export do HTML</h3>
+    <p>
+      Vytvoří samostatný HTML soubor se vloženým CSS stylingem.
+      Výsledný soubor lze otevřít v jakémkoliv webovém prohlížeči bez dalších závislostí.
+    </p>
+    <ul>
+      <li>Tlačítko <strong>Export HTML</strong> (ikona <em>FileCode</em>) v nástrojové liště</li>
+      <li>Nabídka <strong>Soubor → Export as HTML…</strong></li>
+    </ul>
+
+    <h3>Export do PDF</h3>
+    <p>
+      Vytvoří tiskově připravený PDF soubor s více stránkami, správnými okraji a zalamováním stránek.
+      PDF je generováno z interního HTML rendereru, takže vizuálně odpovídá HTML exportu.
+    </p>
+    <ul>
+      <li>Tlačítko <strong>Export PDF</strong> (ikona <em>FileDown</em>) v nástrojové liště</li>
+      <li>Nabídka <strong>Soubor → Export as PDF…</strong></li>
+    </ul>
+
+    <div class="callout tip">
+      <strong>Tip</strong>
+      Navrhovaný název exportovaného souboru se automaticky odvozuje od názvu aktuálního dokumentu.
+    </div>
+  </section>
+
+  <!-- ── Poslední soubory ────────────────────────── -->
+  <section id="posledni-soubory">
+    <h2>Poslední soubory</h2>
+    <p>
+      mdedit si pamatuje posledních <strong>10 otevřených souborů</strong>.
+      Přístup k nim je možný třemi způsoby:
+    </p>
+    <ul>
+      <li>Rozbalovací nabídka <strong>Poslední soubory</strong> v nástrojové liště (ikona šipky dolů)</li>
+      <li>Nabídka <strong>Soubor → Recent Files</strong> (podnabídka)</li>
+      <li>Uvítací obrazovka (zobrazuje posledních 5 souborů)</li>
+    </ul>
+    <p>
+      Soubory, které již na disku neexistují, jsou ze seznamu automaticky odstraněny.
+    </p>
+
+    <h3>Automatické znovuotevření</h3>
+    <p>
+      Při spuštění aplikace se automaticky otevře naposledy editovaný soubor.
+      Toto chování je implicitně zapnuto a lze jej změnit v nastavení aplikace.
+    </p>
+  </section>
+
+  <!-- ── Formátování textu ──────────────────────── -->
+  <section id="formatovani">
+    <h2>Formátování textu</h2>
+    <p>
+      Formátování lze aplikovat pomocí tlačítek v nástrojové liště nebo klávesovými zkratkami.
+      Formátování funguje jak na vybraný text, tak jako přepínač pro nově psaný text.
+    </p>
+
+    <h3>Tučný text (Bold)</h3>
+    <p>Zobrazí text <strong>tučně</strong>. V Markdown se ukládá jako <code>**text**</code>.</p>
+    <ul>
+      <li>Klávesová zkratka: <kbd>Ctrl</kbd>+<kbd>B</kbd></li>
+      <li>Tlačítko <strong>B</strong> v nástrojové liště</li>
+    </ul>
+
+    <h3>Kurzíva (Italic)</h3>
+    <p>Zobrazí text <em>kurzívou</em>. V Markdown se ukládá jako <code>*text*</code>.</p>
+    <ul>
+      <li>Klávesová zkratka: <kbd>Ctrl</kbd>+<kbd>I</kbd></li>
+      <li>Tlačítko <strong><em>I</em></strong> v nástrojové liště</li>
+    </ul>
+
+    <h3>Inline kód</h3>
+    <p>Zvýrazní část textu jako kód ve fontu monospace. V Markdown se ukládá jako <code>`kód`</code>.</p>
+    <p>Lze použít psaním backtick znaku (<code>`</code>) přímo v editoru.</p>
+  </section>
+
+  <!-- ── Nadpisy ────────────────────────────────── -->
+  <section id="nadpisy">
+    <h2>Nadpisy</h2>
+    <p>
+      Nadpisy se spravují pomocí tlačítka <strong>H</strong> v nástrojové liště,
+      které cyklicky přepíná mezi úrovněmi:
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Aktuální stav</th><th>Po kliknutí na H</th><th>Markdown</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Normální odstavec</td><td>Nadpis H1</td><td><code># Nadpis</code></td></tr>
+          <tr><td>H1</td><td>H2</td><td><code>## Nadpis</code></td></tr>
+          <tr><td>H2</td><td>H3</td><td><code>### Nadpis</code></td></tr>
+          <tr><td>H3</td><td>Normální odstavec</td><td>(bez prefixu)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Aplikace podporuje nadpisy úrovní H1 až H6, přičemž přímý cyklus v toolbaru pokrývá H1–H3.</p>
+  </section>
+
+  <!-- ── Seznamy ────────────────────────────────── -->
+  <section id="seznamy">
+    <h2>Seznamy</h2>
+
+    <h3>Odrážkový seznam (Bullet List)</h3>
+    <p>Neodrážkový seznam s odrážkami. V Markdown se ukládá s prefixem <code>-</code>.</p>
+    <ul>
+      <li>Klávesová zkratka: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>U</kbd></li>
+      <li>Tlačítko <strong>seznam</strong> (ikona <em>List</em>) v nástrojové liště</li>
+    </ul>
+
+    <h3>Číslovaný seznam (Ordered List)</h3>
+    <p>Seznam s automatickým číslováním položek.</p>
+    <ul>
+      <li>Klávesová zkratka: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>U</kbd></li>
+      <li>Tlačítko <strong>číslovaný seznam</strong> (ikona <em>ListOrdered</em>) v nástrojové liště</li>
+    </ul>
+
+    <h3>Seznam úkolů (Task List)</h3>
+    <p>
+      Interaktivní seznam s zaškrtávacími políčky. Políčka lze zaškrtnout přímo kliknutím.
+      V Markdown se ukládá jako <code>- [ ] úkol</code> nebo <code>- [x] splněno</code>.
+    </p>
+    <ul>
+      <li>Tlačítko <strong>Task List</strong> (ikona <em>CheckSquare</em>) v nástrojové liště</li>
+    </ul>
+
+    <h4>Chování task listu</h4>
+    <ul>
+      <li><strong>Při vybraném textu:</strong> Každý řádek výběru se transformuje na samostatnou položku task listu.</li>
+      <li><strong>Při prázdném výběru:</strong> Vloží se checkbox na aktuální řádek a editor přejde do režimu task listu.</li>
+      <li><strong>Enter:</strong> Vytvoří další položku s checkboxem.</li>
+      <li><strong>Prázdný Enter:</strong> Ukončí seznam (stejné chování jako u bullet/ordered listu).</li>
+      <li><strong>Tab / Shift+Tab:</strong> Odsazení a zrušení odsazení položky.</li>
+    </ul>
+
+    <h4>Příklad transformace textu na task list</h4>
+    <pre><code>Před (vybraný text):
+řádek 1
+řádek 2
+
+Po (task list):
+- [ ] řádek 1
+- [ ] řádek 2</code></pre>
+  </section>
+
+  <!-- ── Tabulky ────────────────────────────────── -->
+  <section id="tabulky">
+    <h2>Tabulky</h2>
+    <p>
+      Vloží výchozí tabulku 3×2 (3 sloupce, 2 řádky) s řádkem záhlaví.
+      Buňky lze volně editovat kliknutím, přecházet mezi nimi klávesou <kbd>Tab</kbd>.
+    </p>
+    <ul>
+      <li>Tlačítko <strong>Tabulka</strong> (ikona <em>Table</em>) v nástrojové liště</li>
+    </ul>
+
+    <p>Tabulky jsou ukládány v GitHub Flavored Markdown formátu:</p>
+    <pre><code>| Sloupec 1 | Sloupec 2 | Sloupec 3 |
+|-----------|-----------|-----------|
+| Buňka     | Buňka     | Buňka     |</code></pre>
+  </section>
+
+  <!-- ── Kód ────────────────────────────────────── -->
+  <section id="code">
+    <h2>Kód a bloky kódu</h2>
+
+    <h3>Inline kód</h3>
+    <p>Označení části textu jako kódu uvnitř odstavce. Použijte backtick (<code>`</code>) nebo příslušnou Markdown syntaxi.</p>
+
+    <h3>Blok kódu (Code Block)</h3>
+    <p>
+      Vloží víceřádkový blok kódu s monospacovým fontem a zvýrazněním syntaxe.
+    </p>
+    <ul>
+      <li>Tlačítko <strong>Kód</strong> (ikona <em>Code</em>) v nástrojové liště</li>
+    </ul>
+
+    <h3>Výběr jazyka</h3>
+    <p>
+      Když je kurzor uvnitř bloku kódu, aktivuje se v nástrojové liště rozbalovací nabídka
+      pro výběr programovacího jazyka. Výběr jazyka ovlivňuje zvýraznění syntaxe.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Jazyk</th><th>Zvýrazňované prvky</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>JavaScript</td><td>klíčová slova, řetězce, komentáře, čísla</td></tr>
+          <tr><td>TypeScript</td><td>JS + typové anotace a klíčová slova</td></tr>
+          <tr><td>JSON</td><td>vlastnosti, řetězce, čísla, klíčová slova</td></tr>
+          <tr><td>HTML</td><td>tagy, atributy, řetězce</td></tr>
+          <tr><td>CSS</td><td>komentáře, selektory, vlastnosti, barvy</td></tr>
+          <tr><td>Bash</td><td>komentáře, proměnné, řetězce, klíčová slova</td></tr>
+          <tr><td>SQL</td><td>komentáře, řetězce, klíčová slova</td></tr>
+          <tr><td>YAML</td><td>komentáře, vlastnosti, řetězce, klíčová slova</td></tr>
+          <tr><td>Markdown</td><td>nadpisy, odkazy, seznamy</td></tr>
+          <tr><td>Plaintext</td><td>(bez zvýraznění)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Odkazy a obrázky ───────────────────────── -->
+  <section id="odkazy">
+    <h2>Odkazy a obrázky</h2>
+
+    <h3>Vložení odkazu (Link)</h3>
+    <p>Otevře dialog pro zadání URL adresy odkazu.</p>
+    <ul>
+      <li>Tlačítko <strong>Odkaz</strong> (ikona <em>Link</em>) v nástrojové liště</li>
+    </ul>
+    <ul>
+      <li>Pokud URL nezačíná schématem (http://, https://, #, /), automaticky se předřadí <code>https://</code></li>
+      <li>Podporovány jsou relativní cesty a kotvy (<code>#sekce</code>)</li>
+      <li>Výsledné odkazy se otevírají v novém záložce (<code>target="_blank"</code>)</li>
+    </ul>
+
+    <h3>Odebrání odkazu</h3>
+    <p>Odstraní odkaz z vybraného textu, text zůstane zachován.</p>
+    <ul>
+      <li>Tlačítko <strong>Odebrat odkaz</strong> (ikona <em>Unlink</em>) v nástrojové liště</li>
+    </ul>
+
+    <h3>Vložení obrázku (Image)</h3>
+    <p>Otevře dialog, kde zadáte URL obrázku a volitelně alternativní text (popis pro přístupnost).</p>
+    <ul>
+      <li>Tlačítko <strong>Obrázek</strong> (ikona <em>Image</em>) v nástrojové liště</li>
+    </ul>
+    <div class="callout">
+      <strong>Poznámka</strong>
+      mdedit v současné verzi pracuje s URL obrázků (vzdálené nebo lokální cesty). Vkládání obrázků přetažením přímo do editoru není podporováno.
+    </div>
+  </section>
+
+  <!-- ── Ostatní blokové prvky ──────────────────── -->
+  <section id="ostatni-bloky">
+    <h2>Ostatní blokové prvky</h2>
+
+    <h3>Citace (Blockquote)</h3>
+    <p>Blok citace se zvýrazněným levým okrajem. V Markdown se zapisuje prefixem <code>&gt;</code>.</p>
+
+    <h3>Horizontální oddělovač</h3>
+    <p>Vodorovná čára oddělující části dokumentu. V Markdown se zapisuje jako <code>---</code>.</p>
+  </section>
+
+  <!-- ── Nástrojová lišta ───────────────────────── -->
+  <section id="toolbar">
+    <h2>Nástrojová lišta</h2>
+    <p>Nástrojová lišta v horní části okna je rozdělena do skupin oddělených svislými oddělovači:</p>
+
+    <h3>Skupina 1 – Soubor</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ikona</th><th>Akce</th><th>Zkratka</th></tr></thead>
+        <tbody>
+          <tr><td>FilePlus</td><td>Nový dokument</td><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td></tr>
+          <tr><td>FolderOpen</td><td>Otevřít soubor</td><td><kbd>Ctrl</kbd>+<kbd>O</kbd></td></tr>
+          <tr><td>Šipka dolů</td><td>Poslední soubory (dropdown)</td><td>–</td></tr>
+          <tr><td>RefreshCw</td><td>Obnovit ze disku</td><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd></td></tr>
+          <tr><td>Save</td><td>Uložit</td><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td></tr>
+          <tr><td>SaveAll</td><td>Uložit jako…</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd></td></tr>
+          <tr><td>FileCode</td><td>Export HTML</td><td>–</td></tr>
+          <tr><td>FileDown</td><td>Export PDF</td><td>–</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Skupina 2 – Formátování</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ikona</th><th>Akce</th><th>Zkratka</th></tr></thead>
+        <tbody>
+          <tr><td>B</td><td>Tučný text</td><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td></tr>
+          <tr><td><em>I</em></td><td>Kurzíva</td><td><kbd>Ctrl</kbd>+<kbd>I</kbd></td></tr>
+          <tr><td>H</td><td>Cyklování nadpisů (H1→H2→H3→Normal)</td><td>–</td></tr>
+          <tr><td>List</td><td>Odrážkový seznam</td><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>U</kbd></td></tr>
+          <tr><td>ListOrdered</td><td>Číslovaný seznam</td><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>U</kbd></td></tr>
+          <tr><td>Code</td><td>Blok kódu</td><td>–</td></tr>
+          <tr><td>Dropdown jazyků</td><td>Výběr jazyka bloku kódu</td><td>–</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Skupina 3 – Vložení</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ikona</th><th>Akce</th></tr></thead>
+        <tbody>
+          <tr><td>Link</td><td>Vložit odkaz</td></tr>
+          <tr><td>Unlink</td><td>Odebrat odkaz</td></tr>
+          <tr><td>CheckSquare</td><td>Vložit task list</td></tr>
+          <tr><td>Table</td><td>Vložit tabulku</td></tr>
+          <tr><td>Image</td><td>Vložit obrázek</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Skupina 4 – Zobrazení</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ikona</th><th>Akce</th></tr></thead>
+        <tbody>
+          <tr><td>PanelLeft</td><td>Přepnout panel osnovy (zobrazit/skrýt)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Vizuální stavy tlačítek</h3>
+    <p>Tlačítka v nástrojové liště mají tři vizuální stavy:</p>
+    <ul>
+      <li><strong>Normální:</strong> Výchozí vzhled</li>
+      <li><strong>Aktivní:</strong> Modrý okraj + pozadí (formátování je aplikováno nebo kurzor je uvnitř prvku)</li>
+      <li><strong>Zakázané:</strong> 40% průhlednost (akce není v daném kontextu dostupná)</li>
+    </ul>
+    <p>Všechna tlačítka mají tooltip s popisem akce a klávesovou zkratkou.</p>
+  </section>
+
+  <!-- ── Panel osnovy ───────────────────────────── -->
+  <section id="osnova">
+    <h2>Panel osnovy</h2>
+    <p>
+      Panel osnovy (Outline) se zobrazuje na levé straně editoru a poskytuje přehled struktury dokumentu
+      na základě nadpisů.
+    </p>
+
+    <h3>Funkce panelu osnovy</h3>
+    <ul>
+      <li><strong>Hierarchické zobrazení:</strong> Nadpisy jsou odsazeny podle úrovně (H1 bez odsazení, každá další úroveň přidává odsazení).</li>
+      <li><strong>Navigace:</strong> Kliknutím na položku skočíte na příslušný nadpis v dokumentu.</li>
+      <li><strong>Aktivní nadpis:</strong> Aktuálně viditelný nadpis je zvýrazněn.</li>
+      <li><strong>Prázdný stav:</strong> Pokud dokument neobsahuje žádné nadpisy, zobrazí se zpráva <em>„No headings yet"</em>.</li>
+      <li><strong>Okamžitá aktualizace:</strong> Osnova se aktualizuje ihned po otevření dokumentu i při každé editaci.</li>
+    </ul>
+
+    <h3>Zobrazení / skrytí panelu</h3>
+    <ul>
+      <li>Tlačítko <strong>PanelLeft</strong> v nástrojové liště</li>
+      <li>Nabídka <strong>Zobrazení → Toggle Outline</strong></li>
+    </ul>
+    <p>Stav panelu (zobrazeno/skryto) se ukládá a zachovává mezi restarty aplikace.</p>
+  </section>
+
+  <!-- ── Stavový řádek ──────────────────────────── -->
+  <section id="statusbar">
+    <h2>Stavový řádek</h2>
+    <p>Stavový řádek ve spodní části okna zobrazuje informace o aktuálním dokumentu.</p>
+
+    <h3>Levá část – název souboru</h3>
+    <ul>
+      <li>Název aktuálně otevřeného souboru</li>
+      <li><em>Untitled</em> pro nový nepojmenovaný dokument</li>
+      <li><em>No document</em> pokud není otevřen žádný soubor</li>
+    </ul>
+
+    <h3>Pravá část – stav</h3>
+    <ul>
+      <li><strong>Saved</strong> (šedě): Dokument je uložen, žádné neuložené změny</li>
+      <li><strong>Modified</strong> (oranžově): Dokument má neuložené změny</li>
+      <li><strong>External change detected</strong> (oranžově): Soubor na disku byl změněn jinou aplikací – zobrazí se výzva k obnovení</li>
+    </ul>
+  </section>
+
+  <!-- ── Notifikace ─────────────────────────────── -->
+  <section id="notifikace">
+    <h2>Notifikace (Toast)</h2>
+    <p>
+      Aplikace zobrazuje informační notifikace v pravém dolním rohu obrazovky.
+      Notifikace se automaticky skryjí po několika sekundách, nebo je lze zavřít ručně kliknutím na <strong>×</strong>.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Typ</th><th>Barva okraje</th><th>Příklady použití</th><th>Auto-skrytí</th></tr></thead>
+        <tbody>
+          <tr><td>Info</td><td>Modrá</td><td>Obecná informace</td><td>~3,8 s</td></tr>
+          <tr><td>Úspěch</td><td>Zelená</td><td>„Saved", úspěšný export</td><td>~3,8 s</td></tr>
+          <tr><td>Varování</td><td>Oranžová</td><td>Upozornění na nestandardní stav</td><td>~3,8 s</td></tr>
+          <tr><td>Chyba</td><td>Červená</td><td>Chyba při otevření/uložení souboru</td><td>~6,5 s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Dialogy ────────────────────────────────── -->
+  <section id="dialogy">
+    <h2>Dialogy</h2>
+
+    <h3>Potvrzovací dialogy</h3>
+    <p>Zobrazují se před nevratnými nebo rizikovými operacemi:</p>
+    <ul>
+      <li>Zahození neuložených změn (při otevření nového souboru nebo vytvoření nového dokumentu)</li>
+      <li>Zavření aplikace s neuloženými změnami</li>
+    </ul>
+    <p>Klávesové zkratky v dialogu:</p>
+    <ul>
+      <li><kbd>Escape</kbd> – Zrušit (cancel)</li>
+      <li><kbd>Enter</kbd> – Potvrdit (pokud je povoleno)</li>
+    </ul>
+
+    <h3>Vstupní dialogy</h3>
+    <p>Používají se pro zadání textu uživatelem:</p>
+    <ul>
+      <li><strong>Vložit odkaz:</strong> Pole pro zadání URL (ověřuje se neprázdnost)</li>
+      <li><strong>Vložit obrázek:</strong> Nejprve URL obrázku, poté volitelný alternativní text</li>
+    </ul>
+    <p>
+      Vstupní pole se při otevření automaticky zaměří a obsah se vybere.
+      Validační chyby se zobrazují přímo pod polem.
+    </p>
+  </section>
+
+  <!-- ── Klávesové zkratky ──────────────────────── -->
+  <section id="klávesové-zkratky">
+    <h2>Klávesové zkratky</h2>
+    <p>Na macOS nahraďte <kbd>Ctrl</kbd> za <kbd>⌘</kbd> (Command).</p>
+
+    <h3>Práce se soubory</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Zkratka</th><th>Akce</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td><td>Nový dokument</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>O</kbd></td><td>Otevřít soubor</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Uložit</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd></td><td>Uložit jako…</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd></td><td>Obnovit ze disku</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Formátování textu</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Zkratka</th><th>Akce</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td>Tučný text (toggle)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>I</kbd></td><td>Kurzíva (toggle)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>U</kbd></td><td>Odrážkový seznam</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>U</kbd></td><td>Číslovaný seznam</td></tr>
+          <tr><td><kbd>Tab</kbd> (v task listu)</td><td>Odsadit položku</td></tr>
+          <tr><td><kbd>Shift</kbd>+<kbd>Tab</kbd> (v task listu)</td><td>Zrušit odsazení</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Obecné</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Zkratka</th><th>Akce</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Zpět (Undo)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Y</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Znovu (Redo)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>A</kbd></td><td>Vybrat vše</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>X</kbd></td><td>Vyjmout</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>Kopírovat</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>Vložit</td></tr>
+          <tr><td><kbd>Escape</kbd></td><td>Zavřít dialog (Zrušit)</td></tr>
+          <tr><td><kbd>Enter</kbd></td><td>Potvrdit dialog</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Podporovaný Markdown ───────────────────── -->
+  <section id="markdown">
+    <h2>Podporovaný Markdown</h2>
+    <p>
+      mdedit ukládá dokumenty jako standardní Markdown kompatibilní s
+      <strong>GitHub Flavored Markdown (GFM)</strong>.
+    </p>
+
+    <h3>Inline prvky</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Prvek</th><th>Markdown syntaxe</th></tr></thead>
+        <tbody>
+          <tr><td>Tučný text</td><td><code>**tučný**</code></td></tr>
+          <tr><td>Kurzíva</td><td><code>*kurzíva*</code></td></tr>
+          <tr><td>Inline kód</td><td><code>`kód`</code></td></tr>
+          <tr><td>Odkaz</td><td><code>[text](https://url)</code></td></tr>
+          <tr><td>Obrázek</td><td><code>![alt text](https://url)</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Blokové prvky</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Prvek</th><th>Markdown syntaxe</th></tr></thead>
+        <tbody>
+          <tr><td>Nadpis H1</td><td><code># Nadpis</code></td></tr>
+          <tr><td>Nadpis H2</td><td><code>## Nadpis</code></td></tr>
+          <tr><td>Nadpis H3</td><td><code>### Nadpis</code></td></tr>
+          <tr><td>Odrážkový seznam</td><td><code>- položka</code></td></tr>
+          <tr><td>Číslovaný seznam</td><td><code>1. položka</code></td></tr>
+          <tr><td>Nesplněný úkol</td><td><code>- [ ] úkol</code></td></tr>
+          <tr><td>Splněný úkol</td><td><code>- [x] úkol</code></td></tr>
+          <tr><td>Blok kódu</td><td><code>```js\nkód\n```</code></td></tr>
+          <tr><td>Citace</td><td><code>&gt; citovaný text</code></td></tr>
+          <tr><td>Horizontální oddělovač</td><td><code>---</code></td></tr>
+          <tr><td>Tabulka</td><td>GFM tabulkový formát</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Normalizace Markdownu při ukládání</h3>
+    <p>Při uložení souboru mdedit automaticky normalizuje Markdown:</p>
+    <ul>
+      <li>Konce řádků jsou sjednoceny na LF (<code>\n</code>)</li>
+      <li>Bílé znaky na konci řádků jsou odstraněny</li>
+      <li>Více prázdných řádků za sebou se sjednotí na jeden</li>
+      <li>Zaškrtnuté úkoly se normalizují (<code>[X]</code> → <code>[x]</code>)</li>
+      <li>Na konci souboru je přesně jeden prázdný řádek</li>
+      <li>Obsah kódových bloků zůstává beze změny</li>
+    </ul>
+  </section>
+
+  <!-- ── Detekce externích změn ─────────────────── -->
+  <section id="externi-zmeny">
+    <h2>Detekce externích změn</h2>
+    <p>
+      mdedit sleduje, zda byl aktuálně otevřený soubor změněn jinou aplikací (např. textovým editorem,
+      verzovacím systémem apod.).
+    </p>
+    <p>
+      Pokud je detekována zewnętrzní změna:
+    </p>
+    <ul>
+      <li>Ve stavovém řádku se zobrazí oranžový text <strong>„External change detected"</strong></li>
+      <li>Tlačítko <strong>Obnovit ze disku</strong> v nástrojové liště se vizuálně zvýrazní</li>
+    </ul>
+    <p>
+      Pro načtení aktuální verze souboru z disku použijte klávesovou zkratku
+      <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> nebo klikněte na tlačítko Obnovit.
+    </p>
+    <div class="callout warn">
+      <strong>Upozornění</strong>
+      Obnovení ze disku zahodí všechny vaše neuložené změny v editoru.
+    </div>
+  </section>
+
+  <!-- ── Nabídka aplikace ───────────────────────── -->
+  <section id="menu">
+    <h2>Nabídka aplikace</h2>
+    <p>Nativní nabídka aplikace obsahuje tři hlavní sekce:</p>
+
+    <h3>Soubor (File)</h3>
+    <ul>
+      <li>Nový <kbd>Ctrl</kbd>+<kbd>N</kbd></li>
+      <li>Otevřít… <kbd>Ctrl</kbd>+<kbd>O</kbd></li>
+      <li>Uložit <kbd>Ctrl</kbd>+<kbd>S</kbd></li>
+      <li>Uložit jako… <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd></li>
+      <li>Reload from disk <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>R</kbd> (zakázáno, pokud soubor nebyl uložen)</li>
+      <li>Export as HTML…</li>
+      <li>Export as PDF…</li>
+      <li>Recent Files (podnabídka s posledními soubory)</li>
+      <li>Quit (ukončit aplikaci)</li>
+    </ul>
+
+    <h3>Úpravy (Edit)</h3>
+    <ul>
+      <li>Undo / Redo</li>
+      <li>Cut / Copy / Paste</li>
+      <li>Select All</li>
+    </ul>
+
+    <h3>Zobrazení (View)</h3>
+    <ul>
+      <li>Toggle Outline (zaškrtávací položka odrážející stav panelu osnovy)</li>
+    </ul>
+  </section>
+
+  <hr />
+
+  <footer>
+    <p>
+      <strong>mdedit</strong> – multiplatformní Markdown editor ·
+      Postaveno na Tauri 2, React 18 a Tiptap ·
+      <span class="badge badge-gray">v1.x</span>
+    </p>
+    <p style="margin-top: 6px;">
+      Zdrojový kód: <a href="https://github.com/MartinDejmal/mdedit">github.com/MartinDejmal/mdedit</a>
+    </p>
+  </footer>
+
+</main>
+
+<!-- ── Active nav highlight ───────────────────── -->
+<script>
+  (function () {
+    const links = document.querySelectorAll('#sidebar nav a');
+    const sections = Array.from(links)
+      .map(a => document.querySelector(a.getAttribute('href')))
+      .filter(Boolean);
+
+    function activate() {
+      let current = sections[0];
+      for (const s of sections) {
+        if (s.getBoundingClientRect().top <= 60) current = s;
+      }
+      links.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current.id);
+      });
+    }
+
+    window.addEventListener('scroll', activate, { passive: true });
+    activate();
+  })();
+</script>
+
+</body>
+</html>
