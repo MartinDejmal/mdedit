@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mdedit – Markdown editor</title>
+  <link rel="icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="container header-inner">
+      <div class="logo">
+        <img src="icon.png" alt="mdedit icon" width="36" height="36">
+        <span class="logo-name">mdedit</span>
+      </div>
+      <nav>
+        <a href="#features">Funkce</a>
+        <a href="#download">Stáhnout</a>
+        <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="nav-gh">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <img src="icon.png" alt="mdedit" class="hero-icon">
+        <h1>mdedit</h1>
+        <p class="tagline">Odlehčený multiplatformní Markdown editor.<br>Píšte, co vidíte – bez přepínání mezi editací a náhledem.</p>
+        <div class="hero-actions">
+          <a href="#download" class="btn btn-primary">Stáhnout</a>
+          <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="btn btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.091-.646.349-1.087.635-1.337-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.337 4.687-4.565 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+            Zdrojový kód
+          </a>
+        </div>
+        <p class="version-note">v0.1.0 · MIT licence · Tauri + React + TypeScript</p>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+      <div class="container">
+        <h2>Co mdedit umí</h2>
+        <div class="feature-grid">
+
+          <div class="feature-card">
+            <div class="feature-icon">✍️</div>
+            <h3>WYSIWYG editing</h3>
+            <p>Výsledek vidíte přímo při psaní. Žádné přepínání mezi zdrojovým kódem a náhledem.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">📁</div>
+            <h3>Práce se soubory</h3>
+            <p>Otevírání, vytváření a ukládání <code>.md</code>, <code>.markdown</code> a <code>.txt</code> souborů. Drag &amp; drop, CLI argumenty i „Otevřít v".</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🗂️</div>
+            <h3>Osnova dokumentu</h3>
+            <p>Postranní panel s přehledem nadpisů umožňuje rychlou navigaci i v delších dokumentech.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🔧</div>
+            <h3>Panel nástrojů</h3>
+            <p>Tučné písmo, kurzíva, nadpisy, seznamy, úkoly, tabulky, odkazy, obrázky, bloky kódu – vše na dosah kliknutí.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">💾</div>
+            <h3>Sledování změn</h3>
+            <p>Indikátor neuložených změn v titulku okna a ochrana před nechtěným zavřením bez uložení.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">📤</div>
+            <h3>Export</h3>
+            <p>Dokument lze exportovat do HTML nebo PDF přímo z aplikace.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🕐</div>
+            <h3>Poslední soubory</h3>
+            <p>Přehled naposledy otevřených souborů a automatické otevření posledního dokumentu při startu.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🖥️</div>
+            <h3>Multiplatformní</h3>
+            <p>Nativní desktopová aplikace postavená na Tauri – běží na Linuxu, macOS i Windows.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Shortcuts -->
+    <section class="shortcuts">
+      <div class="container">
+        <h2>Klávesové zkratky</h2>
+        <div class="shortcut-table-wrap">
+          <table>
+            <thead>
+              <tr><th>Akce</th><th>Zkratka</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Nový dokument</td><td><kbd>Ctrl</kbd> + <kbd>N</kbd></td></tr>
+              <tr><td>Otevřít soubor</td><td><kbd>Ctrl</kbd> + <kbd>O</kbd></td></tr>
+              <tr><td>Uložit</td><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td></tr>
+              <tr><td>Uložit jako</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td></tr>
+              <tr><td>Znovu načíst z disku</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>R</kbd></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="shortcut-note">Na macOS nahraďte <kbd>Ctrl</kbd> klávesou <kbd>⌘ Cmd</kbd>.</p>
+      </div>
+    </section>
+
+    <!-- Tech stack -->
+    <section class="tech">
+      <div class="container">
+        <h2>Technologie</h2>
+        <ul class="tech-list">
+          <li><span class="tech-label">Desktop shell</span> Tauri 2</li>
+          <li><span class="tech-label">Frontend</span> React 18 + TypeScript</li>
+          <li><span class="tech-label">Editor engine</span> Tiptap 2</li>
+          <li><span class="tech-label">Markdown pipeline</span> unified / remark / rehype</li>
+          <li><span class="tech-label">State management</span> Zustand 4</li>
+          <li><span class="tech-label">Build tool</span> Vite 5</li>
+          <li><span class="tech-label">Backend</span> Rust</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Download -->
+    <section class="download" id="download">
+      <div class="container">
+        <h2>Stáhnout</h2>
+        <p>Stažení binárky není prozatím k dispozici. Sestavit aplikaci ze zdrojového kódu zvládnete v pár krocích:</p>
+        <div class="code-block">
+          <pre><code># Předpoklady: Node.js &gt;= 18, Rust stable
+git clone https://github.com/MartinDejmal/mdedit.git
+cd mdedit
+npm install
+npm run tauri build</code></pre>
+        </div>
+        <p class="download-note">Hotový instalátor najdete v <code>src-tauri/target/release/bundle/</code>.</p>
+        <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="btn btn-primary">
+          Zdrojový kód na GitHubu
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <span>mdedit © 2026 Martin Dejmal · MIT licence</span>
+      <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </footer>
+
+</body>
+</html>
