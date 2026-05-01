@@ -170,6 +170,46 @@ nav a:hover { color: var(--accent); }
   transform: translateY(-1px);
 }
 
+/* Screenshots */
+.screenshots {
+  padding: 72px 0;
+  background: var(--bg-alt);
+}
+
+.screenshots h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.screenshot-item {
+  margin-bottom: 52px;
+}
+
+.screenshot-item:last-child { margin-bottom: 0; }
+
+.screenshot-frame {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px rgba(0,0,0,.13), 0 0 0 1px rgba(0,0,0,.06);
+  line-height: 0;
+}
+
+.screenshot-frame img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.screenshot-caption {
+  margin-top: 14px;
+  text-align: center;
+  font-size: .88rem;
+  color: var(--text-muted);
+}
+
 /* Features */
 .features {
   padding: 72px 0;
