@@ -8,6 +8,7 @@ const repoRoot = path.resolve(__dirname, "..");
 
 const versionPath = path.join(repoRoot, "VERSION");
 const packageJsonPath = path.join(repoRoot, "package.json");
+const packageLockPath = path.join(repoRoot, "package-lock.json");
 const tauriConfigPath = path.join(repoRoot, "src-tauri", "tauri.conf.json");
 const cargoTomlPath = path.join(repoRoot, "src-tauri", "Cargo.toml");
 
@@ -27,6 +28,17 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
 packageJson.version = version;
 writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`, "utf8");
 
+try {
+  const packageLock = JSON.parse(readFileSync(packageLockPath, "utf8"));
+  packageLock.version = version;
+  if (packageLock.packages && packageLock.packages[""]) {
+    packageLock.packages[""].version = version;
+  }
+  writeFileSync(packageLockPath, `${JSON.stringify(packageLock, null, 2)}\n`, "utf8");
+} catch {
+  // Ignore missing or invalid lockfile; versioning still works without it.
+}
+
 const tauriConfig = JSON.parse(readFileSync(tauriConfigPath, "utf8"));
 tauriConfig.version = version;
 writeFileSync(tauriConfigPath, `${JSON.stringify(tauriConfig, null, 2)}\n`, "utf8");
@@ -39,4 +51,6 @@ if (!cargoVersionPattern.test(cargoToml)) {
 const updatedCargoToml = cargoToml.replace(cargoVersionPattern, `$1${version}$3`);
 writeFileSync(cargoTomlPath, updatedCargoToml, "utf8");
 
-console.log(`Synchronized version ${version} -> package.json, src-tauri/tauri.conf.json, src-tauri/Cargo.toml`);
+console.log(
+  `Synchronized version ${version} -> package.json, package-lock.json, src-tauri/tauri.conf.json, src-tauri/Cargo.toml`
+);
