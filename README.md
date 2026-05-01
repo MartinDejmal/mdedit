@@ -105,6 +105,35 @@ npm run build
 npm run tauri build
 ```
 
+## Verze a release
+
+Projekt používá centrální číslo verze v souboru `VERSION` (v rootu repozitáře).
+
+- Skript `npm run sync:version` synchronizuje tuto verzi do:
+  - `package.json`
+  - `src-tauri/tauri.conf.json`
+  - `src-tauri/Cargo.toml`
+- Při `npm run build` a `npm run tauri ...` se synchronizace spouští automaticky.
+- Verze je zobrazena i v title baru aplikace (`mdedit vX.Y.Z`).
+
+### Postup release (příklad 1.0.0)
+
+```bash
+# 1) změň verzi
+echo "1.0.0" > VERSION
+
+# 2) synchronizuj metadata verzí
+npm run sync:version
+
+# 3) build + balíčky
+npm run tauri build
+
+# 4) commit + tag
+git add VERSION package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml
+git commit -m "release: v1.0.0"
+git tag v1.0.0
+```
+
 ## Stav commitů a pull requestů
 
 ### Souhrn historie
