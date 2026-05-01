@@ -113,8 +113,24 @@ Projekt používá centrální číslo verze v souboru `VERSION` (v rootu repozi
   - `package.json`
   - `src-tauri/tauri.conf.json`
   - `src-tauri/Cargo.toml`
+  - `src-tauri/Cargo.lock`
+- Skript `npm run release -- <mode>` umí verzi zvýšit automaticky (`patch|minor|major`) nebo explicitně nastavit (`set x.y.z`).
 - Při `npm run build` a `npm run tauri ...` se synchronizace spouští automaticky.
 - Verze je zobrazena i v title baru aplikace (`mdedit vX.Y.Z`).
+
+### Release skript
+
+```bash
+# bump patch verze (např. 1.0.0 -> 1.0.1)
+npm run release:patch
+
+# bump minor/major
+npm run release:minor
+npm run release:major
+
+# explicitní nastavení verze
+npm run release:set -- 1.2.3
+```
 
 ### Postup release (příklad 1.0.0)
 

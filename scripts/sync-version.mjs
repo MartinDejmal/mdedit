@@ -11,6 +11,7 @@ const packageJsonPath = path.join(repoRoot, "package.json");
 const packageLockPath = path.join(repoRoot, "package-lock.json");
 const tauriConfigPath = path.join(repoRoot, "src-tauri", "tauri.conf.json");
 const cargoTomlPath = path.join(repoRoot, "src-tauri", "Cargo.toml");
+const cargoLockPath = path.join(repoRoot, "src-tauri", "Cargo.lock");
 
 const version = readFileSync(versionPath, "utf8").trim();
 if (!version) {
@@ -51,6 +52,19 @@ if (!cargoVersionPattern.test(cargoToml)) {
 const updatedCargoToml = cargoToml.replace(cargoVersionPattern, `$1${version}$3`);
 writeFileSync(cargoTomlPath, updatedCargoToml, "utf8");
 
+try {
+  const cargoLock = readFileSync(cargoLockPath, "utf8");
+  const cargoLockPackagePattern =
+    /(\[\[package\]\]\s*\nname\s*=\s*"mdedit"\s*\nversion\s*=\s*")([^"]+)(")/;
+  if (!cargoLockPackagePattern.test(cargoLock)) {
+    throw new Error("Could not locate mdedit package version in src-tauri/Cargo.lock.");
+  }
+  const updatedCargoLock = cargoLock.replace(cargoLockPackagePattern, `$1${version}$3`);
+  writeFileSync(cargoLockPath, updatedCargoLock, "utf8");
+} catch {
+  // Ignore missing or unparsable lockfile; cargo will regenerate it when needed.
+}
+
 console.log(
-  `Synchronized version ${version} -> package.json, package-lock.json, src-tauri/tauri.conf.json, src-tauri/Cargo.toml`
+  `Synchronized version ${version} -> package.json, package-lock.json, src-tauri/tauri.conf.json, src-tauri/Cargo.toml, src-tauri/Cargo.lock`
 );

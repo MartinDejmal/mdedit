@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "vite",
     "sync:version": "node scripts/sync-version.mjs",
+    "release": "node scripts/release.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major",
+    "release:set": "node scripts/release.mjs set",
     "build": "npm run sync:version && tsc && vite build",
     "preview": "vite preview",
     "tauri": "npm run sync:version && tauri"
