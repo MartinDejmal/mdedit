@@ -143,37 +143,58 @@
       <!-- Download -->
       <section class="download" id="download">
           <div class="container">
-              <h2>Stažení</h2>
-              <p>Aplikaci stahujte pro Vaši platformu:</p>
-              <p class="download-note">Windows:
-              <a href="/download/mdedit-win-1.0.0_x64.msi">
-                  mdedit-win-1.0.0_x64.msi
-              </a></p>
-              <p class="download-note">
-                  macOS:
-                  <a href="/download/mdedit-macos-1.0.0_x64.dmg">
-                      mdedit-macos-1.0.0_x64.dmg
-                  </a>
-              </p>
-          </div>
-      </section>
+              <div class="section-kicker">Stažení</div>
+              <h2>Vyberte instalátor pro svůj systém</h2>
+              <p class="download-lead">Nainstalujte mdedit jako běžnou desktopovou aplikaci. Bez účtu, bez cloudu, bez další malé daně za existenci.</p>
 
+              <div class="download-grid" aria-label="Instalátory mdedit">
+                  <article class="download-card download-card-primary">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">⊞</div>
+                          <div>
+                              <h3>Windows</h3>
+                              <p>Instalátor MSI pro 64bit Windows.</p>
+                          </div>
+                      </div>
+                      <a href="/download/mdedit-win-1.0.0_x64.msi" class="download-button">
+                          Stáhnout MSI
+                          <span>mdedit-win-1.0.0_x64.msi</span>
+                      </a>
+                  </article>
 
-      <section class="download" id="download">
-          <div class="container">
-              <h2>Zkompilovat svépomocí</h2>
-              <p>Sestavit aplikaci ze zdrojového kódu zvládnete v pár krocích:</p>
-              <div class="code-block">
-                  <pre><code># Předpoklady: Node.js &gt;= 18, Rust stable
-git clone https://github.com/MartinDejmal/mdedit.git
+                  <article class="download-card">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">⌘</div>
+                          <div>
+                              <h3>macOS</h3>
+                              <p>DMG balíček pro Mac s procesorem Intel.</p>
+                          </div>
+                      </div>
+                      <a href="/download/mdedit-macos-1.0.0_x64.dmg" class="download-button download-button-secondary">
+                          Stáhnout DMG
+                          <span>mdedit-macos-1.0.0_x64.dmg</span>
+                      </a>
+                  </article>
+              </div>
+
+              <div class="build-panel">
+                  <div class="build-copy">
+                      <div class="section-kicker">Pro vývojáře</div>
+                      <h3>Zkompilovat svépomocí</h3>
+                      <p>Sestavit aplikaci ze zdrojového kódu zvládnete v pár krocích. Předpoklady: Node.js 18+ a Rust stable.</p>
+                      <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="btn btn-secondary btn-on-dark">
+                          Zdrojový kód na GitHubu
+                      </a>
+                  </div>
+                  <div class="code-block">
+                      <pre><code>git clone https://github.com/MartinDejmal/mdedit.git
 cd mdedit
 npm install
 npm run tauri build</code></pre>
+                  </div>
               </div>
-              <p class="download-note">Hotový instalátor najdete v <code>src-tauri/target/release/bundle/</code>.</p>
-              <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="btn btn-primary">
-                  Zdrojový kód na GitHubu
-              </a>
+
+              <p class="download-note">Hotový instalátor po buildu najdete v <code>src-tauri/target/release/bundle/</code>.</p>
           </div>
       </section>
 
