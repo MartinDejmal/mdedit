@@ -50,6 +50,43 @@ fn decode_html_entities(value: &str) -> String {
         .replace("&#39;", "'")
 }
 
+fn strip_tag_block(mut input: String, open_tag: &str, close_tag: &str) -> String {
+    while let Some(start) = input.find(open_tag) {
+        let search_from = start + open_tag.len();
+        if let Some(end_rel) = input[search_from..].find(close_tag) {
+            let end = search_from + end_rel + close_tag.len();
+            input.replace_range(start..end, "");
+        } else {
+            input.replace_range(start.., "");
+            break;
+        }
+    }
+    input
+}
+
+fn extract_article_html(html_document: &str) -> String {
+    if let Some(article_start) = html_document.find("<article") {
+        if let Some(tag_end_rel) = html_document[article_start..].find('>') {
+            let content_start = article_start + tag_end_rel + 1;
+            if let Some(article_end_rel) = html_document[content_start..].find("</article>") {
+                let content_end = content_start + article_end_rel;
+                return html_document[content_start..content_end].to_string();
+            }
+        }
+    }
+
+    if let Some(body_start) = html_document.find("<body") {
+        if let Some(tag_end_rel) = html_document[body_start..].find('>') {
+            let content_start = body_start + tag_end_rel + 1;
+            if let Some(body_end_rel) = html_document[content_start..].find("</body>") {
+                let content_end = content_start + body_end_rel;
+                return html_document[content_start..content_end].to_string();
+            }
+        }
+    }
+
+    html_document.to_string()
+}
 fn strip_html_tags(value: &str) -> String {
     let mut output = String::new();
     let mut in_tag = false;
@@ -67,7 +104,13 @@ fn strip_html_tags(value: &str) -> String {
 }
 
 fn convert_html_to_semantic_text(html_document: &str) -> String {
-    let mut text = html_document.replace("\r\n", "\n").replace('\r', "\n");
+    let export_root = extract_article_html(html_document);
+    let sanitized = strip_tag_block(
+        strip_tag_block(export_root, "<style", "</style>"),
+        "<script",
+        "</script>",
+    );
+    let mut text = sanitized.replace("\r\n", "\n").replace('\r', "\n");
 
     let replacements = [
         ("<br>", "\n"),
@@ -108,10 +151,7 @@ fn convert_html_to_semantic_text(html_document: &str) -> String {
         "<input checked=\"\" disabled=\"\" type=\"checkbox\">",
         "[x] ",
     );
-    text = text.replace(
-        "<input disabled=\"\" type=\"checkbox\">",
-        "[ ] ",
-    );
+    text = text.replace("<input disabled=\"\" type=\"checkbox\">", "[ ] ");
 
     while let Some(start) = text.find("<pre><code") {
         let Some(open_end_rel) = text[start..].find('>') else {

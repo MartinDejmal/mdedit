@@ -188,7 +188,7 @@ export async function runExportHtmlAction(
 
   try {
     await context.reconcileCanonicalFromEditorHtml(editorHtml);
-    const result = await exportCurrentDocumentAsHtml();
+    const result = await exportCurrentDocumentAsHtml(editorHtml);
     notifyExportResult(result, context);
   } catch (error) {
     context.notify.error({
@@ -206,7 +206,7 @@ export async function runExportPdfAction(
 
   try {
     await context.reconcileCanonicalFromEditorHtml(editorHtml);
-    const result = await exportCurrentDocumentAsPdf();
+    const result = await exportCurrentDocumentAsPdf(editorHtml);
     notifyExportResult(result, context);
   } catch (error) {
     context.notify.error({

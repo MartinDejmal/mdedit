@@ -1,5 +1,5 @@
 import { useDocumentStore } from "../../stores/documentStore";
-import { buildHtmlDocument, renderMarkdownToExportHtml } from "../../services/markdownService";
+import { buildHtmlDocument } from "../../services/markdownService";
 import * as bridge from "../../services/tauriBridge";
 
 export type ExportFormat = "html" | "pdf";
@@ -15,7 +15,6 @@ export type ExportResult =
   | { kind: "error"; message: string };
 
 interface ExportContext {
-  markdown: string;
   title: string;
   suggestedBaseName: string;
 }
@@ -30,8 +29,7 @@ function normalizeSuggestedName(name: string): string {
 }
 
 function buildExportContext(): ExportContext {
-  const { currentCanonicalMarkdown, currentFilePath, hasActiveDocument } =
-    useDocumentStore.getState();
+  const { currentFilePath, hasActiveDocument } = useDocumentStore.getState();
 
   if (!hasActiveDocument) {
     throw new Error("No active document to export.");
@@ -41,16 +39,15 @@ function buildExportContext(): ExportContext {
   const title = pathName && pathName.length > 0 ? pathName : "Untitled";
 
   return {
-    markdown: currentCanonicalMarkdown,
     title,
     suggestedBaseName: normalizeSuggestedName(title),
   };
 }
 
-export async function exportCurrentDocumentAsHtml(): Promise<ExportResult> {
+export async function exportCurrentDocumentAsHtml(editorHtml: string): Promise<ExportResult> {
   try {
     const context = buildExportContext();
-    const bodyHtml = await renderMarkdownToExportHtml(context.markdown);
+    const bodyHtml = editorHtml;
     const htmlDocument = buildHtmlDocument({ title: context.title, bodyHtml });
 
     const exportedPath = await bridge.saveHtmlFileDialog(
@@ -77,10 +74,10 @@ export async function exportCurrentDocumentAsHtml(): Promise<ExportResult> {
   }
 }
 
-export async function exportCurrentDocumentAsPdf(): Promise<ExportResult> {
+export async function exportCurrentDocumentAsPdf(editorHtml: string): Promise<ExportResult> {
   try {
     const context = buildExportContext();
-    const bodyHtml = await renderMarkdownToExportHtml(context.markdown);
+    const bodyHtml = editorHtml;
     const htmlDocument = buildHtmlDocument({
       title: context.title,
       bodyHtml,
