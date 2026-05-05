@@ -77,15 +77,22 @@ export async function exportCurrentDocumentAsHtml(editorHtml: string): Promise<E
 
 export async function exportCurrentDocumentAsPdf(editorHtml: string): Promise<ExportResult> {
   try {
+    console.log('[DEBUG] PDF Export: exportCurrentDocumentAsPdf started');
     const context = buildExportContext();
+    console.log('[DEBUG] PDF Export: Export context:', context);
+
+    console.log('[DEBUG] PDF Export: Calling renderEditorHtmlToPdfBytes');
     const pdfBytes = await renderEditorHtmlToPdfBytes(editorHtml, {
       title: context.title,
     });
+    console.log('[DEBUG] PDF Export: PDF rendered, bytes length:', pdfBytes.length);
 
+    console.log('[DEBUG] PDF Export: Calling savePdfFileDialog');
     const exportedPath = await bridge.savePdfFileDialog(
       pdfBytes,
       `${context.suggestedBaseName}.pdf`
     );
+    console.log('[DEBUG] PDF Export: Dialog result:', exportedPath);
 
     if (!exportedPath) {
       return { kind: "cancelled" };
@@ -99,6 +106,7 @@ export async function exportCurrentDocumentAsPdf(editorHtml: string): Promise<Ex
       },
     };
   } catch (error) {
+    console.error('[DEBUG] PDF Export: Error in exportCurrentDocumentAsPdf:', error);
     return {
       kind: "error",
       message: error instanceof Error ? error.message : "Unknown export error.",
