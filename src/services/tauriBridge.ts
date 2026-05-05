@@ -42,15 +42,38 @@ export async function saveHtmlFileDialog(
   });
 }
 
-/** Shows PDF save dialog, writes generated PDF, and returns saved path. */
+/**
+ * Shows PDF save dialog, writes pre-rendered PDF bytes, and returns saved path.
+ *
+ * Bytes are base64-encoded for transport so the IPC payload remains a JSON
+ * string instead of a JSON number array (which would balloon a 300 KB PDF
+ * into several MB of JSON).
+ */
 export async function savePdfFileDialog(
-  htmlDocument: string,
+  pdfBytes: Uint8Array,
   suggestedFileName: string
 ): Promise<string | null> {
+  const pdfBase64 = await uint8ArrayToBase64(pdfBytes);
   return invoke<string | null>("save_pdf_file_dialog", {
-    htmlDocument,
+    pdfBase64,
     suggestedFileName,
   });
+}
+
+async function uint8ArrayToBase64(bytes: Uint8Array): Promise<string> {
+  // Use a Blob + FileReader so we don't blow the call stack with
+  // String.fromCharCode(...bytes) on multi-MB inputs.
+  // Cast the typed array to BlobPart — the lib.dom typings flag a possible
+  // SharedArrayBuffer backing, but runtime-wise any ArrayBufferView is fine.
+  const blob = new Blob([bytes as unknown as BlobPart]);
+  const dataUrl: string = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to encode PDF bytes."));
+    reader.onload = () => resolve(reader.result as string);
+    reader.readAsDataURL(blob);
+  });
+  const commaIndex = dataUrl.indexOf(",");
+  return commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
 }
 
 /** Reads lightweight file metadata used for external-change detection. */
