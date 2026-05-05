@@ -5,6 +5,7 @@
   "permissions": [
     "core:default",
     "core:window:allow-destroy",
+    "core:window:allow-set-title",
     "allow-open-file-dialog",
     "allow-read-text-file",
     "allow-save-text-file",
