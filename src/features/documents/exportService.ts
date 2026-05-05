@@ -1,5 +1,6 @@
 import { useDocumentStore } from "../../stores/documentStore";
 import { buildHtmlDocument } from "../../services/markdownService";
+import { renderEditorHtmlToPdfBytes } from "../../services/pdfRenderer";
 import * as bridge from "../../services/tauriBridge";
 
 export type ExportFormat = "html" | "pdf";
@@ -77,15 +78,12 @@ export async function exportCurrentDocumentAsHtml(editorHtml: string): Promise<E
 export async function exportCurrentDocumentAsPdf(editorHtml: string): Promise<ExportResult> {
   try {
     const context = buildExportContext();
-    const bodyHtml = editorHtml;
-    const htmlDocument = buildHtmlDocument({
+    const pdfBytes = await renderEditorHtmlToPdfBytes(editorHtml, {
       title: context.title,
-      bodyHtml,
-      printFriendly: true,
     });
 
     const exportedPath = await bridge.savePdfFileDialog(
-      htmlDocument,
+      pdfBytes,
       `${context.suggestedBaseName}.pdf`
     );
 
