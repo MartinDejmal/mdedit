@@ -536,13 +536,19 @@ export async function renderEditorHtmlToPdfBytes(
   editorHtml: string,
   options: PdfRenderOptions
 ): Promise<Uint8Array> {
+  console.log('[DEBUG] PDF Renderer: renderEditorHtmlToPdfBytes called');
+  console.log('[DEBUG] PDF Renderer: ROBOTO_VFS_INSTALLED:', ROBOTO_VFS_INSTALLED);
+
   if (!ROBOTO_VFS_INSTALLED) {
     throw new Error("PDF font assets failed to load.");
   }
 
+  console.log('[DEBUG] PDF Renderer: Parsing HTML fragment');
   const fragment = parseFragment(editorHtml);
+  console.log('[DEBUG] PDF Renderer: Processing children');
   const content = processChildren(fragment, { depth: 0 });
 
+  console.log('[DEBUG] PDF Renderer: Building PDF document definition');
   const docDefinition = {
     info: {
       title: options.title,
@@ -577,10 +583,12 @@ export async function renderEditorHtmlToPdfBytes(
     content,
   };
 
+  console.log('[DEBUG] PDF Renderer: Creating PDF');
   return new Promise<Uint8Array>((resolve, reject) => {
     try {
       const generator = pdfMake.createPdf(docDefinition);
       generator.getBuffer((buffer: ArrayBuffer | Uint8Array) => {
+        console.log('[DEBUG] PDF Renderer: PDF buffer received');
         if (buffer instanceof Uint8Array) {
           resolve(buffer);
         } else {
@@ -588,6 +596,7 @@ export async function renderEditorHtmlToPdfBytes(
         }
       });
     } catch (error) {
+      console.error('[DEBUG] PDF Renderer: Error creating PDF:', error);
       reject(error);
     }
   });

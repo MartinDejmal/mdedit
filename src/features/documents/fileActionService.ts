@@ -201,14 +201,19 @@ export async function runExportHtmlAction(
 export async function runExportPdfAction(
   context: FileActionContext
 ): Promise<void> {
+  console.log('[DEBUG] PDF Export: runExportPdfAction started');
   const editorHtml = context.getEditorHtml();
+  console.log('[DEBUG] PDF Export: Got editor HTML, length:', editorHtml?.length);
   if (!editorHtml) return;
 
   try {
     await context.reconcileCanonicalFromEditorHtml(editorHtml);
+    console.log('[DEBUG] PDF Export: Calling exportCurrentDocumentAsPdf');
     const result = await exportCurrentDocumentAsPdf(editorHtml);
+    console.log('[DEBUG] PDF Export: Export result:', result);
     notifyExportResult(result, context);
   } catch (error) {
+    console.error('[DEBUG] PDF Export: Error occurred:', error);
     context.notify.error({
       title: "Export failed",
       message: error instanceof Error ? error.message : "Unknown error.",
