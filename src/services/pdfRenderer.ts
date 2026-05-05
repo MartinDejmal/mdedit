@@ -595,38 +595,16 @@ export async function renderEditorHtmlToPdfBytes(
   };
 
   console.log('[DEBUG] PDF Renderer: Creating PDF');
-  return new Promise<Uint8Array>((resolve, reject) => {
-    let settled = false;
-    // pdfmake's `getBuffer` is callback-based with no error channel: if the
-    // PDFKit pipeline throws asynchronously (typically a font/VFS resolution
-    // problem) the callback never fires and the export hangs silently. Guard
-    // with a timeout so the user sees a real error instead of nothing.
-    const timeout = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      console.error('[DEBUG] PDF Renderer: Timed out waiting for PDF buffer');
-      reject(new Error("PDF rendering timed out (no buffer produced within 15s)."));
-    }, 15_000);
-
-    try {
-      const generator = pdfMake.createPdf(docDefinition);
-      generator.getBuffer((buffer: ArrayBuffer | Uint8Array) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        console.log('[DEBUG] PDF Renderer: PDF buffer received');
-        if (buffer instanceof Uint8Array) {
-          resolve(buffer);
-        } else {
-          resolve(new Uint8Array(buffer));
-        }
-      });
-    } catch (error) {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      console.error('[DEBUG] PDF Renderer: Error creating PDF:', error);
-      reject(error);
-    }
-  });
+  // pdfmake 0.3.x changed `getBuffer` to return `Promise<Buffer>` instead of
+  // accepting a callback. Passing a callback (the 0.2.x API) is silently
+  // ignored, which is why the export used to hang indefinitely.
+  try {
+    const generator = pdfMake.createPdf(docDefinition);
+    const buffer: ArrayBuffer | Uint8Array = await generator.getBuffer();
+    console.log('[DEBUG] PDF Renderer: PDF buffer received');
+    return buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  } catch (error) {
+    console.error('[DEBUG] PDF Renderer: Error creating PDF:', error);
+    throw error;
+  }
 }
