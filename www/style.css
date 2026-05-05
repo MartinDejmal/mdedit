@@ -375,7 +375,39 @@ kbd {
 .download-lead {
   color: #b7c0d4;
   max-width: 640px;
-  margin: 0 auto 32px;
+  margin: 0 auto 24px;
+}
+
+.download-stats {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.download-stat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: rgba(59,124,244,.15);
+  border: 1px solid rgba(120,154,255,.30);
+  border-radius: 999px;
+  color: #a9c2ff;
+  font-size: .88rem;
+  font-weight: 500;
+}
+
+.download-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  min-width: 1.5ch;
+  display: inline-block;
+  text-align: center;
+}
+
+.download-stat-label {
+  color: #8fa5d0;
 }
 
 .download-grid {

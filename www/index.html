@@ -147,6 +147,14 @@
               <h2>Vyberte instalátor pro svůj systém</h2>
               <p class="download-lead">Nainstalujte mdedit jako běžnou desktopovou aplikaci. Bez účtu, bez cloudu, bez další malé daně za existenci.</p>
 
+              <div class="download-stats">
+                <div class="download-stat-badge">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span id="total-downloads" class="download-stat-value" aria-live="polite">…</span>
+                  <span class="download-stat-label">celkových stažení</span>
+                </div>
+              </div>
+
               <div class="download-grid" aria-label="Instalátory mdedit">
                   <article class="download-card download-card-primary">
                       <div class="download-card-top">
@@ -207,5 +215,37 @@ npm run tauri build</code></pre>
     </div>
   </footer>
 
+  <script>
+    (async () => {
+      try {
+        let total = 0;
+        let page = 1;
+        let hasMore = true;
+        while (hasMore) {
+          const res = await fetch(
+            `https://api.github.com/repos/MartinDejmal/mdedit/releases?per_page=100&page=${page}`
+          );
+          if (!res.ok) {
+            console.error('download counter: GitHub API responded with', res.status);
+            break;
+          }
+          const releases = await res.json();
+          for (const release of releases) {
+            for (const asset of release.assets) {
+              total += asset.download_count;
+            }
+          }
+          hasMore = releases.length === 100;
+          page++;
+        }
+        const el = document.getElementById('total-downloads');
+        if (el) {
+          el.textContent = total.toLocaleString('cs-CZ');
+        }
+      } catch (err) {
+        console.error('download counter: failed to fetch release stats', err);
+      }
+    })();
+  </script>
 </body>
 </html>
