@@ -86,6 +86,11 @@ export async function getLaunchArgs(): Promise<string[]> {
   return invoke<string[]>("get_launch_args");
 }
 
+/** Opens a URL in the system default browser. */
+export async function openInBrowser(url: string): Promise<void> {
+  return invoke<void>("open_in_browser", { url });
+}
+
 /** Updates native window title. */
 export async function setWindowTitle(title: string): Promise<void> {
   await getCurrentWindow().setTitle(title);
