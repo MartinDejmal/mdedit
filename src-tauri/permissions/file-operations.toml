@@ -40,3 +40,8 @@ commands.allow = ["get_file_metadata"]
 identifier = "allow-get-launch-args"
 description = "Allows invoking the get_launch_args command."
 commands.allow = ["get_launch_args"]
+
+[[permission]]
+identifier = "allow-open-in-browser"
+description = "Allows invoking the open_in_browser command."
+commands.allow = ["open_in_browser"]

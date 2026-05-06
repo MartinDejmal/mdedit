@@ -13,6 +13,7 @@
     "allow-save-html-file-dialog",
     "allow-save-pdf-file-dialog",
     "allow-get-file-metadata",
-    "allow-get-launch-args"
+    "allow-get-launch-args",
+    "allow-open-in-browser"
   ]
 }
