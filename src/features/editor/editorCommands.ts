@@ -169,6 +169,22 @@ export function setCodeBlockLanguage(editor: Editor, language: string): void {
 }
 
 export function cycleHeading(editor: Editor): void {
+  // If the cursor is inside a list item, first remove the list formatting,
+  // then convert the lifted paragraph to H1.
+  if (editor.isActive("bulletList")) {
+    editor.chain().focus().toggleBulletList().setHeading({ level: 1 }).run();
+    return;
+  }
+  if (editor.isActive("orderedList")) {
+    editor.chain().focus().toggleOrderedList().setHeading({ level: 1 }).run();
+    return;
+  }
+  if (editor.isActive("taskList")) {
+    // taskList has no built-in toggle command, so we use liftListItem directly.
+    editor.chain().focus().liftListItem("taskItem").setHeading({ level: 1 }).run();
+    return;
+  }
+
   if (editor.isActive("heading", { level: 1 })) {
     editor.chain().focus().setHeading({ level: 2 }).run();
   } else if (editor.isActive("heading", { level: 2 })) {
