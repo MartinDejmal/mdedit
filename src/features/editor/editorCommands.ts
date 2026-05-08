@@ -110,6 +110,40 @@ export function insertTaskList(editor: Editor): void {
     return;
   }
 
+  // Check if there's a text selection
+  if (!editor.state.selection.empty) {
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to, "\n");
+
+    // Split the selected text into lines
+    const lines = selectedText.split("\n").filter(line => line.trim());
+
+    if (lines.length > 0) {
+      // Create task list items from each line
+      const taskListContent = {
+        type: "taskList",
+        content: lines.map(line => ({
+          type: "taskItem",
+          attrs: { checked: false },
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: line.trim() }]
+            }
+          ]
+        }))
+      };
+
+      // Replace the selection with the task list
+      editor.chain()
+        .focus()
+        .deleteSelection()
+        .insertContent(taskListContent)
+        .run();
+      return;
+    }
+  }
+
   editor.chain().focus().wrapInList("taskList").run();
 }
 
