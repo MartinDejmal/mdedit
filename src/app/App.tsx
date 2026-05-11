@@ -2,6 +2,7 @@ import Layout from "../components/Layout";
 import Toolbar from "../components/Toolbar";
 import EditorArea from "../features/editor/Editor";
 import StatusBar from "../components/StatusBar";
+import AboutDialog from "../features/ux/AboutDialog";
 
 import { useDocumentStore } from "../stores/documentStore";
 import { useEditorController } from "../features/editor/useEditorController";
@@ -30,6 +31,8 @@ function AppContent() {
     handleSetCodeBlockLanguage,
     isOutlineVisible,
     handleToggleOutline,
+    isAboutVisible,
+    handleCloseAbout,
   } = useEditorController();
 
   return (
@@ -71,6 +74,7 @@ function AppContent() {
         hasActiveDocument={hasActiveDocument}
         hasExternalChangeWarning={activeDocument.hasExternalChangeWarning}
       />
+      {isAboutVisible && <AboutDialog onClose={handleCloseAbout} />}
     </Layout>
   );
 }

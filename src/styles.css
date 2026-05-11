@@ -680,6 +680,85 @@ body {
 }
 
 /* ============================================================
+   About dialog
+   ============================================================ */
+
+.about-dialog {
+  width: min(460px, calc(100vw - 32px));
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.24);
+  padding: 24px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.about-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.about-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.about-app-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.about-version {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.about-description {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.about-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  font-size: 13px;
+}
+
+.about-meta dt {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.about-meta dd {
+  color: var(--color-text);
+}
+
+.about-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-accent);
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.about-link:hover {
+  color: #2563eb;
+}
+
+/* ============================================================
    Drag-drop overlay
    ============================================================ */
 

@@ -48,6 +48,7 @@ import { useDragDropHandler } from "./useDragDropHandler";
 const APP_VERSION = __APP_VERSION__;
 const APP_NAME = `mdedit v${APP_VERSION}`;
 const RELOAD_ACCELERATOR = "CmdOrCtrl+Alt+R";
+const DOCUMENTATION_URL = "https://github.com/MartinDejmal/mdedit";
 
 const UNTITLED_NAME = "Untitled";
 
@@ -85,6 +86,10 @@ export interface EditorController {
   handleSetCodeBlockLanguage: (language: string) => void;
   isOutlineVisible: boolean;
   handleToggleOutline: () => void;
+  isAboutVisible: boolean;
+  handleOpenAbout: () => void;
+  handleCloseAbout: () => void;
+  handleOpenDocumentation: () => void;
 }
 
 export function useEditorController(): EditorController {
@@ -94,6 +99,7 @@ export function useEditorController(): EditorController {
   const startupReopenDoneRef = useRef(false);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
   const [activeCodeBlockLanguage, setActiveCodeBlockLanguage] = useState<string | null>(null);
+  const [isAboutVisible, setIsAboutVisible] = useState(false);
   const { isDirty, currentFilePath, isUntitled, hasActiveDocument } =
     useDocumentStore();
   const { confirm, notify, requestInput } = useAppUx();
@@ -234,6 +240,18 @@ export function useEditorController(): EditorController {
       saveAppState(nextState);
       return nextState;
     });
+  }, []);
+
+  const handleOpenAbout = useCallback(() => {
+    setIsAboutVisible(true);
+  }, []);
+
+  const handleCloseAbout = useCallback(() => {
+    setIsAboutVisible(false);
+  }, []);
+
+  const handleOpenDocumentation = useCallback(() => {
+    void bridge.openInBrowser(DOCUMENTATION_URL);
   }, []);
 
   useEffect(() => {
@@ -407,8 +425,25 @@ export function useEditorController(): EditorController {
           ],
         });
 
+        const helpSubmenu = await Submenu.new({
+          text: "Help",
+          items: [
+            {
+              id: "help-documentation",
+              text: "Documentation",
+              action: () => handleOpenDocumentation(),
+            },
+            await PredefinedMenuItem.new({ item: "Separator" }),
+            {
+              id: "help-about",
+              text: "About mdedit",
+              action: () => handleOpenAbout(),
+            },
+          ],
+        });
+
         const menu = await Menu.new({
-          items: [fileSubmenu, editSubmenu, viewSubmenu],
+          items: [fileSubmenu, editSubmenu, viewSubmenu, helpSubmenu],
         });
 
         if (!disposed) {
@@ -437,6 +472,8 @@ export function useEditorController(): EditorController {
     persistedState.recentFiles,
     persistedState.ui.isOutlineVisible,
     handleToggleOutline,
+    handleOpenAbout,
+    handleOpenDocumentation,
   ]);
 
   useEffect(() => {
@@ -559,6 +596,10 @@ export function useEditorController(): EditorController {
       handleSetCodeBlockLanguage,
       isOutlineVisible: persistedState.ui.isOutlineVisible,
       handleToggleOutline,
+      isAboutVisible,
+      handleOpenAbout,
+      handleCloseAbout,
+      handleOpenDocumentation,
     }),
     [
       editor,
@@ -581,6 +622,10 @@ export function useEditorController(): EditorController {
       isDragOver,
       persistedState.recentFiles,
       persistedState.ui.isOutlineVisible,
+      isAboutVisible,
+      handleOpenAbout,
+      handleCloseAbout,
+      handleOpenDocumentation,
     ]
   );
 }

@@ -10,6 +10,7 @@ use base64::Engine;
 use rfd::AsyncFileDialog;
 use serde::Serialize;
 use std::time::UNIX_EPOCH;
+use std::process::Command;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -120,6 +121,39 @@ fn get_launch_args() -> Vec<String> {
     std::env::args().skip(1).collect()
 }
 
+/// Opens a URL in the system default browser.
+///
+/// Uses platform-specific mechanisms: `open` on macOS, `xdg-open` on Linux,
+/// and `rundll32 url.dll,FileProtocolHandler` on Windows.
+///
+/// Only `http://` and `https://` URLs are accepted to prevent misuse.
+#[tauri::command]
+fn open_in_browser(url: String) -> Result<(), String> {
+    if !url.starts_with("https://") && !url.starts_with("http://") {
+        return Err("Only http:// and https:// URLs are supported.".to_string());
+    }
+
+    #[cfg(target_os = "macos")]
+    Command::new("open")
+        .arg(&url)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    #[cfg(target_os = "linux")]
+    Command::new("xdg-open")
+        .arg(&url)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    #[cfg(target_os = "windows")]
+    Command::new("rundll32")
+        .args(["url.dll,FileProtocolHandler", &url])
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 #[tauri::command]
 async fn get_file_metadata(path: String) -> Result<FileMetadata, String> {
     let metadata = std::fs::metadata(path).map_err(|e| e.to_string())?;
@@ -137,6 +171,7 @@ pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             get_launch_args,
+            open_in_browser,
             open_file_dialog,
             read_text_file,
             save_text_file,
