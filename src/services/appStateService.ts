@@ -4,6 +4,7 @@ export interface AppSettings {
 
 export interface AppUiState {
   isOutlineVisible: boolean;
+  outlineSidebarWidth: number;
 }
 
 export interface PersistedAppState {
@@ -24,6 +25,7 @@ const DEFAULT_STATE: PersistedAppState = {
   },
   ui: {
     isOutlineVisible: true,
+    outlineSidebarWidth: 240,
   },
 };
 
@@ -55,6 +57,10 @@ function normalizeState(candidate: unknown): PersistedAppState {
     ui: {
       isOutlineVisible:
         draft.ui?.isOutlineVisible ?? DEFAULT_STATE.ui.isOutlineVisible,
+      outlineSidebarWidth:
+        typeof draft.ui?.outlineSidebarWidth === "number"
+          ? Math.max(150, Math.min(600, draft.ui.outlineSidebarWidth))
+          : DEFAULT_STATE.ui.outlineSidebarWidth,
     },
   };
 }

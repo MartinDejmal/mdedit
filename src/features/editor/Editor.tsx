@@ -26,6 +26,8 @@ interface EditorProps {
   onOpen: () => void;
   onOpenRecent: (path: string) => void;
   isOutlineVisible: boolean;
+  outlineSidebarWidth: number;
+  onOutlineWidthChange: (width: number) => void;
 }
 
 export default function EditorArea({
@@ -36,6 +38,8 @@ export default function EditorArea({
   onOpen,
   onOpenRecent,
   isOutlineVisible,
+  outlineSidebarWidth,
+  onOutlineWidthChange,
 }: EditorProps) {
   const [outlineHeadings, setOutlineHeadings] = useState<OutlineHeading[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
@@ -141,6 +145,8 @@ export default function EditorArea({
           headings={outlineHeadings}
           activeHeadingId={activeHeadingId}
           onSelectHeading={handleSelectHeading}
+          width={outlineSidebarWidth}
+          onWidthChange={onOutlineWidthChange}
         />
       ) : null}
       <div className="editor-wrapper">

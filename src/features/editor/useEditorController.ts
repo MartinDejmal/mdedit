@@ -85,6 +85,8 @@ export interface EditorController {
   handleSetCodeBlockLanguage: (language: string) => void;
   isOutlineVisible: boolean;
   handleToggleOutline: () => void;
+  outlineSidebarWidth: number;
+  handleOutlineWidthChange: (width: number) => void;
 }
 
 export function useEditorController(): EditorController {
@@ -229,6 +231,20 @@ export function useEditorController(): EditorController {
         ui: {
           ...current.ui,
           isOutlineVisible: !current.ui.isOutlineVisible,
+        },
+      };
+      saveAppState(nextState);
+      return nextState;
+    });
+  }, []);
+
+  const handleOutlineWidthChange = useCallback((width: number) => {
+    setPersistedState((current) => {
+      const nextState = {
+        ...current,
+        ui: {
+          ...current.ui,
+          outlineSidebarWidth: width,
         },
       };
       saveAppState(nextState);
@@ -559,6 +575,8 @@ export function useEditorController(): EditorController {
       handleSetCodeBlockLanguage,
       isOutlineVisible: persistedState.ui.isOutlineVisible,
       handleToggleOutline,
+      outlineSidebarWidth: persistedState.ui.outlineSidebarWidth,
+      handleOutlineWidthChange,
     }),
     [
       editor,
@@ -577,10 +595,12 @@ export function useEditorController(): EditorController {
       handleToggleCodeBlock,
       handleSetCodeBlockLanguage,
       handleToggleOutline,
+      handleOutlineWidthChange,
       hasActiveDocument,
       isDragOver,
       persistedState.recentFiles,
       persistedState.ui.isOutlineVisible,
+      persistedState.ui.outlineSidebarWidth,
     ]
   );
 }

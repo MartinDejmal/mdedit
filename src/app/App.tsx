@@ -30,6 +30,8 @@ function AppContent() {
     handleSetCodeBlockLanguage,
     isOutlineVisible,
     handleToggleOutline,
+    outlineSidebarWidth,
+    handleOutlineWidthChange,
   } = useEditorController();
 
   return (
@@ -64,6 +66,8 @@ function AppContent() {
         onOpen={() => void handleOpen()}
         onOpenRecent={(path) => void handleOpenRecent(path)}
         isOutlineVisible={isOutlineVisible}
+        outlineSidebarWidth={outlineSidebarWidth}
+        onOutlineWidthChange={handleOutlineWidthChange}
       />
       <StatusBar
         isDirty={isDirty}
