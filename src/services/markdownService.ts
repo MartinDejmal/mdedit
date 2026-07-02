@@ -90,6 +90,18 @@ pre code {
   border-radius: 0;
   color: inherit;
 }
+.mermaid {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  text-align: center;
+}
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
 table {
   width: 100%;
   border-collapse: collapse;
@@ -109,6 +121,28 @@ th {
 input[type="checkbox"] {
   vertical-align: middle;
 }
+`;
+
+const MERMAID_EXPORT_SCRIPT = `
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("pre > code.language-mermaid").forEach(function (code) {
+      var container = document.createElement("div");
+      container.className = "mermaid";
+      container.textContent = code.textContent || "";
+      code.parentElement.replaceWith(container);
+    });
+
+    if (window.mermaid) {
+      window.mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: "strict",
+        theme: "default"
+      });
+    }
+  });
+</script>
 `;
 
 const EXPORT_PRINT_CSS = `
@@ -184,6 +218,7 @@ export function buildHtmlDocument({
     "</head>",
     "<body>",
     `  <article>${bodyHtml}</article>`,
+    MERMAID_EXPORT_SCRIPT,
     "</body>",
     "</html>",
   ].join("\n");

@@ -437,6 +437,45 @@ body {
   color: #7a2f8f;
 }
 
+.ProseMirror .mermaid-code-block {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.ProseMirror .mermaid-code-block pre {
+  border: none;
+  border-radius: 0;
+  margin: 0;
+}
+
+.ProseMirror .mermaid-code-block.is-mermaid pre {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ProseMirror .mermaid-preview {
+  display: none;
+}
+
+.ProseMirror .mermaid-code-block.is-mermaid .mermaid-preview {
+  display: block;
+  min-height: 72px;
+  padding: 16px;
+  overflow-x: auto;
+  background: #fff;
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.ProseMirror .mermaid-preview svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .ProseMirror hr {
   border: none;
   border-top: 2px solid var(--color-border);
