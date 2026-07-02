@@ -189,9 +189,7 @@ export function useEditorController(): EditorController {
   }, [actionContext]);
 
   const handleExportPdf = useCallback(async () => {
-    console.log('[DEBUG] PDF Export: handleExportPdf called');
     await runExportPdfAction(actionContext);
-    console.log('[DEBUG] PDF Export: runExportPdfAction completed');
   }, [actionContext]);
 
   const handleInsertLink = useCallback(async () => {

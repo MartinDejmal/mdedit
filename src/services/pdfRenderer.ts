@@ -33,9 +33,20 @@ interface InlineObject {
 
 type Content = unknown;
 
+const MAX_RENDER_DEPTH = 80;
+const PDF_RENDER_TIMEOUT_MS = 30_000;
+
 interface RenderContext {
   /** Nesting depth used to gate huge documents from blowing the stack. */
   depth: number;
+}
+
+function nextContext(ctx: RenderContext): RenderContext {
+  const depth = ctx.depth + 1;
+  if (depth > MAX_RENDER_DEPTH) {
+    throw new Error("Document is nested too deeply to export safely as PDF.");
+  }
+  return { depth };
 }
 
 const ROBOTO_VFS_INSTALLED = installVfs();
@@ -44,10 +55,20 @@ function installVfs(): boolean {
   const target = pdfMake as { vfs?: unknown; fonts?: unknown };
   // vfs_fonts is exported either as the raw vfs object (newer builds) or
   // wrapped under `pdfMake.vfs` (older builds). Handle both.
-  const candidate = (vfsFonts as { pdfMake?: { vfs?: unknown }; vfs?: unknown }) ?? {};
+  const candidate = (vfsFonts as {
+    default?: unknown;
+    pdfMake?: { vfs?: unknown };
+    vfs?: unknown;
+  }) ?? {};
+  const defaultExport = candidate.default as
+    | { pdfMake?: { vfs?: unknown }; vfs?: unknown }
+    | undefined;
   target.vfs =
-    (candidate as { pdfMake?: { vfs?: unknown } }).pdfMake?.vfs ??
-    (candidate as { vfs?: unknown }).vfs ??
+    candidate.pdfMake?.vfs ??
+    candidate.vfs ??
+    defaultExport?.pdfMake?.vfs ??
+    defaultExport?.vfs ??
+    defaultExport ??
     vfsFonts;
   // Without an explicit font map pdfmake's PDFKit pipeline silently fails
   // resolving "Roboto" and `getBuffer` never fires its callback. Pin the
@@ -60,7 +81,14 @@ function installVfs(): boolean {
       bolditalics: "Roboto-MediumItalic.ttf",
     },
   };
-  return true;
+  return Boolean(
+    target.vfs &&
+      typeof target.vfs === "object" &&
+      "Roboto-Regular.ttf" in target.vfs &&
+      "Roboto-Medium.ttf" in target.vfs &&
+      "Roboto-Italic.ttf" in target.vfs &&
+      "Roboto-MediumItalic.ttf" in target.vfs
+  );
 }
 
 const HEADING_STYLES = {
@@ -249,7 +277,7 @@ function processListItem(li: HTMLElement, ctx: RenderContext): Content {
 
     if (tag === "ul" || tag === "ol") {
       flushInline();
-      stack.push(processList(child, tag === "ol", { depth: ctx.depth + 1 }));
+      stack.push(processList(child, tag === "ol", nextContext(ctx)));
       return;
     }
 
@@ -340,7 +368,7 @@ function processCodeBlock(node: HTMLElement): Content {
 }
 
 function processBlockquote(node: HTMLElement, ctx: RenderContext): Content {
-  const inner = processChildren(node, { ...ctx, depth: ctx.depth + 1 });
+  const inner = processChildren(node, nextContext(ctx));
   return {
     table: {
       widths: ["*"],
@@ -371,7 +399,11 @@ function processTable(node: HTMLElement): Content {
 
   rows.forEach((row, rowIdx) => {
     const cells = Array.from(row.children).filter(isElement);
-    columnCount = Math.max(columnCount, cells.length);
+    const rowColumnCount = cells.reduce((count, cell) => {
+      const span = Number.parseInt(cell.getAttribute("colspan") ?? "1", 10);
+      return count + (Number.isFinite(span) && span > 0 ? span : 1);
+    }, 0);
+    columnCount = Math.max(columnCount, rowColumnCount);
     const isHeader = cells.every((c) => tagName(c) === "th");
     if (isHeader && rowIdx === 0) hasHeader = true;
     body.push(
@@ -387,6 +419,12 @@ function processTable(node: HTMLElement): Content {
   });
 
   if (columnCount === 0) return { text: "" };
+
+  body.forEach((row) => {
+    while (row.length < columnCount) {
+      row.push({ text: "" });
+    }
+  });
 
   const widths = Array.from({ length: columnCount }, () => "*");
   return {
@@ -547,19 +585,14 @@ export async function renderEditorHtmlToPdfBytes(
   editorHtml: string,
   options: PdfRenderOptions
 ): Promise<Uint8Array> {
-  console.log('[DEBUG] PDF Renderer: renderEditorHtmlToPdfBytes called');
-  console.log('[DEBUG] PDF Renderer: ROBOTO_VFS_INSTALLED:', ROBOTO_VFS_INSTALLED);
-
   if (!ROBOTO_VFS_INSTALLED) {
     throw new Error("PDF font assets failed to load.");
   }
 
-  console.log('[DEBUG] PDF Renderer: Parsing HTML fragment');
   const fragment = parseFragment(editorHtml);
-  console.log('[DEBUG] PDF Renderer: Processing children');
   const content = processChildren(fragment, { depth: 0 });
+  const exportContent = content.length > 0 ? content : [{ text: "" }];
 
-  console.log('[DEBUG] PDF Renderer: Building PDF document definition');
   const docDefinition = {
     info: {
       title: options.title,
@@ -591,10 +624,9 @@ export async function renderEditorHtmlToPdfBytes(
         background: "#f3f4f6",
       },
     },
-    content,
+    content: exportContent,
   };
 
-  console.log('[DEBUG] PDF Renderer: Creating PDF');
   return new Promise<Uint8Array>((resolve, reject) => {
     let settled = false;
     // pdfmake's `getBuffer` is callback-based with no error channel: if the
@@ -604,9 +636,8 @@ export async function renderEditorHtmlToPdfBytes(
     const timeout = setTimeout(() => {
       if (settled) return;
       settled = true;
-      console.error('[DEBUG] PDF Renderer: Timed out waiting for PDF buffer');
-      reject(new Error("PDF rendering timed out (no buffer produced within 15s)."));
-    }, 15_000);
+      reject(new Error("PDF rendering timed out (no buffer produced within 30s)."));
+    }, PDF_RENDER_TIMEOUT_MS);
 
     try {
       const generator = pdfMake.createPdf(docDefinition);
@@ -614,7 +645,6 @@ export async function renderEditorHtmlToPdfBytes(
         if (settled) return;
         settled = true;
         clearTimeout(timeout);
-        console.log('[DEBUG] PDF Renderer: PDF buffer received');
         if (buffer instanceof Uint8Array) {
           resolve(buffer);
         } else {
@@ -625,7 +655,6 @@ export async function renderEditorHtmlToPdfBytes(
       if (settled) return;
       settled = true;
       clearTimeout(timeout);
-      console.error('[DEBUG] PDF Renderer: Error creating PDF:', error);
       reject(error);
     }
   });
