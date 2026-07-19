@@ -173,7 +173,9 @@ export default function Toolbar({
                 ? "Heading: H2 → H3"
                 : editor?.isActive("heading", { level: 3 })
                   ? "Heading: H3 → Normal"
-                  : "Heading: Normal → H1"
+                  : editor?.isActive("bulletList") || editor?.isActive("orderedList") || editor?.isActive("taskList")
+                    ? "Heading: List → H1"
+                    : "Heading: Normal → H1"
           }
           icon={<Heading size={ICON_SIZE} strokeWidth={1.9} />}
         />
