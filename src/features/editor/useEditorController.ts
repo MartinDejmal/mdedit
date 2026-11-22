@@ -463,39 +463,53 @@ export function useEditorController(): EditorController {
   }, [currentFilePath, isDirty, isUntitled]);
 
   useEffect(() => {
+    let disposed = false;
     let unlisten: (() => void) | undefined;
 
     void bridge
       .onWindowCloseRequested(async (event) => {
-        if (!useDocumentStore.getState().isDirty) {
-          return;
-        }
-
+        // Handle every close ourselves so destroy errors are reported even when
+        // the document is clean, rather than escaping from Tauri's listener.
         event.preventDefault();
-        if (closeConfirmInFlightRef.current) {
-          return;
-        }
+        if (disposed || closeConfirmInFlightRef.current) return;
 
         closeConfirmInFlightRef.current = true;
-        const canDiscard = await confirmDiscardUnsavedChanges();
-        closeConfirmInFlightRef.current = false;
-        if (!canDiscard) return;
-
         try {
+          if (useDocumentStore.getState().isDirty) {
+            const canDiscard = await confirmDiscardUnsavedChanges();
+            if (!canDiscard || disposed) return;
+          }
           await bridge.destroyCurrentWindow();
         } catch (error) {
-          notify.error({
-            title: "Could not close window",
-            message: error instanceof Error ? error.message : "Unknown error.",
-          });
+          if (!disposed) {
+            notify.error({
+              title: "Could not close window",
+              message: error instanceof Error ? error.message : "Unknown error.",
+            });
+          }
+        } finally {
+          // A failed confirmation or destroy must not block subsequent attempts.
+          closeConfirmInFlightRef.current = false;
         }
       })
       .then((cleanup) => {
-        unlisten = cleanup;
+        // Registration is asynchronous: React StrictMode may already have run
+        // the effect cleanup before the listener becomes available.
+        if (disposed) cleanup();
+        else unlisten = cleanup;
+      })
+      .catch((error) => {
+        if (!disposed) {
+          notify.error({
+            title: "Could not register window close handler",
+            message: error instanceof Error ? error.message : "Unknown error.",
+          });
+        }
       });
 
     return () => {
-      if (unlisten) unlisten();
+      disposed = true;
+      unlisten?.();
     };
   }, [confirmDiscardUnsavedChanges, notify]);
 
