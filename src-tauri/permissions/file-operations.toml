@@ -40,3 +40,13 @@ commands.allow = ["get_file_metadata"]
 identifier = "allow-get-launch-args"
 description = "Allows invoking the get_launch_args command."
 commands.allow = ["get_launch_args"]
+
+[[permission]]
+identifier = "allow-open-folder-dialog"
+description = "Allows selecting a folder for the Markdown browser."
+commands.allow = ["open_folder_dialog"]
+
+[[permission]]
+identifier = "allow-list-markdown-directory"
+description = "Allows listing subdirectories and Markdown files."
+commands.allow = ["list_markdown_directory"]

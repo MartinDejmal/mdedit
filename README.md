@@ -70,6 +70,19 @@ src-tauri/
 | Markdown pipeline | unified / remark / rehype |
 | Nativní bridge | Tauri commandy v Rustu + rfd |
 
+## Prohlížeč složek
+
+- Tlačítko se souborovým stromem na liště zobrazí panel **Files** vlevo od Outline.
+- **Choose folder** / ikona složky vybere kořenový adresář. Podsložky se načítají při rozbalení; soubory se zobrazují pouze s příponou `.md` (včetně `.MD`). Symbolické odkazy se nepřecházejí.
+- Jeden klik otevře soubor v současném editoru. U neuložených změn dialog nabídne **Save**, **Discard** a **Cancel**. Zrušení ukládání nebo chyba ponechá aktuální dokument otevřený.
+- Aktivní soubor je zvýrazněný. Tlačítko obnovení znovu načte obsah kořenové složky; skrytí panelu zachová vybranou složku i rozbalení.
+
+Testy filtrování, řazení, prázdných/neexistujících složek a cyklických odkazů:
+
+```bash
+cargo test --locked --manifest-path src-tauri/Cargo.toml folder_browser::tests
+```
+
 ## Klávesové zkratky
 
 - `Ctrl/Cmd + N` → New

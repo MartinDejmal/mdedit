@@ -106,3 +106,10 @@ export interface ReloadDocumentResult {
   html?: string;
   message?: string;
 }
+
+/** One directory level; directories are expanded on demand. */
+export interface DirectoryEntry {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+}

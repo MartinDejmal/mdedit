@@ -18,7 +18,7 @@ import {
   exportCurrentDocumentAsPdf,
   type ExportResult,
 } from "./exportService";
-import type { ConfirmOptions, ToastOptions } from "../ux/useAppUx";
+import type { ConfirmOptions, SaveChangesChoice, ToastOptions } from "../ux/useAppUx";
 import { useDocumentStore } from "../../stores/documentStore";
 
 const ALLOWED_DROP_EXTENSIONS = [".md", ".markdown", ".txt"];
@@ -342,6 +342,42 @@ export async function runDropAction(
   } catch (error) {
     context.notify.error({
       title: "Drop failed",
+      message: error instanceof Error ? error.message : "Unknown error.",
+    });
+  }
+}
+
+/** Switch from the folder tree, keeping the current document until opening succeeds. */
+export async function runOpenBrowserAction(
+  path: string,
+  context: FileActionContext,
+  requestSaveChanges: () => Promise<SaveChangesChoice>
+): Promise<void> {
+  if (path === useDocumentStore.getState().currentFilePath) return;
+  try {
+    const html = context.getEditorHtml();
+    if (html !== null && useDocumentStore.getState().hasActiveDocument) {
+      await context.reconcileCanonicalFromEditorHtml(html);
+    }
+    if (useDocumentStore.getState().isDirty) {
+      const choice = await requestSaveChanges();
+      if (choice === "cancel") return;
+      if (choice === "save") {
+        const latestHtml = context.getEditorHtml();
+        if (latestHtml !== null) await context.reconcileCanonicalFromEditorHtml(latestHtml);
+        const saved = await saveDocument();
+        if (saved.kind !== "saved") return;
+        if (saved.path) context.onStateChanged(pushRecentFile(saved.path));
+      }
+    }
+    const result = await openDocumentFromPath(path);
+    if (result.kind === "error") throw new Error(result.message);
+    if (result.kind !== "opened" || result.html === undefined) return;
+    context.setEditorHtml(result.html);
+    context.onStateChanged(pushRecentFile(path));
+  } catch (error) {
+    context.notify.error({
+      title: "Could not switch files",
       message: error instanceof Error ? error.message : "Unknown error.",
     });
   }

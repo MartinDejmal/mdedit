@@ -1,3 +1,5 @@
+import { useState } from "react";
+import FolderSidebar from "../components/FolderSidebar";
 import Layout from "../components/Layout";
 import Toolbar from "../components/Toolbar";
 import EditorArea from "../features/editor/Editor";
@@ -8,6 +10,7 @@ import { useEditorController } from "../features/editor/useEditorController";
 import { AppUxProvider } from "../features/ux/useAppUx";
 
 function AppContent() {
+  const [isBrowserVisible, setIsBrowserVisible] = useState(false);
   const { isDirty, currentFilePath, activeDocument } = useDocumentStore();
   const {
     editor,
@@ -17,6 +20,7 @@ function AppContent() {
     handleNew,
     handleOpen,
     handleOpenRecent,
+    handleOpenBrowserFile,
     handleReload,
     handleSave,
     handleSaveAs,
@@ -55,20 +59,29 @@ function AppContent() {
         activeCodeBlockLanguage={activeCodeBlockLanguage}
         onToggleCodeBlock={handleToggleCodeBlock}
         onSetCodeBlockLanguage={handleSetCodeBlockLanguage}
+        isBrowserVisible={isBrowserVisible}
+        onToggleBrowser={() => setIsBrowserVisible((visible) => !visible)}
         isOutlineVisible={isOutlineVisible}
         onToggleOutline={handleToggleOutline}
       />
-      <EditorArea
-        editor={editor}
-        showEmptyState={!hasActiveDocument}
-        recentFiles={recentFiles}
-        onNew={() => void handleNew()}
-        onOpen={() => void handleOpen()}
-        onOpenRecent={(path) => void handleOpenRecent(path)}
-        isOutlineVisible={isOutlineVisible}
-        outlineSidebarWidth={outlineSidebarWidth}
-        onOutlineWidthChange={handleOutlineWidthChange}
-      />
+      <div className="workspace-main">
+        <FolderSidebar
+          visible={isBrowserVisible}
+          currentFilePath={currentFilePath}
+          onOpenFile={handleOpenBrowserFile}
+        />
+        <EditorArea
+          editor={editor}
+          showEmptyState={!hasActiveDocument}
+          recentFiles={recentFiles}
+          onNew={() => void handleNew()}
+          onOpen={() => void handleOpen()}
+          onOpenRecent={(path) => void handleOpenRecent(path)}
+          isOutlineVisible={isOutlineVisible}
+          outlineSidebarWidth={outlineSidebarWidth}
+          onOutlineWidthChange={handleOutlineWidthChange}
+        />
+      </div>
       <StatusBar
         isDirty={isDirty}
         filePath={currentFilePath}

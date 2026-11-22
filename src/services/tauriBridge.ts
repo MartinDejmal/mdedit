@@ -7,7 +7,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import type { DragDropEvent } from "@tauri-apps/api/webview";
-import type { FileMetadata } from "../types";
+import type { DirectoryEntry, FileMetadata } from "../types";
 
 export type { DragDropEvent };
 
@@ -113,4 +113,12 @@ export async function onDragDropEvent(
   handler: (event: { payload: DragDropEvent }) => void
 ): Promise<UnlistenFn> {
   return getCurrentWindow().onDragDropEvent(handler);
+}
+
+export async function openFolderDialog(): Promise<string | null> {
+  return invoke<string | null>("open_folder_dialog");
+}
+
+export async function listMarkdownDirectory(path: string): Promise<DirectoryEntry[]> {
+  return invoke("list_markdown_directory", { path });
 }

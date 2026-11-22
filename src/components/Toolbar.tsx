@@ -22,6 +22,7 @@ import {
   Table,
   Unlink,
   PanelLeft,
+  FolderTree,
 } from "lucide-react";
 
 import { SUPPORTED_CODE_BLOCK_LANGUAGES } from "../features/editor/codeBlockSyntax";
@@ -50,6 +51,8 @@ interface ToolbarProps {
   activeCodeBlockLanguage: string | null;
   onToggleCodeBlock: () => void;
   onSetCodeBlockLanguage: (language: string) => void;
+  isBrowserVisible: boolean;
+  onToggleBrowser: () => void;
   isOutlineVisible: boolean;
   onToggleOutline: () => void;
 }
@@ -73,6 +76,8 @@ export default function Toolbar({
   activeCodeBlockLanguage,
   onToggleCodeBlock,
   onSetCodeBlockLanguage,
+  isBrowserVisible,
+  onToggleBrowser,
   isOutlineVisible,
   onToggleOutline,
 }: ToolbarProps) {
@@ -268,6 +273,12 @@ export default function Toolbar({
       <div className="toolbar-divider" aria-hidden />
 
       <div className="toolbar-group" aria-label="View">
+        <IconButton
+          onClick={onToggleBrowser}
+          active={isBrowserVisible}
+          title="Toggle file browser"
+          icon={<FolderTree size={ICON_SIZE} strokeWidth={1.9} />}
+        />
         <IconButton
           onClick={onToggleOutline}
           active={isOutlineVisible}

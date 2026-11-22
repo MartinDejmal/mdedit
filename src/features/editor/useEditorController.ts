@@ -24,6 +24,7 @@ import {
   getInitialPersistedState,
   runNewAction,
   runOpenAction,
+  runOpenBrowserAction,
   runOpenRecentAction,
   runReloadAction,
   runSaveAction,
@@ -72,6 +73,7 @@ export interface EditorController {
   handleOpen: () => Promise<void>;
   handleNew: () => Promise<void>;
   handleOpenRecent: (path: string) => Promise<void>;
+  handleOpenBrowserFile: (path: string) => Promise<void>;
   handleReload: () => Promise<void>;
   handleSave: () => Promise<void>;
   handleSaveAs: () => Promise<void>;
@@ -91,6 +93,7 @@ export interface EditorController {
 
 export function useEditorController(): EditorController {
   const isApplyingRemoteContent = useRef(false);
+  const browserSwitchInFlight = useRef(false);
   const closeConfirmInFlightRef = useRef(false);
   const reconcileRunIdRef = useRef(0);
   const startupReopenDoneRef = useRef(false);
@@ -98,7 +101,7 @@ export function useEditorController(): EditorController {
   const [activeCodeBlockLanguage, setActiveCodeBlockLanguage] = useState<string | null>(null);
   const { isDirty, currentFilePath, isUntitled, hasActiveDocument } =
     useDocumentStore();
-  const { confirm, notify, requestInput } = useAppUx();
+  const { confirm, notify, requestInput, requestSaveChanges } = useAppUx();
 
   const editor = useEditor({
     extensions: [
@@ -154,6 +157,16 @@ export function useEditorController(): EditorController {
     }),
     [confirmDiscardUnsavedChanges, editor, notify, setEditorHtml]
   );
+
+  const handleOpenBrowserFile = useCallback(async (path: string) => {
+    if (browserSwitchInFlight.current) return;
+    browserSwitchInFlight.current = true;
+    try {
+      await runOpenBrowserAction(path, actionContext, requestSaveChanges);
+    } finally {
+      browserSwitchInFlight.current = false;
+    }
+  }, [actionContext, requestSaveChanges]);
 
   const handleOpen = useCallback(async () => {
     await runOpenAction(actionContext);
@@ -574,6 +587,7 @@ export function useEditorController(): EditorController {
       handleOpen,
       handleNew,
       handleOpenRecent,
+      handleOpenBrowserFile,
       handleReload,
       handleSave,
       handleSaveAs,
@@ -595,6 +609,7 @@ export function useEditorController(): EditorController {
       handleOpen,
       handleNew,
       handleOpenRecent,
+      handleOpenBrowserFile,
       handleReload,
       handleSave,
       handleSaveAs,

@@ -17,6 +17,27 @@ struct FileMetadata {
     modified_ms: Option<u64>,
 }
 
+mod folder_browser;
+use folder_browser::{markdown_directory_entries, DirectoryEntry};
+
+#[tauri::command]
+async fn open_folder_dialog() -> Option<String> {
+    AsyncFileDialog::new()
+        .set_title("Open Markdown Folder")
+        .pick_folder()
+        .await
+        .map(|folder| folder.path().to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+async fn list_markdown_directory(path: String) -> Result<Vec<DirectoryEntry>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        markdown_directory_entries(std::path::Path::new(&path))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 // ---------------------------------------------------------------------------
 // Tauri commands
 // ---------------------------------------------------------------------------
@@ -138,6 +159,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_launch_args,
             open_file_dialog,
+            open_folder_dialog,
+            list_markdown_directory,
             read_text_file,
             save_text_file,
             save_file_dialog,

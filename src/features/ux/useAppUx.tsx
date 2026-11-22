@@ -44,7 +44,10 @@ interface ToastItem extends ToastOptions {
   kind: ToastKind;
 }
 
+export type SaveChangesChoice = "save" | "discard" | "cancel";
+
 interface ActiveConfirm extends ConfirmOptions {
+  discard?: () => void;
   resolve: (value: boolean) => void;
 }
 
@@ -64,6 +67,7 @@ interface AppUxContextValue {
     error: (options: ToastOptions) => void;
   };
   confirm: (options: ConfirmOptions) => Promise<boolean>;
+  requestSaveChanges: () => Promise<SaveChangesChoice>;
   requestInput: (options: InputDialogOptions) => Promise<string | null>;
 }
 
@@ -127,6 +131,18 @@ export function AppUxProvider({ children }: { children: ReactNode }) {
     });
   }, [enqueueDialog]);
 
+  const requestSaveChanges = useCallback(() => new Promise<SaveChangesChoice>((resolve) => {
+    enqueueDialog({ kind: "confirm", payload: {
+      title: "Save changes before switching files?",
+      message: "Save your changes, discard them, or keep editing the current document.",
+      confirmLabel: "Save",
+      cancelLabel: "Cancel",
+      confirmOnEnter: false,
+      resolve: (save) => resolve(save ? "save" : "cancel"),
+      discard: () => resolve("discard"),
+    } });
+  }), [enqueueDialog]);
+
   const requestInput = useCallback((options: InputDialogOptions) => {
     return new Promise<string | null>((resolve) => {
       enqueueDialog({ kind: "input", payload: { ...options, resolve } });
@@ -173,8 +189,9 @@ export function AppUxProvider({ children }: { children: ReactNode }) {
       notify: createNotificationApi(addToast),
       confirm,
       requestInput,
+      requestSaveChanges,
     }),
-    [addToast, confirm, requestInput]
+    [addToast, confirm, requestInput, requestSaveChanges]
   );
 
   return (
@@ -185,6 +202,11 @@ export function AppUxProvider({ children }: { children: ReactNode }) {
         activeConfirm={activeDialog?.kind === "confirm" ? activeDialog.payload : null}
         onCancel={() => resolveActiveConfirm(false)}
         onConfirm={() => resolveActiveConfirm(true)}
+        onDiscard={() => {
+          if (activeDialog?.kind !== "confirm") return;
+          activeDialog.payload.discard?.();
+          closeDialog();
+        }}
       />
       <InputDialogHost
         activeInput={activeDialog?.kind === "input" ? activeDialog.payload : null}
@@ -236,8 +258,10 @@ function ConfirmDialogHost({
   activeConfirm,
   onCancel,
   onConfirm,
+  onDiscard,
 }: {
   activeConfirm: ActiveConfirm | null;
+  onDiscard: () => void;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
@@ -280,6 +304,9 @@ function ConfirmDialogHost({
           <button type="button" ref={cancelButtonRef} onClick={onCancel}>
             {activeConfirm.cancelLabel ?? "Cancel"}
           </button>
+          {activeConfirm.discard ? (
+            <button type="button" className="danger" onClick={onDiscard}>Discard</button>
+          ) : null}
           <button
             type="button"
             ref={confirmButtonRef}

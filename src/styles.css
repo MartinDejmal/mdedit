@@ -765,3 +765,66 @@ body {
   color: var(--color-accent);
   box-shadow: 0 4px 20px rgba(74, 144, 217, 0.18);
 }
+
+/* The file browser stays to the left of the outline and editor. */
+.workspace-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.workspace-main > .editor-main,
+.workspace-main > .editor-wrapper { min-width: 0; }
+.folder-sidebar {
+  width: 240px;
+  min-width: 170px;
+  max-width: 35vw;
+  flex-shrink: 0;
+  overflow: auto;
+  border-right: 1px solid var(--color-border);
+  background: #fafafa;
+  padding: 10px 8px;
+}
+.folder-sidebar[hidden] { display: none; }
+.folder-sidebar-header { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+.folder-sidebar-header h2 {
+  flex: 1;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-left: 8px;
+}
+.folder-sidebar-header button {
+  display: inline-flex;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 5px;
+  cursor: pointer;
+}
+.folder-sidebar button:disabled { opacity: .5; cursor: default; }
+.folder-sidebar-header button:hover { background: #e9edf3; }
+.folder-root { display: flex; align-items: center; gap: 6px; padding: 6px 8px; font-size: 13px; }
+.folder-root strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-tree-list { list-style: none; margin: 0; padding: 0; }
+.folder-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  padding: 6px 8px;
+  text-align: left;
+  color: var(--color-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+.folder-tree-item svg { flex-shrink: 0; }
+.folder-tree-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-tree-item:hover { background: #f0f3f8; }
+.folder-tree-item.active { background: var(--color-btn-active-bg); border-color: #d4e2f5; color: #1f4d86; }
+.folder-file-icon { margin-left: 19px; }
+.folder-message { font-size: 13px; padding: 8px; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.folder-message button { margin-top: 8px; padding: 5px 8px; cursor: pointer; }

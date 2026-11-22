@@ -24,7 +24,7 @@ export default function OutlineSidebar({
 
     const handleMouseMove = (e: MouseEvent) => {
       if (sidebarRef.current) {
-        const newWidth = e.clientX;
+        const newWidth = e.clientX - sidebarRef.current.getBoundingClientRect().left;
         // Constrain width between 150px and 600px
         const constrainedWidth = Math.max(150, Math.min(600, newWidth));
         onWidthChange(constrainedWidth);
