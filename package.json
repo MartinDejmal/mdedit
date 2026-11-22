@@ -14,7 +14,8 @@
     "build": "npm run sync:version && tsc && vite build",
     "preview": "vite preview",
     "tauri": "npm run sync:version && tauri",
-    "test:pdf": "node --test scripts/pdf-export.test.mjs"
+    "test:pdf": "node --test scripts/pdf-export.test.mjs",
+    "test:mermaid": "node --test scripts/mermaid-preview.test.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

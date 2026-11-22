@@ -2,7 +2,7 @@ import { loadMermaid } from "../../services/mermaidRenderer";
 import CodeBlock from "@tiptap/extension-code-block";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
-import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { Decoration, DecorationSet, type ViewMutationRecord } from "@tiptap/pm/view";
 
 export const SUPPORTED_CODE_BLOCK_LANGUAGES = [
   "plaintext",
@@ -336,6 +336,12 @@ function createMermaidCodeBlockView() {
     return {
       dom: wrapper,
       contentDOM: code,
+      ignoreMutation: (mutation: ViewMutationRecord) => {
+        // Selection changes still belong to ProseMirror. Only the editable code
+        // is document content; SVG/loading/error mutations are owned by this view.
+        if (mutation.type === "selection") return false;
+        return !code.contains(mutation.target);
+      },
       update: (updatedNode: ProseMirrorNode) => {
         if (updatedNode.type !== node.type) return false;
         renderPreview(updatedNode.attrs.language, updatedNode.textContent);
