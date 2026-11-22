@@ -1,0 +1,170 @@
+name: Release desktop apps
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to build and release
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  prepare:
+    name: Validate and prepare draft
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    outputs:
+      release_id: ${{ steps.release.outputs.result }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Check release version
+        run: |
+          node --input-type=module -e "import fs from 'node:fs'; const version = fs.readFileSync('VERSION', 'utf8').trim(); if (version !== process.env.RELEASE_TAG) throw new Error('Tag must match VERSION');"
+          npm run sync:version
+          git diff --exit-code
+      - run: npm ci
+      - name: Install PDF test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+          echo "CHROMIUM_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - run: npm run test:mermaid
+      - run: npm run test:pdf
+      - name: Prepare draft release
+        id: release
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const tag = process.env.RELEASE_TAG;
+            const releases = await github.paginate(github.rest.repos.listReleases, context.repo);
+            const existing = releases.find(release => release.tag_name === tag);
+            if (existing && !existing.draft) throw new Error('Release is already published');
+            if (existing) return existing.id;
+            const notesPath = `docs/releases/${tag}.md`;
+            const body = fs.existsSync(notesPath)
+              ? fs.readFileSync(notesPath, 'utf8')
+              : (await github.rest.repos.generateReleaseNotes({ ...context.repo, tag_name: tag })).data.body;
+            const { data } = await github.rest.repos.createRelease({
+              ...context.repo, tag_name: tag, name: `mdedit ${tag}`,
+              body, draft: true, prerelease: false
+            });
+            return data.id;
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs: prepare
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            platform: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundles: msi,nsis
+          - name: Linux x64
+            platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            bundles: deb,rpm,appimage
+          - name: Linux ARM64
+            platform: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            bundles: deb,rpm,appimage
+          - name: macOS Intel
+            platform: macos-latest
+            target: x86_64-apple-darwin
+            bundles: app,dmg
+          - name: macOS Apple Silicon
+            platform: macos-latest
+            target: aarch64-apple-darwin
+            bundles: app,dmg
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils libfuse2 rpm
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@e9d7b9f1e587218970671bac74e5511ed9506e6a # v2
+        with:
+          workspaces: src-tauri -> target
+          key: ${{ matrix.target }}
+      - run: npm ci
+      - name: Test native file browser
+        if: matrix.name == 'Linux x64'
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml folder_browser::tests
+      - name: Build and upload bundles
+        uses: tauri-apps/tauri-action@944946e3e4cac6603d1fe8f514171e9ecd3c78aa # v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.prepare.outputs.release_id }}
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseDraft: true
+          uploadUpdaterJson: false
+          args: --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+
+  publish:
+    name: Publish complete release
+    needs: [prepare, build]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          RELEASE_ID: ${{ needs.prepare.outputs.release_id }}
+        with:
+          script: |
+            const release_id = Number(process.env.RELEASE_ID);
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, { ...context.repo, release_id });
+            const required = [
+              /x64.*\.msi$/, /x64.*\.exe$/,
+              /amd64\.deb$/, /arm64\.deb$/,
+              /amd64\.AppImage$/, /aarch64\.AppImage$/,
+              /x86_64\.rpm$/, /aarch64\.rpm$/,
+              /x64\.dmg$/, /aarch64\.dmg$/
+            ];
+            for (const pattern of required) {
+              if (!assets.some(asset => asset.size > 0 && pattern.test(asset.name))) {
+                throw new Error(`Missing release asset matching ${pattern}`);
+              }
+            }
+            const { data } = await github.rest.repos.updateRelease({
+              ...context.repo, release_id, draft: false, prerelease: false, make_latest: 'true'
+            });
+            core.notice(`Published ${data.html_url}`);
