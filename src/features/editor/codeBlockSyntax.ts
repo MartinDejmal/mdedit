@@ -1,3 +1,4 @@
+import { loadMermaid } from "../../services/mermaidRenderer";
 import CodeBlock from "@tiptap/extension-code-block";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
@@ -161,8 +162,14 @@ function keywordRegex(language: "javascript" | "typescript" | "sql" | "bash"): R
   return new RegExp(`\\b(${body})\\b`, flags);
 }
 
+export interface CodeHighlightRange {
+  from: number;
+  to: number;
+  className: string;
+}
+
 function addMatches(
-  decorations: Decoration[],
+  decorations: CodeHighlightRange[],
   text: string,
   regex: RegExp,
   className: string,
@@ -173,16 +180,14 @@ function addMatches(
     const value = match[0];
     if (index === undefined || !value) continue;
     decorations.push(
-      Decoration.inline(offset + index, offset + index + value.length, {
-        class: className,
-      })
+      { from: offset + index, to: offset + index + value.length, className }
     );
   }
 }
 
-function highlightCode(language: string | null | undefined, text: string, offset: number): Decoration[] {
+export function getCodeHighlightRanges(language: string | null | undefined, text: string, offset = 0): CodeHighlightRange[] {
   const normalized = normalizeCodeBlockLanguage(language);
-  const decorations: Decoration[] = [];
+  const decorations: CodeHighlightRange[] = [];
 
   if (normalized === "plaintext") {
     return decorations;
@@ -260,53 +265,13 @@ function highlightCode(language: string | null | undefined, text: string, offset
   return decorations;
 }
 
-interface MermaidApi {
-  initialize: (config: Record<string, unknown>) => void;
-  render: (id: string, definition: string) => Promise<{ svg: string }>;
+function highlightCode(language: string | null | undefined, text: string, offset: number): Decoration[] {
+  return getCodeHighlightRanges(language, text, offset).map(({ from, to, className }) =>
+    Decoration.inline(from, to, { class: className })
+  );
 }
 
-declare global {
-  interface Window {
-    mermaid?: MermaidApi;
-    __mdeditMermaidLoader?: Promise<MermaidApi>;
-  }
-}
-
-const MERMAID_CDN_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
 let mermaidRenderId = 0;
-
-function loadMermaid(): Promise<MermaidApi> {
-  if (window.mermaid) {
-    return Promise.resolve(window.mermaid);
-  }
-
-  if (window.__mdeditMermaidLoader) {
-    return window.__mdeditMermaidLoader;
-  }
-
-  window.__mdeditMermaidLoader = new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = MERMAID_CDN_URL;
-    script.async = true;
-    script.onload = () => {
-      if (!window.mermaid) {
-        reject(new Error("Mermaid renderer did not become available."));
-        return;
-      }
-
-      window.mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: "strict",
-        theme: "default",
-      });
-      resolve(window.mermaid);
-    };
-    script.onerror = () => reject(new Error("Unable to load Mermaid renderer."));
-    document.head.append(script);
-  });
-
-  return window.__mdeditMermaidLoader;
-}
 
 function createMermaidCodeBlockView() {
   return ({ node }: { node: ProseMirrorNode }) => {

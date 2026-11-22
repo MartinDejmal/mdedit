@@ -1,661 +1,360 @@
-/**
- * Editor HTML → PDF bytes renderer.
- *
- * The PDF is built on the JS side using pdfmake so we keep the full
- * structural fidelity of the editor (headings, ordered/unordered/nested lists,
- * task lists, tables, code blocks, blockquotes, inline marks, links) and get
- * proper Unicode out of the box — pdfmake bundles Roboto, which covers Latin
- * Extended-A so European diacritics (Czech / Polish / German / French …)
- * render correctly instead of as mojibake.
- *
- * The Rust backend just writes the bytes to disk; it does not attempt to
- * understand the document.
- */
-// pdfmake ships its own .d.ts but is JS at runtime; the browser bundle is the
-// one that works inside the Tauri webview (the default `main` entry pulls in
-// node-only `fs`).
-// @ts-expect-error - no bundled types for the browser entry point
-import pdfMake from "pdfmake/build/pdfmake";
-// @ts-expect-error - vfs bundle is plain JS
-import vfsFonts from "pdfmake/build/vfs_fonts";
+/** Structural PDF export of the editor's HTML, with selectable text and embedded assets. */
+// @ts-expect-error pdfmake's browser entry point has no bundled declarations
+import pdfMakeModule from "pdfmake/build/pdfmake";
+import { loadPdfFonts, PDF_FONTS } from "./pdfFonts";
+import { loadMermaid } from "./mermaidRenderer";
+import { getCodeHighlightRanges, normalizeCodeBlockLanguage } from "../features/editor/codeBlockSyntax";
 
-type Inline = string | InlineObject;
+interface PdfMakeApi {
+  addVirtualFileSystem: (vfs: Record<string, string>) => void;
+  addFonts: (fonts: typeof PDF_FONTS) => void;
+  createPdf: (definition: Content) => { getBuffer: () => Promise<Uint8Array> };
+}
+const pdfMake = pdfMakeModule as PdfMakeApi;
+type Content = Record<string, unknown>;
 interface InlineObject {
-  text: string | Inline[];
+  text: string;
   bold?: boolean;
   italics?: boolean;
-  decoration?: "underline" | "lineThrough" | "overline";
+  decoration?: string[];
   color?: string;
   background?: string;
   link?: string;
-  style?: string | string[];
+  font?: string;
+  fontSize?: number;
 }
-
-type Content = unknown;
-
-const MAX_RENDER_DEPTH = 80;
-const PDF_RENDER_TIMEOUT_MS = 30_000;
-
+type Marks = Omit<InlineObject, "text">;
+type Inline = string | InlineObject;
+interface ImageRun { image: HTMLImageElement; link?: string }
+type Run = Inline | ImageRun;
 interface RenderContext {
-  /** Nesting depth used to gate huge documents from blowing the stack. */
   depth: number;
+  width: number;
+  images: Map<string, { data: string; width: number; height: number }>;
+  diagrams: Map<HTMLElement, string>;
 }
-
-function nextContext(ctx: RenderContext): RenderContext {
-  const depth = ctx.depth + 1;
-  if (depth > MAX_RENDER_DEPTH) {
-    throw new Error("Document is nested too deeply to export safely as PDF.");
-  }
-  return { depth };
-}
-
-const ROBOTO_VFS_INSTALLED = installVfs();
-
-function installVfs(): boolean {
-  const target = pdfMake as { vfs?: unknown; fonts?: unknown };
-  // vfs_fonts is exported either as the raw vfs object (newer builds) or
-  // wrapped under `pdfMake.vfs` (older builds). Handle both.
-  const candidate = (vfsFonts as {
-    default?: unknown;
-    pdfMake?: { vfs?: unknown };
-    vfs?: unknown;
-  }) ?? {};
-  const defaultExport = candidate.default as
-    | { pdfMake?: { vfs?: unknown }; vfs?: unknown }
-    | undefined;
-  target.vfs =
-    candidate.pdfMake?.vfs ??
-    candidate.vfs ??
-    defaultExport?.pdfMake?.vfs ??
-    defaultExport?.vfs ??
-    defaultExport ??
-    vfsFonts;
-  // Without an explicit font map pdfmake's PDFKit pipeline silently fails
-  // resolving "Roboto" and `getBuffer` never fires its callback. Pin the
-  // four Roboto faces to the keys shipped in vfs_fonts.
-  target.fonts = {
-    Roboto: {
-      normal: "Roboto-Regular.ttf",
-      bold: "Roboto-Medium.ttf",
-      italics: "Roboto-Italic.ttf",
-      bolditalics: "Roboto-MediumItalic.ttf",
-    },
-  };
-  return Boolean(
-    target.vfs &&
-      typeof target.vfs === "object" &&
-      "Roboto-Regular.ttf" in target.vfs &&
-      "Roboto-Medium.ttf" in target.vfs &&
-      "Roboto-Italic.ttf" in target.vfs &&
-      "Roboto-MediumItalic.ttf" in target.vfs
-  );
-}
-
-const HEADING_STYLES = {
-  h1: { fontSize: 24, bold: true, marginTop: 18, marginBottom: 8 },
-  h2: { fontSize: 20, bold: true, marginTop: 16, marginBottom: 8 },
-  h3: { fontSize: 17, bold: true, marginTop: 14, marginBottom: 6 },
-  h4: { fontSize: 14, bold: true, marginTop: 12, marginBottom: 6 },
-  h5: { fontSize: 12, bold: true, marginTop: 10, marginBottom: 4 },
-  h6: { fontSize: 11, bold: true, marginTop: 10, marginBottom: 4 },
+const PAGE_WIDTH = 595.28;
+const PAGE_MARGIN = 56;
+const CONTENT_WIDTH = PAGE_WIDTH - 2 * PAGE_MARGIN;
+const MAX_DEPTH = 80;
+const EXPORT_TIMEOUT_MS = 30_000;
+const CODE_COLORS: Record<string, string> = {
+  "cm-comment": "#6a737d", "cm-keyword": "#8a3ffc", "cm-string": "#0f7b0f",
+  "cm-number": "#b35a00", "cm-property": "#005a9c", "cm-variable": "#7a2f8f",
 };
-
-/** Strips everything except the article body if a full HTML document was passed. */
-function extractBodyHtml(html: string): string {
-  const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
-  if (articleMatch) return articleMatch[1];
-  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  if (bodyMatch) return bodyMatch[1];
-  return html;
+function descend(ctx: RenderContext, width = ctx.width): RenderContext {
+  if (ctx.depth >= MAX_DEPTH) throw new Error("Document is nested too deeply to export safely as PDF.");
+  return { ...ctx, width: Math.max(24, width), depth: ctx.depth + 1 };
+}
+function element(node: Node): node is HTMLElement { return node.nodeType === Node.ELEMENT_NODE; }
+function tag(node: Element): string { return node.tagName.toLowerCase(); }
+function withDecoration(marks: Marks, decoration: string): Marks {
+  return { ...marks, decoration: [...new Set([...(marks.decoration ?? []), decoration])] };
 }
 
-function parseFragment(html: string): DocumentFragment {
-  const template = document.createElement("template");
-  template.innerHTML = extractBodyHtml(html);
-  return template.content;
-}
-
-function isElement(node: Node): node is HTMLElement {
-  return node.nodeType === Node.ELEMENT_NODE;
-}
-
-function tagName(node: HTMLElement): string {
-  return node.tagName.toLowerCase();
-}
-
-/** Turns inline content (strong/em/code/a/text) into a pdfmake `text` array. */
-function collectInline(parent: Node, marks: InlineObject = {} as InlineObject): Inline[] {
-  const out: Inline[] = [];
-
-  parent.childNodes.forEach((node) => {
+function collectInline(parent: Node, marks: Marks = {}, depth = 0): Run[] {
+  if (depth > MAX_DEPTH) throw new Error("Inline formatting is nested too deeply to export as PDF.");
+  const result: Run[] = [];
+  for (const node of Array.from(parent.childNodes)) {
     if (node.nodeType === Node.TEXT_NODE) {
-      const value = node.textContent ?? "";
-      if (!value) return;
-      if (Object.keys(marks).length === 0) {
-        out.push(value);
-      } else {
-        out.push({ ...marks, text: value });
-      }
-      return;
+      if (node.textContent) result.push({ ...marks, text: node.textContent });
+      continue;
     }
-
-    if (!isElement(node)) return;
-
-    const tag = tagName(node);
-
-    if (tag === "br") {
-      out.push("\n");
-      return;
-    }
-
-    if (tag === "strong" || tag === "b") {
-      out.push(...collectInline(node, { ...marks, bold: true }));
-      return;
-    }
-
-    if (tag === "em" || tag === "i") {
-      out.push(...collectInline(node, { ...marks, italics: true }));
-      return;
-    }
-
-    if (tag === "u") {
-      out.push(...collectInline(node, { ...marks, decoration: "underline" }));
-      return;
-    }
-
-    if (tag === "s" || tag === "strike" || tag === "del") {
-      out.push(...collectInline(node, { ...marks, decoration: "lineThrough" }));
-      return;
-    }
-
-    if (tag === "code") {
-      // Inline code: monospace + subtle background. pdfmake supports the
-      // `background` property on text fragments.
-      const text = node.textContent ?? "";
-      out.push({
-        ...marks,
-        text,
-        style: "inlineCode",
-      });
-      return;
-    }
-
-    if (tag === "a") {
+    if (!element(node)) continue;
+    const name = tag(node);
+    if (["script", "style", "label", "input"].includes(name)) continue;
+    if (name === "br") { result.push("\n"); continue; }
+    if (name === "img") { result.push({ image: node as HTMLImageElement, link: marks.link }); continue; }
+    let next = { ...marks };
+    if (["strong", "b"].includes(name)) next.bold = true;
+    if (["em", "i"].includes(name)) next.italics = true;
+    if (name === "u") next = withDecoration(next, "underline");
+    if (["s", "strike", "del"].includes(name)) next = withDecoration(next, "lineThrough");
+    if (name === "code") next = { ...next, font: "Mono", fontSize: 10.56, background: "#f0f0f0" };
+    if (name === "a") {
+      next = { ...withDecoration(next, "underline"), color: "#4a90d9" };
       const href = node.getAttribute("href");
-      const linkMarks: InlineObject = {
-        ...marks,
-        color: "#1d4ed8",
-        decoration: "underline",
-      };
-      if (href) linkMarks.link = href;
-      out.push(...collectInline(node, linkMarks));
-      return;
+      if (href && /^(https?:|mailto:|tel:|#)/i.test(href)) next.link = href;
     }
-
-    if (tag === "img") {
-      // Inline images aren't supported in inline runs by pdfmake; fall back to
-      // an alt-text marker so authors don't lose the reference.
-      const alt = node.getAttribute("alt") ?? "";
-      const src = node.getAttribute("src") ?? "";
-      const label = alt || src || "image";
-      out.push({ ...marks, text: `[${label}]`, italics: true, color: "#6b7280" });
-      return;
-    }
-
-    // Fallback: descend without changing marks.
-    out.push(...collectInline(node, marks));
-  });
-
-  return out;
-}
-
-function trimLeadingNewlines(items: Inline[]): Inline[] {
-  while (items.length > 0 && items[0] === "\n") items.shift();
-  while (items.length > 0 && items[items.length - 1] === "\n") items.pop();
-  return items;
-}
-
-function inlineToText(parent: Node): Inline[] {
-  return trimLeadingNewlines(collectInline(parent));
-}
-
-function processList(
-  list: HTMLElement,
-  ordered: boolean,
-  ctx: RenderContext
-): Content {
-  const items: Content[] = [];
-
-  list.childNodes.forEach((child) => {
-    if (!isElement(child)) return;
-    if (tagName(child) !== "li") return;
-    items.push(processListItem(child, ctx));
-  });
-
-  if (ordered) {
-    const start = list.getAttribute("start");
-    const startNum = start ? parseInt(start, 10) : NaN;
-    return {
-      ol: items,
-      ...(Number.isFinite(startNum) ? { start: startNum } : {}),
-      marginBottom: 6,
-    };
+    if (name === "p" && result.length) result.push("\n");
+    result.push(...collectInline(node, next, depth + 1));
   }
-  return { ul: items, marginBottom: 6 };
+  return result;
 }
 
-function processListItem(li: HTMLElement, ctx: RenderContext): Content {
-  // A list item may contain inline content followed by nested lists. pdfmake
-  // accepts an array as a list item's content.
-  const stack: Content[] = [];
-  const inlineBuffer: Node[] = [];
+function imageContent(image: HTMLImageElement, ctx: RenderContext, link?: string): Content {
+  const source = ctx.images.get(image.getAttribute("src") ?? "");
+  if (!source) throw new Error(`Image could not be embedded: ${image.alt || image.src}`);
+  const cssWidth = Number.parseFloat(image.style.width || image.getAttribute("width") || "");
+  const requestedWidth = (Number.isFinite(cssWidth) && cssWidth > 0 ? cssWidth : source.width) * 0.75;
+  const width = Math.min(ctx.width, requestedWidth, 600 * source.width / source.height);
+  return { image: source.data, width, ...(link ? { link } : {}), margin: [0, 4, 0, 6] };
+}
 
-  const flushInline = () => {
-    if (inlineBuffer.length === 0) return;
-    const synthetic = document.createElement("span");
-    inlineBuffer.forEach((n) => synthetic.appendChild(n.cloneNode(true)));
-    const inlines = inlineToText(synthetic);
-    if (inlines.length > 0) {
-      stack.push({ text: inlines });
-    }
-    inlineBuffer.length = 0;
+function paragraph(node: HTMLElement, ctx: RenderContext, style: Content = {}): Content[] {
+  const blocks: Content[] = [];
+  let text: Inline[] = [];
+  const flush = () => {
+    if (text.length) blocks.push({ text, margin: [0, 6, 0, 6], ...style });
+    text = [];
   };
-
-  // Handle Tiptap task list items: <li data-checked="true|false">…<label><input/>…</label><div><p>…</p></div></li>
-  const dataChecked = li.getAttribute("data-checked");
-  const isTaskItem = dataChecked === "true" || dataChecked === "false";
-  const checkbox = isTaskItem ? (dataChecked === "true" ? "☑ " : "☐ ") : "";
-
-  li.childNodes.forEach((child) => {
-    if (child.nodeType === Node.TEXT_NODE) {
-      inlineBuffer.push(child);
-      return;
-    }
-    if (!isElement(child)) return;
-
-    const tag = tagName(child);
-
-    if (tag === "ul" || tag === "ol") {
-      flushInline();
-      stack.push(processList(child, tag === "ol", nextContext(ctx)));
-      return;
-    }
-
-    if (tag === "p") {
-      // Treat a paragraph inside an <li> as inline so we don't get extra
-      // spacing between marker and text.
-      flushInline();
-      const inlines = inlineToText(child);
-      if (inlines.length > 0) {
-        stack.push({ text: inlines });
-      }
-      return;
-    }
-
-    if (tag === "blockquote" || tag === "pre" || tag === "table" || tag === "hr") {
-      flushInline();
-      stack.push(...processBlock(child, ctx));
-      return;
-    }
-
-    if (tag === "label" || tag === "div" || tag === "span") {
-      // Common Tiptap task-item wrappers — descend.
-      child.childNodes.forEach((n) => inlineBuffer.push(n));
-      return;
-    }
-
-    if (tag === "input") {
-      // Plain markdown-style task list: <input type="checkbox" checked>
-      const type = child.getAttribute("type");
-      if (type === "checkbox") {
-        const checked = child.hasAttribute("checked");
-        inlineBuffer.push(document.createTextNode(checked ? "☑ " : "☐ "));
-      }
-      return;
-    }
-
-    inlineBuffer.push(child);
-  });
-
-  flushInline();
-
-  if (isTaskItem && stack.length > 0) {
-    const first = stack[0] as { text?: Inline[] };
-    if (first && Array.isArray(first.text)) {
-      first.text = [checkbox, ...first.text];
-    } else {
-      stack.unshift({ text: checkbox });
-    }
+  for (const run of collectInline(node)) {
+    if (typeof run === "object" && "image" in run) {
+      flush();
+      blocks.push(imageContent(run.image, ctx, run.link));
+    } else text.push(run);
   }
-
-  if (stack.length === 0) return { text: " " };
-  if (stack.length === 1) return stack[0];
-  return { stack };
+  flush();
+  return blocks.length ? blocks : [{ text: " ", margin: [0, 6, 0, 6], ...style }];
 }
 
-function processCodeBlock(node: HTMLElement): Content {
-  // <pre><code>…</code></pre>; preserve raw text exactly as written.
-  const codeEl = node.querySelector("code") ?? node;
-  const text = codeEl.textContent ?? "";
-  // Render as a single-cell table so we get a real background fill behind the
-  // monospaced text. pdfmake's text background only colors the run, not the
-  // full block width.
-  return {
-    table: {
-      widths: ["*"],
-      body: [
-        [
-          {
-            text,
-            style: "code",
-            preserveLeadingSpaces: true,
-          },
-        ],
-      ],
-    },
+function checkbox(checked: boolean): Content {
+  const canvas: Content[] = [{ type: "rect", x: 0, y: 2, w: 9, h: 9, lineWidth: 0.8, lineColor: "#555555" }];
+  if (checked) canvas.push({ type: "polyline", points: [{ x: 1.5, y: 6 }, { x: 4, y: 9 }, { x: 8, y: 3.5 }], lineWidth: 1.2, lineColor: "#333333" });
+  return { width: 14, canvas, margin: [0, 6, 0, 0] };
+}
+function listContent(list: HTMLElement, ctx: RenderContext): Content {
+  const items = Array.from(list.children).filter((child) => tag(child) === "li");
+  if (!items.length) return { text: "" };
+  const isTaskList = list.getAttribute("data-type") === "taskList" || items.every((li) => li.hasAttribute("data-checked") || li.querySelector('input[type="checkbox"]'));
+  const content = items.map((li) => {
+    const stack = processChildren(li, descend(ctx, ctx.width - 20));
+    const item = { stack: stack.length ? stack : [{ text: " " }], margin: [0, 0, 0, 2] };
+    if (!isTaskList) return item;
+    const input = li.querySelector('input[type="checkbox"]');
+    const checked = li.getAttribute("data-checked") === "true" || Boolean(input?.hasAttribute("checked"));
+    return { columns: [checkbox(checked), { ...item, width: "*" }], columnGap: 3 };
+  });
+  if (isTaskList) return { stack: content, margin: [4, 2, 0, 6] };
+  if (tag(list) === "ol") {
+    const start = Number.parseInt(list.getAttribute("start") ?? "1", 10);
+    return { ol: content, start: Number.isFinite(start) ? start : 1, margin: [0, 2, 0, 6] };
+  }
+  return { ul: content, margin: [0, 2, 0, 6] };
+}
+
+function codeContent(node: HTMLElement, ctx: RenderContext): Content[] {
+  const code = node.querySelector("code") ?? node;
+  const source = code.textContent ?? "";
+  const language = normalizeCodeBlockLanguage(code.className.match(/language-([\w-]+)/)?.[1] ?? node.getAttribute("data-language"));
+  const ranges = getCodeHighlightRanges(language, source);
+  const boundaries = [...new Set([0, source.length, ...ranges.flatMap((range) => [range.from, range.to])])].sort((a, b) => a - b);
+  const runs: InlineObject[] = [];
+  for (let i = 0; i < boundaries.length - 1; i++) {
+    const start = boundaries[i], end = boundaries[i + 1];
+    // Decoration order matches the editor; later decorations override colors.
+    const match = ranges.filter((range) => range.from <= start && range.to >= end).pop();
+    runs.push({ text: source.slice(start, end), ...(match ? { color: CODE_COLORS[match.className] } : {}) });
+  }
+  const result: Content[] = [{
+    table: { widths: ["*"], body: [[{ text: runs.length ? runs : " ", font: "Mono", fontSize: 10.56, lineHeight: 1.2, preserveLeadingSpaces: true }]] },
     layout: {
-      hLineWidth: () => 0,
-      vLineWidth: () => 0,
-      paddingLeft: () => 8,
-      paddingRight: () => 8,
-      paddingTop: () => 6,
-      paddingBottom: () => 6,
-      fillColor: () => "#f3f4f6",
-    },
-    marginBottom: 8,
-    marginTop: 4,
-  };
+      hLineWidth: () => 0.5, vLineWidth: () => 0.5,
+      hLineColor: () => "#e0e0e0", vLineColor: () => "#e0e0e0",
+      paddingLeft: () => 10, paddingRight: () => 10,
+      paddingTop: () => 8, paddingBottom: () => 8, fillColor: () => "#f5f5f5",
+    }, margin: [0, 8, 0, 8],
+  }];
+  const diagram = ctx.diagrams.get(node);
+  if (diagram) result.push({ svg: diagram, fit: [ctx.width, 600], margin: [0, 6, 0, 8] });
+  return result;
 }
 
-function processBlockquote(node: HTMLElement, ctx: RenderContext): Content {
-  const inner = processChildren(node, nextContext(ctx));
-  return {
-    table: {
-      widths: ["*"],
-      body: [[{ stack: inner, margin: [10, 0, 0, 0] }]],
-    },
-    layout: {
-      hLineWidth: () => 0,
-      vLineWidth: (i: number) => (i === 0 ? 3 : 0),
-      vLineColor: () => "#d1d5db",
-      paddingLeft: () => 6,
-      paddingRight: () => 6,
-      paddingTop: () => 4,
-      paddingBottom: () => 4,
-      fillColor: () => "#f9fafb",
-    },
-    marginBottom: 8,
-    marginTop: 4,
-  };
-}
-
-function processTable(node: HTMLElement): Content {
-  const rows: HTMLElement[] = Array.from(node.querySelectorAll("tr"));
-  if (rows.length === 0) return { text: "" };
-
+function tableContent(node: HTMLElement, ctx: RenderContext): Content {
+  const rows = Array.from(node.querySelectorAll("tr")).filter((row) => row.closest("table") === node);
+  if (!rows.length) return { text: "" };
   const body: Content[][] = [];
-  let columnCount = 0;
-  let hasHeader = false;
-
-  rows.forEach((row, rowIdx) => {
-    const cells = Array.from(row.children).filter(isElement);
-    const rowColumnCount = cells.reduce((count, cell) => {
-      const span = Number.parseInt(cell.getAttribute("colspan") ?? "1", 10);
-      return count + (Number.isFinite(span) && span > 0 ? span : 1);
-    }, 0);
-    columnCount = Math.max(columnCount, rowColumnCount);
-    const isHeader = cells.every((c) => tagName(c) === "th");
-    if (isHeader && rowIdx === 0) hasHeader = true;
-    body.push(
-      cells.map((cell) => {
-        const inlines = inlineToText(cell);
-        const content: InlineObject = {
-          text: inlines.length > 0 ? inlines : "",
-        };
-        if (tagName(cell) === "th") content.bold = true;
-        return content;
-      })
-    );
-  });
-
-  if (columnCount === 0) return { text: "" };
-
-  body.forEach((row) => {
-    while (row.length < columnCount) {
-      row.push({ text: "" });
+  const occupied: boolean[][] = [];
+  const sources = new Map<Content, HTMLElement>();
+  let columns = 0;
+  for (const [r, row] of rows.entries()) {
+    const cells: Content[] = [];
+    const rowOccupied = occupied[r] ??= [];
+    let c = 0;
+    for (const cell of Array.from(row.children).filter(element).filter((cell) => ["th", "td"].includes(tag(cell)))) {
+      while (rowOccupied[c]) cells[c++] = {};
+      const colSpan = Math.min(100, Math.max(1, Number.parseInt(cell.getAttribute("colspan") ?? "1", 10) || 1));
+      const rowSpan = Math.min(rows.length - r, Math.max(1, Number.parseInt(cell.getAttribute("rowspan") ?? "1", 10) || 1));
+      cells[c] = { stack: [], ...(colSpan > 1 ? { colSpan } : {}), ...(rowSpan > 1 ? { rowSpan } : {}),
+        ...(tag(cell) === "th" ? { bold: true, fillColor: "#f7f7f7" } : {}) };
+      // Render after the grid width is known, so images fit within their cells.
+      sources.set(cells[c], cell);
+      for (let y = r; y < r + rowSpan; y++) {
+        const slots = occupied[y] ??= [];
+        for (let x = c; x < c + colSpan; x++) slots[x] = true;
+      }
+      for (let x = 1; x < colSpan; x++) cells[c + x] = {};
+      c += colSpan;
     }
-  });
-
-  const widths = Array.from({ length: columnCount }, () => "*");
+    while (rowOccupied[c]) cells[c++] = {};
+    columns = Math.max(columns, cells.length);
+    body.push(cells);
+  }
+  if (!columns) return { text: "" };
+  for (const row of body) {
+    while (row.length < columns) row.push({});
+    for (const cell of row) {
+      const source = sources.get(cell);
+      if (!source) continue;
+      const width = (ctx.width / columns) * Number(cell.colSpan ?? 1) - 14;
+      cell.stack = processChildren(source, descend(ctx, width));
+      if (!(cell.stack as Content[]).length) cell.stack = [{ text: " " }];
+      const align = source.style.textAlign || source.getAttribute("align");
+      if (["left", "right", "center", "justify"].includes(align ?? "")) cell.alignment = align;
+    }
+  }
+  const headerRows = rows.findIndex((row) => !Array.from(row.children).every((cell) => tag(cell) === "th"));
   return {
-    table: {
-      headerRows: hasHeader ? 1 : 0,
-      widths,
-      body,
-    },
-    layout: {
-      hLineWidth: () => 0.5,
-      vLineWidth: () => 0.5,
-      hLineColor: () => "#d1d5db",
-      vLineColor: () => "#d1d5db",
-      fillColor: (rowIndex: number) =>
-        hasHeader && rowIndex === 0 ? "#f9fafb" : null,
-      paddingLeft: () => 6,
-      paddingRight: () => 6,
-      paddingTop: () => 4,
-      paddingBottom: () => 4,
-    },
-    marginBottom: 8,
-    marginTop: 4,
+    table: { headerRows: headerRows === -1 ? rows.length : headerRows, widths: Array(columns).fill("*"), body },
+    layout: { hLineWidth: () => 0.5, vLineWidth: () => 0.5,
+      hLineColor: () => "#e0e0e0", vLineColor: () => "#e0e0e0",
+      paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 4, paddingBottom: () => 4 },
+    margin: [0, 10, 0, 10],
   };
 }
 
+const BLOCKS = new Set(["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "pre", "blockquote", "table", "hr", "div", "section", "article", "img"]);
 function processBlock(node: HTMLElement, ctx: RenderContext): Content[] {
-  const tag = tagName(node);
-
-  switch (tag) {
-    case "h1":
-    case "h2":
-    case "h3":
-    case "h4":
-    case "h5":
-    case "h6": {
-      const inlines = inlineToText(node);
-      if (inlines.length === 0) return [];
-      return [{ text: inlines, style: tag }];
-    }
-    case "p": {
-      const inlines = inlineToText(node);
-      if (inlines.length === 0) return [{ text: "", marginBottom: 4 }];
-      return [{ text: inlines, marginBottom: 6, lineHeight: 1.35 }];
-    }
-    case "ul":
-    case "ol":
-      return [processList(node, tag === "ol", ctx)];
-    case "pre":
-      return [processCodeBlock(node)];
-    case "blockquote":
-      return [processBlockquote(node, ctx)];
-    case "table":
-      return [processTable(node)];
-    case "hr":
-      return [
-        {
-          canvas: [
-            {
-              type: "line",
-              x1: 0,
-              y1: 4,
-              x2: 515,
-              y2: 4,
-              lineWidth: 0.5,
-              lineColor: "#d1d5db",
-            },
-          ],
-          marginBottom: 8,
-          marginTop: 4,
-        },
-      ];
-    case "img": {
-      // Standalone image — only inline supported sources (data URLs).
-      const src = node.getAttribute("src") ?? "";
-      const alt = node.getAttribute("alt") ?? "";
-      if (src.startsWith("data:image/")) {
-        return [{ image: src, fit: [515, 515], marginBottom: 6 }];
-      }
-      return [
-        {
-          text: `[${alt || src || "image"}]`,
-          italics: true,
-          color: "#6b7280",
-          marginBottom: 6,
-        },
-      ];
-    }
-    case "br":
-      return [{ text: "", marginBottom: 4 }];
-    default:
-      // Container/unknown — flatten children as blocks.
-      return processChildren(node, ctx);
+  const name = tag(node);
+  if (/^h[1-6]$/.test(name)) {
+    const level = Number(name[1]);
+    return paragraph(node, ctx, { fontSize: [24, 18, 14.4, 12, 12, 12][level - 1], bold: true, lineHeight: 1.05,
+      margin: [0, [28.8, 18, 13, 12, 12, 12][level - 1], 0, 8], headlineLevel: level });
+  }
+  switch (name) {
+    case "p": return paragraph(node, ctx);
+    case "ul": case "ol": return [listContent(node, ctx)];
+    case "pre": return codeContent(node, ctx);
+    case "table": return [tableContent(node, ctx)];
+    case "blockquote": return [{
+      table: { widths: ["*"], body: [[{ stack: processChildren(node, descend(ctx, ctx.width - 20)), italics: true, color: "#999999" }]] },
+      layout: { hLineWidth: () => 0, vLineWidth: (i: number) => i === 0 ? 2.25 : 0,
+        vLineColor: () => "#e0e0e0", paddingLeft: () => 12, paddingRight: () => 4, paddingTop: () => 0, paddingBottom: () => 0 },
+      margin: [0, 8, 0, 8],
+    }];
+    case "hr": return [{ canvas: [{ type: "line", x1: 0, y1: 0, x2: ctx.width, y2: 0, lineWidth: 1.5, lineColor: "#e0e0e0" }], margin: [0, 18, 0, 18] }];
+    case "img": return [imageContent(node as HTMLImageElement, ctx)];
+    default: return processChildren(node, descend(ctx));
   }
 }
-
 function processChildren(parent: Node, ctx: RenderContext): Content[] {
-  const out: Content[] = [];
-  const inlineRun: Node[] = [];
-
-  const flushInline = () => {
-    if (inlineRun.length === 0) return;
-    const synthetic = document.createElement("span");
-    inlineRun.forEach((n) => synthetic.appendChild(n.cloneNode(true)));
-    const inlines = inlineToText(synthetic);
-    if (inlines.length > 0) {
-      out.push({ text: inlines, marginBottom: 4 });
-    }
-    inlineRun.length = 0;
+  const blocks: Content[] = [];
+  let inline = document.createElement("span");
+  const flush = () => {
+    if (inline.childNodes.length) blocks.push(...paragraph(inline, ctx));
+    inline = document.createElement("span");
   };
-
-  parent.childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      if ((node.textContent ?? "").trim().length > 0) {
-        inlineRun.push(node);
-      }
-      return;
-    }
-    if (!isElement(node)) return;
-
-    const tag = tagName(node);
-    const isBlockTag = [
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "p",
-      "ul",
-      "ol",
-      "pre",
-      "blockquote",
-      "table",
-      "hr",
-      "div",
-      "section",
-      "article",
-      "img",
-    ].includes(tag);
-
-    if (isBlockTag) {
-      flushInline();
-      out.push(...processBlock(node, ctx));
-    } else {
-      inlineRun.push(node);
-    }
-  });
-
-  flushInline();
-  return out;
-}
-
-interface PdfRenderOptions {
-  title: string;
-}
-
-export async function renderEditorHtmlToPdfBytes(
-  editorHtml: string,
-  options: PdfRenderOptions
-): Promise<Uint8Array> {
-  if (!ROBOTO_VFS_INSTALLED) {
-    throw new Error("PDF font assets failed to load.");
+  for (const child of Array.from(parent.childNodes)) {
+    if (element(child)) {
+      if (["script", "style", "label", "input"].includes(tag(child))) continue;
+      if (BLOCKS.has(tag(child))) {
+        flush(); blocks.push(...processBlock(child, ctx));
+      } else inline.append(child.cloneNode(true));
+    } else if ((child.textContent ?? "").trim()) inline.append(child.cloneNode(true));
   }
+  flush();
+  return blocks;
+}
 
-  const fragment = parseFragment(editorHtml);
-  const content = processChildren(fragment, { depth: 0 });
-  const exportContent = content.length > 0 ? content : [{ text: "" }];
+async function embedImage(image: HTMLImageElement): Promise<{ data: string; width: number; height: number }> {
+  const source = image.getAttribute("src");
+  if (!source) throw new Error("Cannot export an image without a source.");
+  const decoded = new Image();
+  decoded.crossOrigin = "anonymous";
+  decoded.src = source;
+  try {
+    await decoded.decode();
+    const canvas = document.createElement("canvas");
+    // Limit decoded export dimensions while keeping high resolution on A4.
+    const scale = Math.min(1, 2400 / Math.max(decoded.naturalWidth, decoded.naturalHeight));
+    canvas.width = Math.max(1, Math.round(decoded.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(decoded.naturalHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Image rendering is unavailable.");
+    context.drawImage(decoded, 0, 0, canvas.width, canvas.height);
+    return { data: canvas.toDataURL("image/png"), width: decoded.naturalWidth, height: decoded.naturalHeight };
+  } catch {
+    throw new Error(`Could not embed image "${image.alt || source}". Check that it is available and permits cross-origin access.`);
+  }
+}
 
-  const docDefinition = {
-    info: {
-      title: options.title,
-    },
-    pageSize: "A4",
-    pageMargins: [56, 56, 56, 56] as [number, number, number, number],
-    defaultStyle: {
-      font: "Roboto",
-      fontSize: 11,
-      lineHeight: 1.35,
-      color: "#1f2937",
-    },
-    styles: {
-      h1: HEADING_STYLES.h1,
-      h2: HEADING_STYLES.h2,
-      h3: HEADING_STYLES.h3,
-      h4: HEADING_STYLES.h4,
-      h5: HEADING_STYLES.h5,
-      h6: HEADING_STYLES.h6,
-      code: {
-        font: "Roboto",
-        fontSize: 10,
-        color: "#111827",
-        preserveLeadingSpaces: true,
-      },
-      inlineCode: {
-        fontSize: 10,
-        color: "#111827",
-        background: "#f3f4f6",
-      },
-    },
-    content: exportContent,
-  };
-
-  return new Promise<Uint8Array>((resolve, reject) => {
-    let settled = false;
-    // pdfmake's `getBuffer` is callback-based with no error channel: if the
-    // PDFKit pipeline throws asynchronously (typically a font/VFS resolution
-    // problem) the callback never fires and the export hangs silently. Guard
-    // with a timeout so the user sees a real error instead of nothing.
-    const timeout = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      reject(new Error("PDF rendering timed out (no buffer produced within 30s)."));
-    }, PDF_RENDER_TIMEOUT_MS);
-
-    try {
-      const generator = pdfMake.createPdf(docDefinition);
-      generator.getBuffer((buffer: ArrayBuffer | Uint8Array) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        if (buffer instanceof Uint8Array) {
-          resolve(buffer);
-        } else {
-          resolve(new Uint8Array(buffer));
-        }
-      });
-    } catch (error) {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      reject(error);
+/** pdfmake's SVG renderer does not resolve Mermaid's embedded CSS selectors. */
+function inlineSvgStyles(root: Element): string {
+  const host = document.createElement("div");
+  host.style.cssText = "position:fixed;left:-100000px;top:0;visibility:hidden;pointer-events:none";
+  const svg = document.importNode(root, true);
+  host.append(svg);
+  document.body.append(host);
+  try {
+    const properties = ["fill", "fill-opacity", "stroke", "stroke-width", "stroke-opacity", "stroke-dasharray",
+      "stroke-linecap", "stroke-linejoin", "opacity", "font-size", "font-weight", "font-style", "text-anchor", "dominant-baseline", "display"];
+    const styles = [svg, ...Array.from(svg.querySelectorAll("*"))].map((node) => {
+      const computed = getComputedStyle(node);
+      return { node, values: properties.map((property) => [property, computed.getPropertyValue(property)] as const) };
+    });
+    // Capture all styles before removing classes so descendants keep inherited values.
+    for (const { node, values } of styles) {
+      node.removeAttribute("class");
+      node.removeAttribute("style");
+      for (const [property, value] of values) if (value) node.setAttribute(property, value);
+      node.setAttribute("font-family", "Serif");
     }
-  });
+    svg.querySelectorAll("style").forEach((style) => style.remove());
+    return new XMLSerializer().serializeToString(svg);
+  } finally {
+    host.remove();
+  }
+}
+
+async function render(editorHtml: string, title: string): Promise<Uint8Array> {
+  pdfMake.addVirtualFileSystem(await loadPdfFonts());
+  pdfMake.addFonts(PDF_FONTS);
+  const parsed = new DOMParser().parseFromString(editorHtml, "text/html");
+  const root = parsed.querySelector("article") ?? parsed.body;
+  const ctx: RenderContext = { depth: 0, width: CONTENT_WIDTH, images: new Map(), diagrams: new Map() };
+  await Promise.all(Array.from(root.querySelectorAll("img")).map(async (image) => {
+    ctx.images.set(image.getAttribute("src") ?? "", await embedImage(image));
+  }));
+  let diagramId = 0;
+  for (const pre of Array.from(root.querySelectorAll("pre"))) {
+    const code = pre.querySelector("code");
+    if (!code?.classList.contains("language-mermaid") || !code.textContent?.trim()) continue;
+    const mermaid = await loadMermaid();
+    const { svg } = await mermaid.render(`mdedit-pdf-${Date.now()}-${++diagramId}`, code.textContent);
+    // Mermaid emits width="100%". pdfmake interprets that as 100 points,
+    // which distorts the aspect ratio and can push a small diagram off-page.
+    const svgDocument = new DOMParser().parseFromString(svg, "image/svg+xml");
+    const svgRoot = svgDocument.documentElement;
+    const viewBox = (svgRoot.getAttribute("viewBox") ?? "").trim().split(/[ ,]+/).map(Number);
+    if (viewBox.length !== 4 || !viewBox.every(Number.isFinite) || viewBox[2] <= 0 || viewBox[3] <= 0) {
+      throw new Error("Mermaid diagram has invalid SVG dimensions.");
+    }
+    svgRoot.setAttribute("width", String(viewBox[2]));
+    svgRoot.setAttribute("height", String(viewBox[3]));
+    ctx.diagrams.set(pre, inlineSvgStyles(svgRoot));
+  }
+  const content = processChildren(root, ctx);
+  const buffer = await pdfMake.createPdf({
+    info: { title }, pageSize: "A4", pageMargins: [PAGE_MARGIN, PAGE_MARGIN, PAGE_MARGIN, PAGE_MARGIN],
+    defaultStyle: { font: "Serif", fontSize: 12, lineHeight: 1.35, color: "#333333" },
+    content: content.length ? content : [{ text: "" }],
+    pageBreakBefore: (node: { headlineLevel?: number }, container: { getFollowingNodesOnPage: () => unknown[] }) =>
+      Boolean(node.headlineLevel && container.getFollowingNodesOnPage().length === 0),
+  }).getBuffer();
+  if (!(buffer instanceof Uint8Array) || buffer.length === 0) throw new Error("PDF renderer returned an empty document.");
+  return new Uint8Array(buffer);
+}
+
+export async function renderEditorHtmlToPdfBytes(editorHtml: string, options: { title: string }): Promise<Uint8Array> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      render(editorHtml, options.title),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("PDF rendering timed out after 30 seconds.")), EXPORT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }

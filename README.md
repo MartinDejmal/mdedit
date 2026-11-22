@@ -83,6 +83,20 @@ Testy filtrování, řazení, prázdných/neexistujících složek a cyklických
 cargo test --locked --manifest-path src-tauri/Cargo.toml folder_browser::tests
 ```
 
+## Export PDF
+
+PDF zachovává nadpisy, kombinované inline formátování, odkazy, vnořené seznamy a úkoly, bloky v tabulkách, zvýraznění kódu, obrázky a Mermaid diagramy. Text zůstává označitelný; patkové a monospace fonty s diakritikou jsou součástí aplikace. Mermaid je rovněž přibalený a nevyžaduje připojení k CDN.
+
+Obrázky se vkládají do PDF. Vzdálený server musí dovolit načtení obrázku přes CORS; nedostupný obrázek export ukončí s vysvětlením místo tichého nahrazení textem.
+
+Regresní testy vytvářejí skutečné PDF v headless Chromium a kontrolují je nástroji Poppler (`pdftotext`, `pdffonts`, `pdfimages`, `pdfinfo`):
+
+```bash
+# Linux: nainstalované chromium a poppler-utils
+npm run test:pdf
+# Pro jinou cestu k prohlížeči nastav CHROMIUM_PATH.
+```
+
 ## Klávesové zkratky
 
 - `Ctrl/Cmd + N` → New
