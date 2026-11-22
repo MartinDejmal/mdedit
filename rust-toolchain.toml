@@ -1,0 +1,4 @@
+[toolchain]
+# ashpd 0.8 (via rfd 0.14) predates Rust's never-type fallback change.
+channel = "1.94.1"
+profile = "minimal"
