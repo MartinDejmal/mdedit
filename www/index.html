@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>mdedit – Markdown editor</title>
   <meta name="description" content="mdedit 1.1.0: odlehčený Markdown editor s náhledem Mermaid, prohlížečem složek a exportem do PDF. Ke stažení pro Windows, macOS a Linux.">
+  <link rel="alternate" hreflang="cs" href="index.html">
+  <link rel="alternate" hreflang="en" href="en.html">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="shortcut icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
@@ -15,14 +17,20 @@
   <header>
     <div class="container header-inner">
       <div class="logo">
-        <img src="icon.png" alt="mdedit icon" width="36" height="36">
+        <img src="icon.png" alt="Ikona mdedit" width="36" height="36">
         <span class="logo-name">mdedit</span>
       </div>
-      <nav>
+      <div class="header-actions">
+      <nav aria-label="Hlavní navigace">
         <a href="#features">Funkce</a>
         <a href="#download">Stáhnout</a>
         <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="nav-gh">GitHub</a>
       </nav>
+      <nav class="language-switch" aria-label="Jazyk stránky">
+        <a href="index.html" lang="cs" hreflang="cs" aria-label="Čeština" aria-current="page">CS</a>
+        <a href="en.html" lang="en" hreflang="en" aria-label="English">EN</a>
+      </nav>
+      </div>
     </div>
   </header>
 
@@ -282,7 +290,7 @@ npm run tauri build</code></pre>
         }
         const el = document.getElementById('total-downloads');
         if (el) {
-          el.textContent = total.toLocaleString('cs-CZ');
+          el.textContent = total.toLocaleString(document.documentElement.lang === 'en' ? 'en-US' : 'cs-CZ');
         }
       } catch (err) {
         const el = document.getElementById('total-downloads');

@@ -652,3 +652,51 @@ footer a:hover { color: var(--accent); }
   .footer-inner { justify-content: center; text-align: center; }
   nav { gap: 12px; }
 }
+
+/* Language navigation works as ordinary links, including without JavaScript. */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.language-switch {
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.language-switch a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 32px;
+  border-radius: 5px;
+  font-size: .8rem;
+  font-weight: 600;
+}
+.language-switch a[aria-current="page"] {
+  color: #fff;
+  background: var(--accent-dark);
+}
+.language-switch a:focus-visible {
+  outline: 2px solid var(--accent-dark);
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .header-inner {
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .header-actions { display: contents; }
+  .language-switch { order: 1; margin-left: auto; }
+  .header-actions > nav:not(.language-switch) {
+    order: 2;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}

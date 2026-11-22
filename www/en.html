@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mdedit – Markdown editor</title>
+  <meta name="description" content="mdedit 1.1.0: a lightweight Markdown editor with Mermaid previews, a folder browser and PDF export. Available for Windows, macOS and Linux.">
+  <link rel="alternate" hreflang="cs" href="index.html">
+  <link rel="alternate" hreflang="en" href="en.html">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="shortcut icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="container header-inner">
+      <div class="logo">
+        <img src="icon.png" alt="mdedit icon" width="36" height="36">
+        <span class="logo-name">mdedit</span>
+      </div>
+      <div class="header-actions">
+      <nav aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="nav-gh">GitHub</a>
+      </nav>
+      <nav class="language-switch" aria-label="Page language">
+        <a href="index.html" lang="cs" hreflang="cs" aria-label="Čeština">CS</a>
+        <a href="en.html" lang="en" hreflang="en" aria-label="English" aria-current="page">EN</a>
+      </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+      <!-- Hero -->
+      <section class="hero">
+          <div class="container">
+              <img src="icon.png" alt="mdedit" class="hero-icon">
+              <h1>mdedit</h1>
+              <p class="tagline">A lightweight, cross-platform Markdown editor.<br>What you see is what you write — no switching between editing and preview.</p>
+              <div class="hero-actions">
+                  <a href="#download" class="btn btn-primary">Download</a>
+                  <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="btn btn-secondary">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.154-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.091-.646.349-1.087.635-1.337-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.337 4.687-4.565 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" /></svg>
+                      Source code
+                  </a>
+              </div>
+              <p class="version-note" data-release-version="1.1.0">v1.1.0 · 22 November 2026 · MIT license</p>
+              <div class="release-highlights">
+                  <h2>New in version 1.1.0</h2>
+                  <p>Browse Markdown files in folders, view Mermaid diagrams directly in the editor and export more faithful PDFs. Fixed freezing when opening diagrams.</p>
+                  <a href="https://github.com/MartinDejmal/mdedit/releases/tag/1.1.0" target="_blank" rel="noopener">Release notes and all packages</a>
+              </div>
+          </div>
+      </section>
+
+      <!-- Features -->
+      <section class="features" id="features">
+          <div class="container">
+              <h2>What mdedit can do</h2>
+              <div class="feature-grid">
+
+                  <div class="feature-card">
+                      <div class="feature-icon">✍️</div>
+                      <h3>WYSIWYG editing</h3>
+                      <p>See the result as you type. No switching between source code and preview.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">📁</div>
+                      <h3>Files and folders</h3>
+                      <p>Open <code>.md</code>, <code>.markdown</code> and <code>.txt</code> files. Browse Markdown files in the folder sidebar, with support for drag and drop and “Open with”.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">🗂️</div>
+                      <h3>Document outline</h3>
+                      <p>Navigate longer documents using the heading sidebar. Adjust its width and the app remembers your preference.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">🔧</div>
+                      <h3>Formatting toolbar</h3>
+                      <p>Bold, italic, headings, lists, tasks, tables, links, images and code blocks — all a click away.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">💾</div>
+                      <h3>Change tracking</h3>
+                      <p>An unsaved-changes indicator in the window title and protection against accidentally closing without saving.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">📤</div>
+                      <h3>Export</h3>
+                      <p>HTML and PDF export preserves tables, lists, code blocks, Czech diacritics and Mermaid diagrams.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">📊</div>
+                      <h3>Mermaid diagrams</h3>
+                      <p>Write a diagram as a code block and preview it directly in the document. Rendering works offline, too.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">🕐</div>
+                      <h3>Recent files</h3>
+                      <p>Access recently opened files and automatically reopen your last document at startup.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">🖥️</div>
+                      <h3>Cross-platform</h3>
+                      <p>A native desktop app built with Tauri — runs on Linux, macOS and Windows.</p>
+                  </div>
+
+              </div>
+          </div>
+      </section>
+
+      <!-- Shortcuts -->
+      <section class="shortcuts">
+          <div class="container">
+              <h2>Keyboard shortcuts</h2>
+              <div class="shortcut-table-wrap">
+                  <table>
+                      <thead>
+                          <tr><th>Action</th><th>Shortcut</th></tr>
+                      </thead>
+                      <tbody>
+                          <tr><td>New document</td><td><kbd>Ctrl</kbd> + <kbd>N</kbd></td></tr>
+                          <tr><td>Open file</td><td><kbd>Ctrl</kbd> + <kbd>O</kbd></td></tr>
+                          <tr><td>Save</td><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td></tr>
+                          <tr><td>Save as</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td></tr>
+                          <tr><td>Reload from disk</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>R</kbd></td></tr>
+                      </tbody>
+                  </table>
+              </div>
+              <p class="shortcut-note">On macOS, use <kbd>⌘ Cmd</kbd> instead of <kbd>Ctrl</kbd>.</p>
+          </div>
+      </section>
+
+      <!-- Tech stack -->
+      <section class="tech">
+          <div class="container">
+              <h2>Technology</h2>
+              <ul class="tech-list">
+                  <li><span class="tech-label">Desktop shell</span> Tauri 2</li>
+                  <li><span class="tech-label">Frontend</span> React 18 + TypeScript</li>
+                  <li><span class="tech-label">Editor engine</span> Tiptap 2</li>
+                  <li><span class="tech-label">Markdown pipeline</span> unified / remark / rehype</li>
+                  <li><span class="tech-label">State management</span> Zustand 4</li>
+                  <li><span class="tech-label">Build tool</span> Vite 5</li>
+                  <li><span class="tech-label">Backend</span> Rust</li>
+              </ul>
+          </div>
+      </section>
+
+      <!-- Download -->
+      <section class="download" id="download">
+          <div class="container">
+              <div class="section-kicker">Downloads</div>
+              <h2>Choose the installer for your system</h2>
+              <p class="download-lead">Version 1.1.0 for Windows, macOS and Linux. Choose your operating system and processor architecture. No account needed; your documents stay with you.</p>
+
+              <div class="download-stats">
+                <div class="download-stat-badge">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span id="total-downloads" class="download-stat-value" aria-live="polite">…</span>
+                  <span class="download-stat-label">GitHub downloads</span>
+                </div>
+              </div>
+
+              <div class="download-grid" aria-label="mdedit installers">
+                  <article class="download-card download-card-primary">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">⊞</div>
+                          <div>
+                              <h3>Windows</h3>
+                              <p>For 64-bit Windows on Intel or AMD processors (x64).</p>
+                          </div>
+                      </div>
+                      <div class="download-actions">
+                          <a href="/download/mdedit-windows.exe" class="download-button">Download EXE<span>Windows x64</span></a>
+                          <a href="/download/mdedit-windows.msi" class="download-button download-button-secondary">Download MSI<span>Windows x64</span></a>
+                      </div>
+                  </article>
+
+                  <article class="download-card">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">⌘</div>
+                          <div>
+                              <h3>macOS Intel</h3>
+                              <p>DMG package for Intel-based Macs.</p>
+                          </div>
+                      </div>
+                      <a href="/download/mdedit-macos.dmg" class="download-button download-button-secondary">
+                          Download DMG
+                          <span>Intel · x64</span>
+                      </a>
+                      <div class="download-alternatives"><a href="/download/mdedit-macos-intel.app.tar.gz">TAR.GZ app archive</a></div>
+                  </article>
+
+                  <article class="download-card">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">⌘</div>
+                          <div><h3>macOS Apple Silicon</h3><p>For Macs with Apple M1 or newer chips (ARM64).</p></div>
+                      </div>
+                      <a href="/download/mdedit-macos-arm64.dmg" class="download-button download-button-secondary">Download DMG<span>Apple Silicon · ARM64</span></a>
+                      <div class="download-alternatives"><a href="/download/mdedit-macos-arm64.app.tar.gz">TAR.GZ app archive</a></div>
+                  </article>
+
+                  <article class="download-card">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">🐧</div>
+                          <div><h3>Linux x64</h3><p>For computers with Intel or AMD processors (x86_64).</p></div>
+                      </div>
+                      <a href="/download/mdedit-linux.AppImage" class="download-button download-button-secondary">Download AppImage<span>Linux x64 · mark the file as executable</span></a>
+                      <div class="download-alternatives"><a href="/download/mdedit-linux.deb">DEB · Debian / Ubuntu</a><a href="/download/mdedit-linux.rpm">RPM · Fedora / openSUSE</a></div>
+                  </article>
+
+                  <article class="download-card">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">🐧</div>
+                          <div><h3>Linux ARM64</h3><p>For 64-bit systems with ARM processors (aarch64).</p></div>
+                      </div>
+                      <a href="/download/mdedit-linux-arm64.AppImage" class="download-button download-button-secondary">Download AppImage<span>Linux ARM64 · mark the file as executable</span></a>
+                      <div class="download-alternatives"><a href="/download/mdedit-linux-arm64.deb">DEB · Debian / Ubuntu</a><a href="/download/mdedit-linux-arm64.rpm">RPM · Fedora / openSUSE</a></div>
+                  </article>
+              </div>
+
+              <p class="download-note">Windows installers are not signed by a publisher. macOS packages use ad-hoc signing without Apple notarization.</p>
+              <p class="download-note"><a href="/download/">All files and SHA-256 checksums</a> · <a href="https://github.com/MartinDejmal/mdedit/releases/tag/1.1.0" target="_blank" rel="noopener">Release on GitHub</a></p>
+
+              <div class="build-panel">
+                  <div class="build-copy">
+                      <div class="section-kicker">For developers</div>
+                      <h3>Build from source</h3>
+                      <p>You need Node.js 22, Rust 1.94.1 as specified in <code>rust-toolchain.toml</code>, and the system dependencies listed in the README.</p>
+                      <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="btn btn-secondary btn-on-dark">
+                          Source code on GitHub
+                      </a>
+                  </div>
+                  <div class="code-block">
+                      <pre><code>git clone https://github.com/MartinDejmal/mdedit.git
+cd mdedit
+npm ci
+npm run tauri build</code></pre>
+                  </div>
+              </div>
+
+              <p class="download-note">After building, find the installer in <code>src-tauri/target/release/bundle/</code>.</p>
+          </div>
+      </section>
+
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <span>mdedit © 2026 Martin Dejmal · MIT license</span>
+      <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </footer>
+
+  <script>
+    (async () => {
+      try {
+        let total = 0;
+        let page = 1;
+        let hasMore = true;
+        while (hasMore) {
+          const res = await fetch(
+            `https://api.github.com/repos/MartinDejmal/mdedit/releases?per_page=100&page=${page}`
+          );
+          if (!res.ok) {
+            throw new Error(`GitHub API responded with ${res.status}`);
+          }
+          const releases = await res.json();
+          for (const release of releases) {
+            for (const asset of release.assets) {
+              total += asset.download_count;
+            }
+          }
+          hasMore = releases.length === 100;
+          page++;
+        }
+        const el = document.getElementById('total-downloads');
+        if (el) {
+          el.textContent = total.toLocaleString(document.documentElement.lang === 'en' ? 'en-US' : 'cs-CZ');
+        }
+      } catch (err) {
+        const el = document.getElementById('total-downloads');
+        if (el) el.textContent = '—';
+        console.error('download counter: failed to fetch release stats', err);
+      }
+    })();
+  </script>
+</body>
+</html>
