@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>mdedit – Markdown editor</title>
+  <meta name="description" content="mdedit 1.1.0: odlehčený Markdown editor s náhledem Mermaid, prohlížečem složek a exportem do PDF. Ke stažení pro Windows, macOS a Linux.">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="shortcut icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
@@ -32,7 +33,7 @@
           <div class="container">
               <img src="icon.png" alt="mdedit" class="hero-icon">
               <h1>mdedit</h1>
-              <p class="tagline">Odlehčený multiplatformní Markdown editor.<br>Píšte, co vidíte – bez přepínání mezi editací a náhledem.</p>
+              <p class="tagline">Odlehčený multiplatformní Markdown editor.<br>Pište, co vidíte – bez přepínání mezi editací a náhledem.</p>
               <div class="hero-actions">
                   <a href="#download" class="btn btn-primary">Stáhnout</a>
                   <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="btn btn-secondary">
@@ -40,7 +41,12 @@
                       Zdrojový kód
                   </a>
               </div>
-              <p class="version-note">v0.1.0 · MIT licence · Tauri + React + TypeScript</p>
+              <p class="version-note" data-release-version="1.1.0">v1.1.0 · 22. listopadu 2026 · MIT licence</p>
+              <div class="release-highlights">
+                  <h2>Nově ve verzi 1.1.0</h2>
+                  <p>Procházení Markdown souborů ve složkách, diagramy Mermaid přímo v editoru a věrnější export do PDF. Opravené zamrzání při otevření diagramů.</p>
+                  <a href="https://github.com/MartinDejmal/mdedit/releases/tag/1.1.0" target="_blank" rel="noopener">Přehled změn a všechny balíčky</a>
+              </div>
           </div>
       </section>
 
@@ -52,20 +58,20 @@
 
                   <div class="feature-card">
                       <div class="feature-icon">✍️</div>
-                      <h3>WYSIWYG editing</h3>
+                      <h3>WYSIWYG editace</h3>
                       <p>Výsledek vidíte přímo při psaní. Žádné přepínání mezi zdrojovým kódem a náhledem.</p>
                   </div>
 
                   <div class="feature-card">
                       <div class="feature-icon">📁</div>
-                      <h3>Práce se soubory</h3>
-                      <p>Otevírání, vytváření a ukládání <code>.md</code>, <code>.markdown</code> a <code>.txt</code> souborů. Drag &amp; drop, CLI argumenty i „Otevřít v".</p>
+                      <h3>Soubory i složky</h3>
+                      <p>Otevírejte <code>.md</code>, <code>.markdown</code> a <code>.txt</code> soubory. Markdown soubory ve složce najdete v postranním stromu; nechybí drag &amp; drop ani „Otevřít v“.</p>
                   </div>
 
                   <div class="feature-card">
                       <div class="feature-icon">🗂️</div>
                       <h3>Osnova dokumentu</h3>
-                      <p>Postranní panel s přehledem nadpisů umožňuje rychlou navigaci i v delších dokumentech.</p>
+                      <p>Postranní panel s nadpisy usnadňuje navigaci v delších dokumentech. Jeho šířku si přizpůsobíte a aplikace si ji zapamatuje.</p>
                   </div>
 
                   <div class="feature-card">
@@ -83,7 +89,13 @@
                   <div class="feature-card">
                       <div class="feature-icon">📤</div>
                       <h3>Export</h3>
-                      <p>Dokument lze exportovat do HTML nebo PDF přímo z aplikace.</p>
+                      <p>Export do HTML a PDF zachovává tabulky, seznamy, bloky kódu, českou diakritiku i diagramy Mermaid.</p>
+                  </div>
+
+                  <div class="feature-card">
+                      <div class="feature-icon">📊</div>
+                      <h3>Diagramy Mermaid</h3>
+                      <p>Pište diagram jako blok kódu a sledujte jeho náhled přímo v dokumentu. Vykreslování funguje i bez připojení k internetu.</p>
                   </div>
 
                   <div class="feature-card">
@@ -145,13 +157,13 @@
           <div class="container">
               <div class="section-kicker">Stažení</div>
               <h2>Vyberte instalátor pro svůj systém</h2>
-              <p class="download-lead">Nainstalujte mdedit jako běžnou desktopovou aplikaci. Bez účtu, bez cloudu, bez další malé daně za existenci.</p>
+              <p class="download-lead">Verze 1.1.0 pro Windows, macOS a Linux. Vyberte svůj systém a architekturu procesoru. Bez účtu, dokumenty zůstávají u vás.</p>
 
               <div class="download-stats">
                 <div class="download-stat-badge">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   <span id="total-downloads" class="download-stat-value" aria-live="polite">…</span>
-                  <span class="download-stat-label">celkových stažení</span>
+                  <span class="download-stat-label">stažení z GitHubu</span>
                 </div>
               </div>
 
@@ -161,35 +173,66 @@
                           <div class="platform-icon" aria-hidden="true">⊞</div>
                           <div>
                               <h3>Windows</h3>
-                              <p>Instalátor MSI pro 64bit Windows.</p>
+                              <p>Pro 64bit Windows s procesorem Intel nebo AMD (x64).</p>
                           </div>
                       </div>
-                      <a href="/download/mdedit-windows.msi" class="download-button">
-                          Stáhnout MSI
-                          <span>mdedit-windows.msi</span>
-                      </a>
+                      <div class="download-actions">
+                          <a href="/download/mdedit-windows.exe" class="download-button">Stáhnout EXE<span>Windows x64</span></a>
+                          <a href="/download/mdedit-windows.msi" class="download-button download-button-secondary">Stáhnout MSI<span>Windows x64</span></a>
+                      </div>
                   </article>
 
                   <article class="download-card">
                       <div class="download-card-top">
                           <div class="platform-icon" aria-hidden="true">⌘</div>
                           <div>
-                              <h3>macOS</h3>
+                              <h3>macOS Intel</h3>
                               <p>DMG balíček pro Mac s procesorem Intel.</p>
                           </div>
                       </div>
                       <a href="/download/mdedit-macos.dmg" class="download-button download-button-secondary">
                           Stáhnout DMG
-                          <span>mdedit-macos.dmg</span>
+                          <span>Intel · x64</span>
                       </a>
+                      <div class="download-alternatives"><a href="/download/mdedit-macos-intel.app.tar.gz">Archiv aplikace TAR.GZ</a></div>
+                  </article>
+
+                  <article class="download-card">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">⌘</div>
+                          <div><h3>macOS Apple Silicon</h3><p>Pro Macy s čipy Apple M1 a novějšími (ARM64).</p></div>
+                      </div>
+                      <a href="/download/mdedit-macos-arm64.dmg" class="download-button download-button-secondary">Stáhnout DMG<span>Apple Silicon · ARM64</span></a>
+                      <div class="download-alternatives"><a href="/download/mdedit-macos-arm64.app.tar.gz">Archiv aplikace TAR.GZ</a></div>
+                  </article>
+
+                  <article class="download-card">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">🐧</div>
+                          <div><h3>Linux x64</h3><p>Pro počítače s procesorem Intel nebo AMD (x86_64).</p></div>
+                      </div>
+                      <a href="/download/mdedit-linux.AppImage" class="download-button download-button-secondary">Stáhnout AppImage<span>Linux x64 · soubor označte jako spustitelný</span></a>
+                      <div class="download-alternatives"><a href="/download/mdedit-linux.deb">DEB · Debian / Ubuntu</a><a href="/download/mdedit-linux.rpm">RPM · Fedora / openSUSE</a></div>
+                  </article>
+
+                  <article class="download-card">
+                      <div class="download-card-top">
+                          <div class="platform-icon" aria-hidden="true">🐧</div>
+                          <div><h3>Linux ARM64</h3><p>Pro 64bit systémy s procesorem ARM (aarch64).</p></div>
+                      </div>
+                      <a href="/download/mdedit-linux-arm64.AppImage" class="download-button download-button-secondary">Stáhnout AppImage<span>Linux ARM64 · soubor označte jako spustitelný</span></a>
+                      <div class="download-alternatives"><a href="/download/mdedit-linux-arm64.deb">DEB · Debian / Ubuntu</a><a href="/download/mdedit-linux-arm64.rpm">RPM · Fedora / openSUSE</a></div>
                   </article>
               </div>
+
+              <p class="download-note">Windows instalátory nemají podpis vydavatele. macOS balíčky používají ad-hoc podpis bez notarizace Apple.</p>
+              <p class="download-note"><a href="/download/">Všechny soubory a kontrolní součty SHA-256</a> · <a href="https://github.com/MartinDejmal/mdedit/releases/tag/1.1.0" target="_blank" rel="noopener">Release na GitHubu</a></p>
 
               <div class="build-panel">
                   <div class="build-copy">
                       <div class="section-kicker">Pro vývojáře</div>
                       <h3>Zkompilovat svépomocí</h3>
-                      <p>Sestavit aplikaci ze zdrojového kódu zvládnete v pár krocích. Předpoklady: Node.js 18+ a Rust stable.</p>
+                      <p>Potřebujete Node.js 22, Rust 1.94.1 podle souboru <code>rust-toolchain.toml</code> a systémové závislosti uvedené v README.</p>
                       <a href="https://github.com/MartinDejmal/mdedit" target="_blank" rel="noopener" class="btn btn-secondary btn-on-dark">
                           Zdrojový kód na GitHubu
                       </a>
@@ -197,7 +240,7 @@
                   <div class="code-block">
                       <pre><code>git clone https://github.com/MartinDejmal/mdedit.git
 cd mdedit
-npm install
+npm ci
 npm run tauri build</code></pre>
                   </div>
               </div>
@@ -226,8 +269,7 @@ npm run tauri build</code></pre>
             `https://api.github.com/repos/MartinDejmal/mdedit/releases?per_page=100&page=${page}`
           );
           if (!res.ok) {
-            console.error('download counter: GitHub API responded with', res.status);
-            break;
+            throw new Error(`GitHub API responded with ${res.status}`);
           }
           const releases = await res.json();
           for (const release of releases) {
@@ -243,6 +285,8 @@ npm run tauri build</code></pre>
           el.textContent = total.toLocaleString('cs-CZ');
         }
       } catch (err) {
+        const el = document.getElementById('total-downloads');
+        if (el) el.textContent = '—';
         console.error('download counter: failed to fetch release stats', err);
       }
     })();

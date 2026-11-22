@@ -128,9 +128,15 @@ nav a:hover { color: var(--accent); }
 }
 
 .version-note {
-  font-size: .82rem;
-  color: #9aa3b4;
+  font-size: .875rem;
+  color: var(--text-muted);
 }
+
+.release-highlights { max-width: 640px; margin: 32px auto 0; }
+.release-highlights h2 { font-size: 1.1rem; margin-bottom: 8px; }
+.release-highlights p { color: var(--text-muted); margin-bottom: 10px; }
+.release-highlights a { color: var(--accent-dark); font-size: .9rem; }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
 
 /* Buttons */
 .btn {
@@ -440,6 +446,7 @@ kbd {
 }
 
 .download-card-primary {
+  grid-column: 1 / -1;
   border-color: rgba(59,124,244,.45);
   background: linear-gradient(160deg, rgba(59,124,244,.22), rgba(255,255,255,.06));
 }
@@ -503,7 +510,7 @@ kbd {
 
 .download-button span {
   color: rgba(255,255,255,.72);
-  font-size: .74rem;
+  font-size: .875rem;
   font-weight: 500;
   overflow-wrap: anywhere;
 }
@@ -517,6 +524,10 @@ kbd {
 .download-button-secondary:hover {
   background: rgba(255,255,255,.16);
 }
+
+.download-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.download-alternatives { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: .875rem; }
+.download-alternatives a, .download-note a { color: #b8ceff; text-underline-offset: 3px; }
 
 .build-panel {
   display: grid;
@@ -597,6 +608,7 @@ kbd {
 
 @media (max-width: 760px) {
   .download-grid,
+  .download-actions,
   .build-panel {
     grid-template-columns: 1fr;
   }
