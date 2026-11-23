@@ -38,10 +38,10 @@ tr{break-inside:avoid}
 </style>
 </head>
 <body><main><h1>Uživatelská příručka mdedit</h1>
-<p>Offline nápověda pro mdedit 1.2.0.</p>
+<p>Offline nápověda pro aktuální vývojovou větev mdedit.</p>
 <nav aria-label="Obsah"><h2 style="margin-top:0">Obsah</h2>
 <ol><li><a href="#start">Začínáme</a></li>
-<li><a href="#workspace">Pracovní plocha a nápověda</a></li>
+<li><a href="#workspace">Pracovní plocha a nápověda</a> · <a href="#fonts">Výběr písma</a></li>
 <li><a href="#files">Otevření, nový dokument a ukládání</a></li>
 <li><a href="#unsaved">Neuložené změny a potvrzovací dialogy</a></li>
 <li><a href="#browser">Filebrowser: složky a souborové operace</a></li>
@@ -53,7 +53,7 @@ tr{break-inside:avoid}
 </ol></nav>
 <section id="start"><h2>Začínáme</h2>
 <p>mdedit je desktopový WYSIWYG editor Markdownu pro Windows, macOS a Linux. Formátování vidíte přímo při psaní. Soubory zůstávají na vašem disku; aplikace nevyžaduje účet ani cloudovou službu.</p>
-<p>Tato příručka popisuje mdedit 1.2.0, včetně správy souborů, zoomu editoru, statistik a offline nápovědy. Starší instalátory mohou obsahovat menší sadu funkcí. Přesnou verzi své aplikace najdete v <strong>Help → About</strong>.</p>
+<p>Tato příručka popisuje aktuální vývojovou větev, včetně volby písma pro text a kód, správy souborů, zoomu editoru, statistik a offline nápovědy. Starší instalátory mohou obsahovat menší sadu funkcí. Přesnou verzi své aplikace najdete v <strong>Help → About</strong>.</p>
 <p>Instalátor vyberte pro svůj systém a procesor: Windows x64 (EXE/MSI), macOS Intel či Apple Silicon (DMG), Linux x64 či ARM64 (AppImage/DEB/RPM). AppImage označte jako spustitelný. Nepodepsané Windows a ad-hoc podepsané, nenotarizované macOS balíčky mohou vyvolat upozornění systému; instalujte pouze důvěryhodné vydání.</p>
 <p>Windows desktop používá WebView2 Runtime. Samotná nápověda a Mermaid náhledy nepotřebují internet.</p>
 </section>
@@ -63,10 +63,18 @@ tr{break-inside:avoid}
 <p>Vlevo může být panel <strong>Files</strong>, za ním <strong>Outline</strong> s nadpisy a potom editor. Outline zapnete přes View, kliknutím na nadpis se přesunete v dokumentu; jeho pravý okraj lze táhnout a šířka se pamatuje. Dole vidíte cestu, stav <strong>Saved / Modified</strong> a případné upozornění na externí změnu.</p>
 <p>Statusbar navíc zobrazuje <strong>Lines, Words, Chars</strong> a pozici kurzoru <strong>Ln / Col</strong> (od 1, při výběru jeho aktivní konec). Jde o text editoru bez Markdown značek: každý odstavec, nadpis, položka seznamu a buňka tabulky tvoří logický řádek; ruční zalomení a řádky kódu přidávají další řádky. Zalomení podle šířky okna ani zoom počty nemění. Prázdný dokument má jeden řádek. Slova jsou skupiny písmen a číslic; znaky se počítají jako Unicode code points včetně mezer a zalomení (emoji mimo složené sekvence jako jeden znak).</p>
 <p>Vedle <strong>Saved / Modified</strong> je velikost aktuálního Markdownu v <strong>bajtech UTF-8 (B)</strong>, včetně neuložených změn. Jde o obsah připravený k uložení, nikoli velikost původního souboru na disku: normalizace Markdownu může tyto hodnoty odlišit. Prázdný Markdown má při uložení jeden koncový LF, tedy 1 B. Údaje se aktualizují při psaní, Undo/Redo a přepnutí souboru; pohyb kurzoru soubor nemění.</p>
-<p>V nabídce <strong>View → Font Settings…</strong> můžete vyhledat nainstalované písmo. Tlačítka v horní části dialogu přepínají mezi nastavením písma nadpisů a běžného textu (<strong>Text</strong>) a písma kódu v textu i v blocích (<strong>Code</strong>). Obě volby mají živý náhled. Tlačítko <strong>OK</strong> uloží obě volby pro všechny dokumenty. Cancel nebo Escape je zahodí. Pokud se uložení nezdaří, dialog obě volby zachová a tlačítkem <strong>OK</strong> můžete uložení zkusit znovu. <strong>Editor default</strong> obnoví výchozí písmo textu a <strong>Monospace default</strong> výchozí písmo kódu. V prohlížeči otevřete nastavení tlačítkem <strong>Font Settings</strong> na nástrojové liště (v úzkém okně pod <strong>»</strong>). Zadejte název nainstalované rodiny nebo použijte tlačítko <strong>Load installed fonts</strong>, pokud je dostupné, a povolte přístup k písmům. Vymazáním názvu obnovíte výchozí písmo. Volby se projeví při zobrazení v editoru. Soubory Markdown a exporty HTML/PDF si zachovají vlastní formátování.</p>
+
 <p><strong>Help → Help</strong> nebo <strong>F1</strong> otevře tuto offline nápovědu. Přepínač <strong>Čeština / English</strong> mění jazyk nápovědy a About, nikoli celé rozhraní editoru. Zavřete ji tlačítkem Close/Zavřít nebo Escape. Otevřený dokument se tím nemění. Po dobu dialogu jsou nativní nabídky File/Edit/View dočasně vypnuté; pro práci s dokumentem nápovědu nejprve zavřete. Zavření hlavního okna nápovědu skryje a případné neuložené změny dál chrání potvrzovací dialog.</p>
 <p><strong>Zoom:</strong> v rozbalovacím seznamu lišty vyberte 50–200 %, nebo nad editační plochou použijte <strong>Ctrl + kolečko</strong> (nahoru zvětší, dolů zmenší). Pro zoom se používá Ctrl také na macOS. Nevejde-li se seznam na lištu, je pod ».</p>
 <p>Zoom mění pouze zobrazení editoru, nikoli lištu, Files či Outline, obsah Markdownu, stav Saved/Modified, historii Undo ani HTML/PDF export. Zachová se při přepínání i vytváření dokumentů v rámci běhu aplikace; při novém spuštění je vždy 100 %. Neukládá se do nastavení ani do souboru.</p>
+<h3 id="fonts">Výběr písma pro text a kód</h3>
+<p>V desktopové aplikaci otevřete <strong>View → Font Settings…</strong>. Dialog načte rodiny písem nainstalované v systému; nic nestahuje. Pole <strong>Search fonts</strong> filtruje seznam podle názvu.</p>
+<ol><li>Zvolte <strong>Text</strong> pro nadpisy a běžný text, nebo <strong>Code</strong> pro kód v textu i kódové bloky. Každá kategorie má vlastní volbu.</li>
+<li>Vyberte rodinu v seznamu. Náhled ukáže nadpis, běžný, tučný a kurzivní text, nebo ukázku kódu. Změna se zatím týká pouze náhledu.</li>
+<li>Stiskněte <strong>OK</strong>: obě volby se uloží a použijí pro všechny dokumenty i po novém spuštění aplikace. <strong>Cancel</strong> nebo <strong>Escape</strong> změny zahodí. Pokud uložení selže, dialog volby zachová; tlačítkem OK je můžete uložit znovu.</li></ol>
+<p>Pro návrat k výchozímu písmu vyberte v kategorii Text <strong>Editor default</strong>, v kategorii Code <strong>Monospace default</strong>, a potvrďte OK. Obě kategorie lze obnovit nezávisle. Není-li uložená rodina dostupná, seznam ji označí <strong>(unavailable)</strong> a editor použije náhradní písmo; zvolte dostupnou rodinu nebo výchozí volbu.</p>
+<p>Pokud systém seznam neposkytne, zadejte přesný název nainstalované rodiny do <strong>Installed font family name</strong>. Vymazání pole obnoví výchozí písmo. Při spuštění samotného frontendu v prohlížeči otevřete dialog tlačítkem <strong>Font Settings</strong> na liště (v úzkém okně pod <strong>»</strong>). Podporuje-li prohlížeč přístup k místním písmům, lze použít <strong>Load installed fonts</strong> a udělit oprávnění. Po zamítnutí lze dál zadat název ručně nebo oprávnění změnit v nastavení webu v prohlížeči.</p>
+<p>Výběr mění pouze písmo v editoru. Neoznačí dokument jako Modified, nezmění obsah Markdownu, historii Undo, statistiky ani fonty HTML/PDF exportů. Nastavení fontu se pamatuje mezi spuštěními; zobrazovací zoom se naopak po spuštění vrací na 100 %.</p>
 </section>
 
 <section id="files"><h2>Otevření, nový dokument a ukládání</h2>

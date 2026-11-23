@@ -38,10 +38,10 @@ tr{break-inside:avoid}
 </style>
 </head>
 <body><main><h1>mdedit user guide</h1>
-<p>Offline help for mdedit 1.2.0.</p>
+<p>Offline help for the current mdedit development branch.</p>
 <nav aria-label="Contents"><h2 style="margin-top:0">Contents</h2>
 <ol><li><a href="#start">Getting started</a></li>
-<li><a href="#workspace">Workspace and help</a></li>
+<li><a href="#workspace">Workspace and help</a> · <a href="#fonts">Font settings</a></li>
 <li><a href="#files">Opening, creating and saving documents</a></li>
 <li><a href="#unsaved">Unsaved changes and confirmation dialogs</a></li>
 <li><a href="#browser">File browser: folders and file operations</a></li>
@@ -53,7 +53,7 @@ tr{break-inside:avoid}
 </ol></nav>
 <section id="start"><h2>Getting started</h2>
 <p>mdedit is a desktop WYSIWYG Markdown editor for Windows, macOS and Linux. See formatting as you type. Documents stay on your disk; no account or cloud service is required.</p>
-<p>This guide describes mdedit 1.2.0, including file management, editor zoom, statistics and offline help. Older installers may contain a smaller feature set. Find your exact application version under <strong>Help → About</strong>.</p>
+<p>This guide describes the current development branch, including text/code font settings, file management, editor zoom, statistics and offline help. Older installers may contain a smaller feature set. Find your exact application version under <strong>Help → About</strong>.</p>
 <p>Choose an installer for your OS and CPU: Windows x64 (EXE/MSI), macOS Intel or Apple Silicon (DMG), Linux x64 or ARM64 (AppImage/DEB/RPM). Mark an AppImage as executable. Unsigned Windows installers and ad-hoc signed, non-notarized macOS packages may trigger system warnings; install only trusted releases.</p>
 <p>The Windows desktop uses the WebView2 Runtime. The built-in help and Mermaid previews do not require internet access.</p>
 </section>
@@ -63,10 +63,18 @@ tr{break-inside:avoid}
 <p>The left side can contain <strong>Files</strong>, then the heading <strong>Outline</strong>, followed by the editor. Toggle Outline from View, click a heading to navigate, or drag its right edge to resize it; the width is remembered. The status bar shows the file path, <strong>Saved / Modified</strong>, and external-change warnings.</p>
 <p>The status bar also shows <strong>Lines, Words, Chars</strong> and cursor position <strong>Ln / Col</strong> (starting at 1; the active end when selecting). These describe editor text without Markdown syntax: each paragraph, heading, list-item paragraph and table-cell paragraph forms a logical line; hard breaks and code lines add further lines. Window wrapping and zoom do not change the counts. An empty document has one line. Words are groups of letters and digits; characters are Unicode code points including spaces and line breaks (a standalone emoji counts as one character).</p>
 <p>Next to <strong>Saved / Modified</strong>, the size in <strong>UTF-8 bytes (B)</strong> represents the current Markdown, including unsaved edits. It measures the content ready to save rather than the original disk file: Markdown normalization may make those sizes differ. Empty Markdown is saved with one trailing LF, or 1 B. Values update on typing, Undo/Redo and file switches; moving the cursor does not modify the file.</p>
-<p><strong>View → Font Settings…</strong> opens a searchable list of installed fonts. Use the buttons at the top of the dialog. Choose <strong>Text</strong> for headings and body text or <strong>Code</strong> for inline code and code blocks. Each choice has a live preview. Select <strong>OK</strong> to save both choices for all documents, or Cancel / Escape to discard them. If saving fails, the dialog keeps both choices so you can select <strong>OK</strong> to try again. <strong>Editor default</strong> resets the text font. <strong>Monospace default</strong> resets the code font. In a browser, use the <strong>Font Settings</strong> toolbar button (under <strong>»</strong> in a narrow window), then enter an installed family name or choose <strong>Load installed fonts</strong> if available and grant local font access. Clear the name to restore the default. The choices apply to the editor display. Markdown files and HTML/PDF exports keep their own formatting.</p>
+
 <p><strong>Help → Help</strong> or <strong>F1</strong> opens this offline guide. <strong>Čeština / English</strong> switches the language of Help and About, not the entire editor interface. Use Close/Zavřít or Escape to dismiss it. Your document remains unchanged. Native File/Edit/View menus are temporarily disabled while this dialog is open; close help to resume editing. Closing the main window dismisses help and still protects unsaved changes with a confirmation dialog.</p>
 <p><strong>Zoom:</strong> choose 50–200% in the toolbar selector, or use <strong>Ctrl + mouse wheel</strong> over the editor (up zooms in, down zooms out). Zoom uses Control on macOS too. If the selector does not fit on the toolbar, find it under ».</p>
 <p>Zoom changes only the editor view, not the toolbar, Files or Outline, Markdown content, Saved/Modified state, Undo history or HTML/PDF exports. It survives switching and creating documents for the current application session, and always starts at 100% in a new session. It is never stored in settings or document files.</p>
+<h3 id="fonts">Choosing text and code fonts</h3>
+<p>In the desktop application, open <strong>View → Font Settings…</strong>. The dialog loads font families installed on your system; it does not download fonts. Use <strong>Search fonts</strong> to filter the list by name.</p>
+<ol><li>Choose <strong>Text</strong> for headings and body text, or <strong>Code</strong> for inline code and code blocks. Each category has an independent selection.</li>
+<li>Select a family from the list. The preview shows a heading, normal, bold and italic text, or sample code. Changes affect only the preview until you confirm.</li>
+<li>Select <strong>OK</strong> to save both choices and apply them to all documents, including after restarting the application. <strong>Cancel</strong> or <strong>Escape</strong> discards changes. If saving fails, the dialog keeps your choices; select OK to retry.</li></ol>
+<p>To restore defaults, select <strong>Editor default</strong> under Text or <strong>Monospace default</strong> under Code, then confirm with OK. You can reset each category independently. If a saved family is missing, the list marks it <strong>(unavailable)</strong> and the editor uses a fallback font; choose an installed family or the default.</p>
+<p>If the system cannot provide a font list, enter the exact installed family name in <strong>Installed font family name</strong>. Clearing the field restores the default. When running only the frontend in a browser, open the <strong>Font Settings</strong> toolbar button (under <strong>»</strong> in narrow windows). If local font access is supported, select <strong>Load installed fonts</strong> and grant permission. After denying access, you can still enter a name manually or change the permission in the browser’s site settings.</p>
+<p>Font choices affect only the editor display. They do not mark the document Modified or change Markdown content, Undo history, statistics or HTML/PDF export fonts. Font settings persist across application restarts; display zoom instead resets to 100% at startup.</p>
 </section>
 
 <section id="files"><h2>Opening, creating and saving documents</h2>
