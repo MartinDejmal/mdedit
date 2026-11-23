@@ -42,6 +42,9 @@ async function setContent(page, html) {
   await page.evaluate(html => {
     const editor = document.querySelector('.ProseMirror').editor;
     editor.commands.setContent(html);
+    editor.view.updateState(editor.state.constructor.create({
+      schema: editor.schema, doc: editor.state.doc, plugins: editor.state.plugins,
+    }));
     editor.commands.setTextSelection(1);
   }, html);
 }
@@ -67,5 +70,43 @@ test('#44 Undo and Redo buttons track history and work through overflow', async 
     await page.getByRole('button', { name: 'More editor tools', exact: true }).click();
     await page.getByRole('dialog', { name: 'More editor tools' }).getByRole('button', { name: 'Undo (Ctrl/Cmd+Z)', exact: true }).click();
     assert.equal((await page.locator('.ProseMirror').innerText()).trim(), '');
+  } finally { await page.close(); }
+});
+
+
+test('#46 Heading lifts only the selected list item, preserving siblings, marks and undo', async () => {
+  const page = await openEditor();
+  try {
+    for (const html of [
+      '<ul><li><p>Before</p></li><li><p>Target <strong>bold</strong></p></li><li><p>After</p></li></ul>',
+      '<ol start="3"><li><p>Before</p></li><li><p>Target <strong>bold</strong></p></li><li><p>After</p></li></ol>',
+      '<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>Before</p></li><li data-type="taskItem" data-checked="false"><p>Target <strong>bold</strong></p></li><li data-type="taskItem"><p>After</p></li></ul>',
+      '<ul><li><p>Parent</p><ul><li><p>Before</p></li><li><p>Target <strong>bold</strong></p></li><li><p>After</p></li></ul></li></ul>',
+    ]) {
+      await setContent(page, html);
+      await page.evaluate(() => {
+        const editor = document.querySelector('.ProseMirror').editor;
+        editor.state.doc.descendants((node, pos) => {
+          if (node.isText && node.text.startsWith('Target')) editor.chain().focus().setTextSelection(pos + 1).run();
+        });
+      });
+      await page.waitForTimeout(40);
+      const before = await documentJSON(page);
+      await page.getByRole('button', { name: 'Heading: Normal → H1', exact: true }).click();
+      const after = await documentJSON(page);
+      const heading = after.content.find(node => node.type === 'heading');
+      assert(heading, 'heading is outside the list: ' + JSON.stringify(after));
+      assert.equal(heading.attrs.level, 1);
+      assert(heading.content.some(node => node.marks?.some(mark => mark.type === 'bold')));
+      assert.equal(await page.locator('.ProseMirror li').filter({ hasText: 'Before' }).count() >= 1, true);
+      assert.equal(await page.locator('.ProseMirror li').filter({ hasText: 'After' }).count() >= 1, true);
+      await page.getByRole('button', { name: 'Undo (Ctrl/Cmd+Z)', exact: true }).click();
+      assert.deepEqual(await documentJSON(page), before, 'one Undo restores the list');
+    }
+    await setContent(page, '<p>Cycle</p>');
+    for (const title of ['Heading: Normal → H1', 'Heading: H1 → H2', 'Heading: H2 → H3', 'Heading: H3 → Normal']) {
+      await page.getByRole('button', { name: title, exact: true }).click();
+    }
+    assert.equal((await documentJSON(page)).content[0].type, 'paragraph');
   } finally { await page.close(); }
 });

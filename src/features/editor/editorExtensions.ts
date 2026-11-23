@@ -54,7 +54,7 @@ export const TaskListNode = Node.create({
   content: "taskItem+",
 
   parseHTML() {
-    return [{ tag: 'ul[data-type="taskList"]' }];
+    return [{ tag: 'ul[data-type="taskList"]', priority: 60 }];
   },
 
   renderHTML({ HTMLAttributes }) {
@@ -78,7 +78,7 @@ export const TaskItemNode = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'li[data-type="taskItem"]' }];
+    return [{ tag: 'li[data-type="taskItem"]', priority: 60 }];
   },
 
   renderHTML({ HTMLAttributes }) {

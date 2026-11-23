@@ -1,3 +1,5 @@
+import { EditorState, Selection, type Transaction } from "@tiptap/pm/state";
+import { liftListItem } from "@tiptap/pm/schema-list";
 import type { Editor } from "@tiptap/react";
 
 import type { InputDialogOptions } from "../ux/useAppUx";
@@ -169,15 +171,33 @@ export function setCodeBlockLanguage(editor: Editor, language: string): void {
 }
 
 export function cycleHeading(editor: Editor): void {
-  if (editor.isActive("heading", { level: 1 })) {
-    editor.chain().focus().setHeading({ level: 2 }).run();
-  } else if (editor.isActive("heading", { level: 2 })) {
-    editor.chain().focus().setHeading({ level: 3 }).run();
-  } else if (editor.isActive("heading", { level: 3 })) {
-    editor.chain().focus().setParagraph().run();
-  } else {
-    editor.chain().focus().setHeading({ level: 1 }).run();
+  const level = editor.isActive("heading", { level: 1 }) ? 2
+    : editor.isActive("heading", { level: 2 }) ? 3
+    : editor.isActive("heading", { level: 3 }) ? null : 1;
+  const chain = editor.chain().focus();
+  // A list item must begin with a paragraph. Lift the selected item through
+  // every surrounding list before setting its block type; preserve siblings.
+  const { $from } = editor.state.selection;
+  const lists: string[] = [];
+  for (let depth = $from.depth; depth > 0; depth--) {
+    const name = $from.node(depth).type.name;
+    if (name === "listItem" || name === "taskItem") lists.push(name);
   }
+  chain.command(({ tr, state }) => {
+    let working = EditorState.create({ schema: state.schema, doc: tr.doc, selection: tr.selection });
+    for (const name of lists) {
+      // schema-list commands require a fresh transaction mapping for each lift.
+      let lifted: Transaction | undefined;
+      if (!liftListItem(state.schema.nodes[name])(working, next => { lifted = next; }) || !lifted) return false;
+      for (const step of lifted.steps) tr.step(step);
+      tr.setSelection(Selection.fromJSON(tr.doc, lifted.selection.toJSON()));
+      working = working.apply(lifted);
+    }
+    return true;
+  });
+  if (level) chain.setHeading({ level });
+  else chain.setParagraph();
+  chain.run();
 }
 
 export function insertDefaultTable(editor: Editor): void {
