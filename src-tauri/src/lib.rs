@@ -181,6 +181,20 @@ async fn save_pdf_file_dialog(
 }
 
 #[tauri::command]
+async fn list_font_families() -> Result<Vec<String>, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let mut families = font_kit::source::SystemSource::new()
+            .all_families()
+            .map_err(|error| error.to_string())?;
+        families.sort_unstable();
+        families.dedup();
+        Ok(families)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
 fn get_launch_args() -> Vec<String> {
     std::env::args().skip(1).collect()
 }
@@ -202,6 +216,7 @@ pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             get_launch_args,
+            list_font_families,
             open_file_dialog,
             open_folder_dialog,
             list_markdown_directory,
@@ -218,4 +233,15 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(all(test, target_os = "windows"))]
+mod font_tests {
+    #[test]
+    fn lists_installed_windows_font_families() {
+        let families = tauri::async_runtime::block_on(super::list_font_families()).unwrap();
+        assert!(!families.is_empty());
+        assert!(families.iter().all(|name| !name.trim().is_empty()));
+        assert!(families.windows(2).all(|pair| pair[0] < pair[1]));
+    }
 }

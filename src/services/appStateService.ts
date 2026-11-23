@@ -1,4 +1,9 @@
-export interface AppSettings {
+export interface EditorFontSettings {
+  editorFontFamily: string | null;
+  codeFontFamily: string | null;
+}
+
+export interface AppSettings extends EditorFontSettings {
   reopenLastFileOnStartup: boolean;
 }
 
@@ -21,6 +26,8 @@ const DEFAULT_STATE: PersistedAppState = {
   recentFiles: [],
   lastOpenedFilePath: null,
   settings: {
+    editorFontFamily: null,
+    codeFontFamily: null,
     reopenLastFileOnStartup: true,
   },
   ui: {
@@ -50,6 +57,10 @@ function normalizeState(candidate: unknown): PersistedAppState {
     lastOpenedFilePath:
       typeof draft.lastOpenedFilePath === "string" ? draft.lastOpenedFilePath : null,
     settings: {
+      editorFontFamily: typeof draft.settings?.editorFontFamily === "string"
+        ? draft.settings.editorFontFamily.trim() || null : null,
+      codeFontFamily: typeof draft.settings?.codeFontFamily === "string"
+        ? draft.settings.codeFontFamily.trim() || null : null,
       reopenLastFileOnStartup:
         draft.settings?.reopenLastFileOnStartup ??
         DEFAULT_STATE.settings.reopenLastFileOnStartup,

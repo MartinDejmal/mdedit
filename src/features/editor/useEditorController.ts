@@ -8,7 +8,7 @@ import { CheckMenuItem, Menu, PredefinedMenuItem, Submenu } from "@tauri-apps/ap
 import { createEditorExtensions } from "./editorSchema";
 
 import { parentDirectory, basename } from "../../lib/utils";
-import { saveAppState } from "../../services/appStateService";
+import { saveAppState, type EditorFontSettings } from "../../services/appStateService";
 import * as bridge from "../../services/tauriBridge";
 import { useAppUx } from "../ux/useAppUx";
 import { useDocumentStore } from "../../stores/documentStore";
@@ -58,8 +58,11 @@ function buildWindowTitle(params: {
   return `${prefix}${basename(path ?? "")} - ${APP_NAME}`;
 }
 export interface EditorController {
-  helpView: HelpView;
-  closeHelp: () => void;
+  activeDialog: HelpView | "fonts";
+  showFontSettings: () => void;
+  fontSettings: EditorFontSettings;
+  applyEditorFonts: (fonts: EditorFontSettings) => boolean;
+  closeDialog: () => void;
   browserLocation: { path: string; version: number } | null;
   browserOperations: BrowserFileOperations;
   editor: Editor | null;
@@ -93,10 +96,13 @@ export interface EditorController {
 }
 
 export function useEditorController(): EditorController {
-  const [helpView, setHelpView] = useState<HelpView>(null);
-  const showHelp = useCallback(() => setHelpView("help"), []);
-  const showAbout = useCallback(() => setHelpView("about"), []);
-  const closeHelp = useCallback(() => setHelpView(null), []);
+  const [activeDialog, setActiveDialog] = useState<HelpView | "fonts">(null);
+  const showFontSettings = useCallback(() => {
+    if (!document.querySelector("dialog[open]")) setActiveDialog("fonts");
+  }, []);
+  const showHelp = useCallback(() => setActiveDialog("help"), []);
+  const showAbout = useCallback(() => setActiveDialog("about"), []);
+  const closeDialog = useCallback(() => setActiveDialog(null), []);
   const isApplyingRemoteContent = useRef(false);
   const browserSwitchInFlight = useRef(false);
   const closeConfirmInFlightRef = useRef(false);
@@ -116,6 +122,18 @@ export function useEditorController(): EditorController {
     setIsBrowserVisible(!isBrowserVisible);
   }, [isBrowserVisible]);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
+  const applyEditorFonts = useCallback((fonts: EditorFontSettings) => {
+    const current = getInitialPersistedState();
+    const next = { ...current, settings: { ...current.settings, ...fonts } };
+    try {
+      saveAppState(next);
+    } catch {
+      return false;
+    }
+    setPersistedState(next);
+    closeDialog();
+    return true;
+  }, [closeDialog]);
   const [activeCodeBlockLanguage, setActiveCodeBlockLanguage] = useState<string | null>(null);
   const { isDirty, currentFilePath, isUntitled, hasActiveDocument } =
     useDocumentStore();
@@ -337,7 +355,7 @@ export function useEditorController(): EditorController {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "F1") { event.preventDefault(); showHelp(); return; }
+      if (event.key === "F1") { event.preventDefault(); if (activeDialog !== "fonts") showHelp(); return; }
       if ((event.target as Element)?.closest?.("dialog[open]")) return;
       const mod = event.ctrlKey || event.metaKey;
       if (!mod) return;
@@ -364,7 +382,7 @@ export function useEditorController(): EditorController {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleNew, handleOpen, handleReload, handleSave, handleSaveAs, showHelp]);
+  }, [handleNew, handleOpen, handleReload, handleSave, handleSaveAs, showHelp, activeDialog]);
 
   useEffect(() => {
     let disposed = false;
@@ -387,7 +405,7 @@ export function useEditorController(): EditorController {
 
         const fileSubmenu = await Submenu.new({
           text: "File",
-          enabled: helpView === null,
+          enabled: activeDialog === null,
           items: [
             {
               id: "file-new",
@@ -440,7 +458,7 @@ export function useEditorController(): EditorController {
 
         const editSubmenu = await Submenu.new({
           text: "Edit",
-          enabled: helpView === null,
+          enabled: activeDialog === null,
           items: [
             await PredefinedMenuItem.new({ item: "Undo" }),
             await PredefinedMenuItem.new({ item: "Redo" }),
@@ -455,7 +473,7 @@ export function useEditorController(): EditorController {
 
         const viewSubmenu = await Submenu.new({
           text: "View",
-          enabled: helpView === null,
+          enabled: activeDialog === null,
           items: [
             await CheckMenuItem.new({
               id: "view-toggle-file-browser",
@@ -471,11 +489,13 @@ export function useEditorController(): EditorController {
                 handleToggleOutline();
               },
             }),
+            { id: "view-font-settings", text: "Font Settings…", action: showFontSettings },
           ],
         });
 
         const helpSubmenu = await Submenu.new({
           text: "Help",
+          enabled: activeDialog !== "fonts",
           items: [
             { id: "help-guide", text: "Help", accelerator: "F1", action: showHelp },
             { id: "help-about", text: "About", action: showAbout },
@@ -501,7 +521,8 @@ export function useEditorController(): EditorController {
   }, [
     showHelp,
     showAbout,
-    helpView,
+    showFontSettings,
+    activeDialog,
     currentFilePath,
     handleNew,
     handleOpen,
@@ -540,7 +561,7 @@ export function useEditorController(): EditorController {
 
         closeConfirmInFlightRef.current = true;
         try {
-          closeHelp();
+          closeDialog();
           if (useDocumentStore.getState().isDirty) {
             const canDiscard = await confirmDiscardUnsavedChanges();
             if (!canDiscard || disposed) return;
@@ -577,7 +598,7 @@ export function useEditorController(): EditorController {
       disposed = true;
       unlisten?.();
     };
-  }, [confirmDiscardUnsavedChanges, notify, closeHelp]);
+  }, [confirmDiscardUnsavedChanges, notify, closeDialog]);
 
   useEffect(() => {
     let isRunning = false;
@@ -633,8 +654,11 @@ export function useEditorController(): EditorController {
 
   return useMemo(
     () => ({
-      helpView,
-      closeHelp,
+      fontSettings: persistedState.settings,
+      applyEditorFonts,
+      activeDialog,
+      showFontSettings,
+      closeDialog,
       editor,
       recentFiles: persistedState.recentFiles,
       hasActiveDocument,
@@ -667,8 +691,11 @@ export function useEditorController(): EditorController {
       handleOutlineWidthChange,
     }),
     [
-      helpView,
-      closeHelp,
+      persistedState.settings,
+      applyEditorFonts,
+      activeDialog,
+      showFontSettings,
+      closeDialog,
       editor,
       handleOpen,
       handleNew,

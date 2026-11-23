@@ -331,18 +331,21 @@ body {
 }
 
 /* ProseMirror / Tiptap content */
+.font-preview,
 .ProseMirror {
   outline: none;
-  font-family: var(--font-editor);
+  font-family: var(--selected-editor-font, var(--font-editor));
   font-size: 16px;
   line-height: 1.75;
   color: var(--color-text);
 }
 
+.font-preview > * + *,
 .ProseMirror > * + * {
   margin-top: 0.75em;
 }
 
+.font-preview h1,
 .ProseMirror h1 {
   font-size: 2em;
   font-weight: 700;
@@ -366,6 +369,7 @@ body {
   margin-bottom: 0.3em;
 }
 
+.font-preview p,
 .ProseMirror p {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
@@ -387,26 +391,29 @@ body {
   font-style: italic;
 }
 
+.font-preview pre,
 .ProseMirror pre {
   background: #f5f5f5;
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 1em 1.2em;
   overflow-x: auto;
-  font-family: var(--font-mono);
+  font-family: var(--selected-code-font, var(--font-mono));
   font-size: 0.88em;
   line-height: 1.6;
 }
 
+.font-preview code,
 .ProseMirror code {
   background: #f0f0f0;
   padding: 0.15em 0.35em;
   border-radius: 3px;
-  font-family: var(--font-mono);
+  font-family: var(--selected-code-font, var(--font-mono));
   font-size: 0.88em;
 }
 
 /* Reset code styles inside pre */
+.font-preview pre code,
 .ProseMirror pre code {
   background: transparent;
   padding: 0;
@@ -916,3 +923,25 @@ body {
 
 .status-statistics { display: flex; flex-wrap: wrap; gap: 4px 12px; font-variant-numeric: tabular-nums; }
 .status-statistics span, .status-size { white-space: nowrap; }
+
+.font-dialog { width: min(480px, 94vw); height: fit-content; overflow: hidden; }
+.font-switch {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-columns: max-content 1fr;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 12px 16px 0;
+}
+.font-switch span { font-size: 13px; }
+.font-switch button[aria-pressed="true"] { background: var(--color-btn-active-bg); border-color: var(--color-accent); }
+.font-dialog-body { min-height: 0; overflow: auto; padding: 16px 16px 0; }
+.font-dialog-body label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.font-dialog-body input, .font-dialog-body select { width: 100%; padding: 6px; font: inherit; color: inherit; border: 1px solid var(--color-border); border-radius: 4px; }
+.font-dialog-body input { margin-bottom: 12px; }
+.font-dialog-body [role="status"]:not(:empty) { margin-top: 6px; font-size: 14px; }
+.font-preview { overflow-wrap: anywhere; margin: 16px 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 5px; }
+.font-preview h1:first-child { margin-top: 0; }
+.font-save-error { padding: 0 16px 8px; color: #a22626; }
+.font-actions { display: flex; flex-shrink: 0; justify-content: flex-end; gap: 8px; padding: 0 16px 16px; }
+.font-actions button:last-child { background: var(--color-btn-active-bg); border-color: var(--color-accent); }

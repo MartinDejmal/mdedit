@@ -1,4 +1,7 @@
 import { useEditorZoom } from "../features/editor/useEditorZoom";
+import { isTauri } from "@tauri-apps/api/core";
+import FontSettingsDialog from "../components/FontSettingsDialog";
+import { editorFontStyle } from "../lib/editorFontStyle";
 import HelpDialog from "../components/HelpDialog";
 import FolderSidebar from "../components/FolderSidebar";
 import Layout from "../components/Layout";
@@ -14,8 +17,11 @@ function AppContent() {
   const { zoom, selectZoom, viewportRef } = useEditorZoom();
   const { isDirty, currentFilePath, activeDocument, currentCanonicalMarkdown } = useDocumentStore();
   const {
-    helpView,
-    closeHelp,
+    activeDialog,
+    showFontSettings,
+    closeDialog,
+    fontSettings,
+    applyEditorFonts,
     editor,
     recentFiles,
     hasActiveDocument,
@@ -75,8 +81,9 @@ function AppContent() {
         onToggleBrowser={handleToggleBrowser}
         isOutlineVisible={isOutlineVisible}
         onToggleOutline={handleToggleOutline}
+        onShowFontSettings={isTauri() ? undefined : showFontSettings}
       />
-      <div className="workspace-main">
+      <div className="workspace-main" style={editorFontStyle(fontSettings)}>
         <FolderSidebar
           visible={isBrowserVisible}
           location={browserLocation}
@@ -101,7 +108,10 @@ function AppContent() {
           onOutlineWidthChange={handleOutlineWidthChange}
         />
       </div>
-      <HelpDialog view={helpView} onClose={closeHelp} />
+      {activeDialog === "fonts" && (
+        <FontSettingsDialog settings={fontSettings} onApply={applyEditorFonts} onClose={closeDialog} />
+      )}
+      <HelpDialog view={activeDialog === "fonts" ? null : activeDialog} onClose={closeDialog} />
       <StatusBar
         editor={editor}
         markdown={currentCanonicalMarkdown}
