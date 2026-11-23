@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { createServer } from "vite";
 import { chromium } from "playwright-core";
 
-test("file browser only prompts for real edits, not editor normalization", async () => {
+test("file browser prompts only for real edits and resets the viewport after switching", async () => {
   const server = await createServer({ server: { host: "127.0.0.1", port: 0, strictPort: false }, logLevel: "error" });
   let browser;
   try {
@@ -12,7 +12,7 @@ test("file browser only prompts for real edits, not editor normalization", async
     const executablePath = process.env.CHROMIUM_PATH ?? ["/usr/bin/chromium", "/usr/bin/chromium-browser"].find(existsSync);
     assert(executablePath, "Install Chromium or set CHROMIUM_PATH");
     browser = await chromium.launch({ executablePath, args: ["--no-sandbox"] });
-    const page = await browser.newPage();
+    const page = await browser.newPage({ viewport: { width: 1800, height: 900 } });
     await page.addInitScript(() => {
       const callbacks = new Map(); let id = 0;
       window.files = {
@@ -22,6 +22,8 @@ test("file browser only prompts for real edits, not editor normalization", async
         "/docs/empty.md": "",
         "/docs/text.md": "# Text\n\nSome **bold** and [link](https://example.com).\n",
       };
+      files['/docs/long-a.md'] = '# Long A\n\n' + 'Paragraph in the first document.\n\n'.repeat(150);
+      files['/docs/long-b.md'] = '# Long B\n\n' + 'Paragraph in the second document.\n\n'.repeat(150);
       window.writes = 0;
       window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener() {} };
       window.__TAURI_INTERNALS__ = {
@@ -62,6 +64,42 @@ test("file browser only prompts for real edits, not editor normalization", async
     await open('text.md');
     assert.deepEqual(await page.evaluate(() => dirtyHistory), [], 'unedited documents never flash Modified');
     assert.equal(await page.evaluate(() => writes), 0, 'opening must not write to disk');
+    const viewport = page.locator('.editor-wrapper');
+    const scrollDown = async () => {
+      await viewport.evaluate(node => { node.scrollTop = 700; });
+      assert.equal(await viewport.evaluate(node => node.scrollTop), 700);
+    };
+    const assertAtStart = async () => {
+      // Let delayed editor focus and browser scroll anchoring settle as well.
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      assert.equal(await viewport.evaluate(node => node.scrollTop), 0, 'newly opened files start at the top');
+    };
+    for (const zoom of ['100', '150']) {
+      await page.getByRole('combobox', { name: 'Editor zoom', exact: true }).selectOption(zoom);
+      await open('long-a.md');
+      await scrollDown();
+      await open('long-b.md');
+      await assertAtStart();
+      await scrollDown();
+      await open('long-a.md');
+      await assertAtStart();
+      assert.equal(await page.getByRole('combobox', { name: 'Editor zoom', exact: true }).inputValue(), zoom);
+      await open('text.md');
+    }
+    // Cancelling a switch must preserve the current document and viewport.
+    await open('long-a.md');
+    await page.evaluate(() => document.querySelector('.ProseMirror').editor.commands.insertContentAt(1, 'Unsaved edit '));
+    await page.waitForFunction(() => document.querySelector('.status-dirty')?.textContent === 'Modified');
+    await scrollDown();
+    await page.getByRole('button', { name: 'long-b.md', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+    assert.equal(await page.locator('.status-path').innerText(), 'long-a.md');
+    assert.equal(await viewport.evaluate(node => node.scrollTop), 700);
+    await page.getByRole('button', { name: 'text.md', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Discard', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('.status-path')?.textContent === 'text.md');
+    await assertAtStart();
+    assert.equal(await page.evaluate(() => writes), 0);
     await page.locator('[contenteditable=true]').fill('Actual user edit');
     await page.waitForFunction(() => document.querySelector('.status-dirty')?.textContent === 'Modified');
     await page.getByRole('button', { name: 'tasks.md', exact: true }).click();

@@ -76,7 +76,7 @@ tr{break-inside:avoid}
 </section>
 
 <section id="unsaved"><h2>Unsaved changes and confirmation dialogs</h2>
-<p>Switching files in Files shows <strong>Save changes before switching files?</strong> only when the current document has changed. <strong>Save</strong> saves and continues, <strong>Discard</strong> drops changes, and <strong>Cancel</strong> keeps editing. Cancelling Save As or a write failure stops the switch.</p>
+<p>Switching files in Files shows <strong>Save changes before switching files?</strong> only when the current document has changed. <strong>Save</strong> saves and continues, <strong>Discard</strong> drops changes, and <strong>Cancel</strong> keeps editing. Cancelling Save As or a write failure stops the switch. After a successful switch, the editor scrolls to the start of the new file; cancelling preserves the viewport position in the current document.</p>
 <p>New, regular Open, reload and closing the window use <strong>Discard unsaved changes?</strong> with <strong>Discard / Keep Editing</strong>. To preserve changes, select Keep Editing, save, and repeat the action. The window close button respects this protection.</p>
 <p>Deleting the open file through Files is a separate operation: it deletes the disk file and, when the document is modified, also warns that unsaved edits will be lost.</p>
 </section>

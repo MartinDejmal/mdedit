@@ -170,12 +170,24 @@ export function useEditorController(): EditorController {
     if (browserSwitchInFlight.current) return useDocumentStore.getState().currentFilePath;
     browserSwitchInFlight.current = true;
     try {
-      await runOpenBrowserAction(path, actionContext, requestSaveChanges);
+      await runOpenBrowserAction(path, {
+        ...actionContext,
+        setEditorHtml: (html) => {
+          setEditorHtml(html);
+          // The editor DOM is reused between files, including its scroll offset.
+          // Reset only when the new document has actually replaced the old one.
+          const viewport = editor?.view.dom.closest(".editor-wrapper");
+          if (viewport) {
+            viewport.scrollTop = 0;
+            viewport.scrollLeft = 0;
+          }
+        },
+      }, requestSaveChanges);
       return useDocumentStore.getState().currentFilePath;
     } finally {
       browserSwitchInFlight.current = false;
     }
-  }, [actionContext, requestSaveChanges]);
+  }, [actionContext, editor, requestSaveChanges, setEditorHtml]);
 
   const handleOpen = useCallback(async () => {
     await runOpenAction(actionContext);

@@ -30,7 +30,7 @@ The English user guide is bundled in the application alongside Czech help. Contr
 - Ochrana neuložených změn, Saved/Modified podle normalizovaného obsahu, upozornění na externí změny, reload a funkční zavření okna s potvrzením.
 - Lišta přesouvá nevejdoucí se nástroje do `»`. Menu: File, Edit, View a Help. Jazyky lze přepínat v nápovědě a About; celé rozhraní zatím lokalizované není.
 
-Přepnutí ve filebrowseru nabízí Save / Discard / Cancel. New, běžné Open, reload a zavření okna používají Discard / Keep Editing; chcete-li změny uchovat, nejprve uložte. Smazání souboru nepoužívá koš.
+Přepnutí ve filebrowseru otevře nový soubor od začátku a u neuložených změn nabízí Save / Discard / Cancel. Zrušení přepnutí zachová aktuální pozici v dokumentu. New, běžné Open, reload a zavření okna používají Discard / Keep Editing; chcete-li změny uchovat, nejprve uložte. Smazání souboru nepoužívá koš.
 
 ## Klávesové zkratky
 
