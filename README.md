@@ -27,6 +27,7 @@ The English user guide is bundled in the application alongside Czech help. Contr
 - Tabulka bez výběru 3×3; s výběrem odpovídá počtu řádků, podporuje TSV a běžné Markdown tabulky a zachovává inline formátování.
 - Mermaid náhled a PDF diagramy fungují offline. HTML export zůstává samostatným dokumentem se styly a CDN pro jeho Mermaid náhled; pro tento náhled potřebuje internet.
 - PDF obsahuje označitelný text, lokální fonty s diakritikou, tabulky, seznamy, checkboxy, obrázky a zvýraznění kódu. Vzdálené obrázky pro PDF vyžadují dostupnost a CORS.
+- Statusbar s počtem logických řádků, slov a Unicode znaků textu editoru, pozicí kurzoru (řádek/sloupec) a velikostí aktuálního Markdownu v UTF-8 bajtech včetně neuložených úprav.
 - Ochrana neuložených změn, Saved/Modified podle normalizovaného obsahu, upozornění na externí změny, reload a funkční zavření okna s potvrzením.
 - Lišta přesouvá nevejdoucí se nástroje do `»`. Menu: File, Edit, View a Help. Jazyky lze přepínat v nápovědě a About; celé rozhraní zatím lokalizované není.
 
@@ -72,6 +73,7 @@ Browserové testy používají `playwright-core` a nainstalovaný Chromium/Chrom
 ```bash
 npm run test:help
 npm run test:zoom
+npm run test:statistics
 npm run test:editor
 npm run test:file-browser
 npm run test:new-document

@@ -546,6 +546,8 @@ body {
 
 .status-bar {
   display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   align-items: center;
   justify-content: space-between;
   padding: 3px 12px;
@@ -558,6 +560,8 @@ body {
 }
 
 .status-path {
+  min-width: 0;
+  flex: 1 1 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -568,8 +572,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
-  margin-left: 12px;
+  flex-wrap: wrap;
+  margin-left: auto;
 }
 
 .status-external-warning {
@@ -909,3 +913,6 @@ body {
 .zoom-control select { padding: 4px 6px; border: 1px solid var(--color-border); border-radius: 4px; background: white; color: var(--color-text); }
 /* Zoom belongs to the view wrapper, outside ProseMirror's serialized content. */
 .editor-zoom { min-height: 100%; }
+
+.status-statistics { display: flex; flex-wrap: wrap; gap: 4px 12px; font-variant-numeric: tabular-nums; }
+.status-statistics span, .status-size { white-space: nowrap; }

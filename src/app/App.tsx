@@ -12,7 +12,7 @@ import { AppUxProvider } from "../features/ux/useAppUx";
 
 function AppContent() {
   const { zoom, selectZoom, viewportRef } = useEditorZoom();
-  const { isDirty, currentFilePath, activeDocument } = useDocumentStore();
+  const { isDirty, currentFilePath, activeDocument, currentCanonicalMarkdown } = useDocumentStore();
   const {
     helpView,
     closeHelp,
@@ -103,6 +103,8 @@ function AppContent() {
       </div>
       <HelpDialog view={helpView} onClose={closeHelp} />
       <StatusBar
+        editor={editor}
+        markdown={currentCanonicalMarkdown}
         isDirty={isDirty}
         filePath={currentFilePath}
         hasActiveDocument={hasActiveDocument}
