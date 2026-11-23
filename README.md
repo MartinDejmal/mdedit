@@ -102,8 +102,20 @@ npm run test:pdf
 # Pro jinou cestu k prohlížeči nastav CHROMIUM_PATH.
 ```
 
+## Úpravy textu
+
+- **Undo / Redo** na nástrojové liště vrací a opakuje úpravy. Historie se při načtení jiného dokumentu vynuluje; tlačítka fungují i v nabídce `>>`.
+- **Heading** na položce seznamu vyvede vybranou položku ze seznamu a změní ji na nadpis. Okolní položky i inline formátování zůstávají zachované; celou akci lze vrátit jedním Undo.
+- **Insert table** s vybraným textem vytvoří tabulku podle počtu vybraných řádků. Tabulátory a Markdown tabulky určují sloupce. Bez výběru vloží původní tabulku 3×3.
+- **Tab / Shift+Tab** zvyšuje a snižuje úroveň nejbližší položky seznamu, včetně úkolových a smíšených seznamů. První položka bez předchozího sourozence se klávesou Tab nemění a fokus zůstává v editoru.
+
+Regresní testy těchto funkcí: `npm run test:editor` (vyžaduje Chromium, případně nastavte `CHROMIUM_PATH`).
+
 ## Klávesové zkratky
 
+- `Ctrl/Cmd + Z` → Undo
+- `Ctrl/Cmd + Shift + Z` → Redo
+- `Tab / Shift+Tab` v seznamu → zvýšit / snížit úroveň
 - `Ctrl/Cmd + N` → New
 - `Ctrl/Cmd + O` → Open
 - `Ctrl/Cmd + S` → Save
