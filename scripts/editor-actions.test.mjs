@@ -41,7 +41,7 @@ async function openEditor() {
 async function setContent(page, html) {
   await page.evaluate(html => {
     const editor = document.querySelector('.ProseMirror').editor;
-    editor.commands.setContent(html);
+    editor.commands.setContent(html, false, { preserveWhitespace: "full" });
     editor.view.updateState(editor.state.constructor.create({
       schema: editor.schema, doc: editor.state.doc, plugins: editor.state.plugins,
     }));
@@ -108,5 +108,47 @@ test('#46 Heading lifts only the selected list item, preserving siblings, marks 
       await page.getByRole('button', { name: title, exact: true }).click();
     }
     assert.equal((await documentJSON(page)).content[0].type, 'paragraph');
+  } finally { await page.close(); }
+});
+
+
+test('#47 Table converts selected lines, TSV and Markdown cells while preserving outside text and marks', async () => {
+  const page = await openEditor();
+  try {
+    const selectAll = () => page.evaluate(() => {
+      const editor = document.querySelector('.ProseMirror').editor;
+      editor.chain().focus().setTextSelection({ from: 1, to: editor.state.doc.content.size - 1 }).run();
+    });
+    for (const [html, rows, columns] of [
+      ['<p>One</p><p><strong>Two</strong></p><p>Three</p><p>Four</p>', 4, 1],
+      ['<p>Name\tValue</p><p>Alpha\t42</p><p>Beta</p>', 3, 2],
+      ['<p>| Name | Value |</p><p>| --- | --- |</p><p>| Alpha | 42 |</p>', 2, 2],
+      ['<p>First<br>Second<br>Third</p>', 3, 1],
+    ]) {
+      await setContent(page, html);
+      await selectAll();
+      await page.waitForTimeout(40);
+      const before = await documentJSON(page);
+      await page.getByRole('button', { name: 'Insert table', exact: true }).click();
+      const table = (await documentJSON(page)).content.find(node => node.type === 'table');
+      assert.equal(table.content.length, rows);
+      assert(table.content.every(row => row.content.length === columns), JSON.stringify(table));
+      if (html.includes('<strong>')) assert(JSON.stringify(table).includes('"bold"'));
+      await page.getByRole('button', { name: 'Undo (Ctrl/Cmd+Z)', exact: true }).click();
+      assert.deepEqual(await documentJSON(page), before);
+    }
+    await setContent(page, '<p>Before selected After</p>');
+    await page.evaluate(() => document.querySelector('.ProseMirror').editor.chain().focus().setTextSelection({ from: 8, to: 16 }).run());
+    await page.getByRole('button', { name: 'Insert table', exact: true }).click();
+    const result = await documentJSON(page);
+    assert.equal(result.content[0].content[0].text, 'Before ');
+    assert.equal(result.content[1].type, 'table');
+    assert.equal(result.content[1].content[0].content[0].content[0].content[0].text, 'selected');
+    assert.equal(result.content[2].content[0].text, ' After');
+    await setContent(page, '<p></p>');
+    await page.getByRole('button', { name: 'Insert table', exact: true }).click();
+    const defaults = (await documentJSON(page)).content.find(node => node.type === 'table');
+    assert.equal(defaults.content.length, 3);
+    assert(defaults.content.every(row => row.content.length === 3));
   } finally { await page.close(); }
 });

@@ -1,3 +1,4 @@
+import type { JSONContent } from "@tiptap/core";
 import { EditorState, Selection, type Transaction } from "@tiptap/pm/state";
 import { liftListItem } from "@tiptap/pm/schema-list";
 import type { Editor } from "@tiptap/react";
@@ -200,7 +201,68 @@ export function cycleHeading(editor: Editor): void {
   chain.run();
 }
 
+/** Preserve selected inline nodes while turning paragraphs/hard breaks into rows. */
+function tableFromSelection(editor: Editor): JSONContent {
+  const { from, to } = editor.state.selection;
+  const lines: JSONContent[][] = [];
+  editor.state.doc.nodesBetween(from, to, (node, pos) => {
+    if (!node.isTextblock) return;
+    const start = Math.max(0, from - pos - 1);
+    const end = Math.min(node.content.size, to - pos - 1);
+    if (start >= end && !(node.content.size === 0 && from <= pos && to >= pos + node.nodeSize)) return false;
+    let line: JSONContent[] = [];
+    for (const inline of node.content.cut(start, end).toJSON() ?? []) {
+      if (inline.type === "hardBreak") { lines.push(line); line = []; }
+      else if (inline.type === "text") {
+        const parts = (inline.text as string).split("\n");
+        parts.forEach((text, index) => {
+          if (index) { lines.push(line); line = []; }
+          if (text) line.push({ ...inline, text });
+        });
+      } else line.push(inline);
+    }
+    lines.push(line);
+    return false;
+  });
+  const text = (nodes: JSONContent[]) => nodes.map(node => node.text ?? "").join("");
+  const nonempty = lines.filter(line => text(line).trim());
+  const delimiter = lines.some(line => text(line).includes("\t")) ? "\t"
+    : nonempty.length && nonempty.every(line => /^\s*\|.*\|\s*$/.test(text(line))) ? "|" : null;
+  const empty = (cell: JSONContent[]) => cell.every(node => node.type === "text" && !node.text?.trim());
+  const rows = lines.map(line => {
+    const cells: JSONContent[][] = [[]];
+    for (const node of line) {
+      if (!delimiter || node.type !== "text") { cells[cells.length - 1].push(node); continue; }
+      (node.text ?? "").split(delimiter).forEach((part, index) => {
+        if (index) cells.push([]);
+        if (part) cells[cells.length - 1].push({ ...node, text: part });
+      });
+    }
+    if (delimiter === "|") {
+      if (cells.length > 1 && empty(cells[0])) cells.shift();
+      if (cells.length > 1 && empty(cells[cells.length - 1])) cells.pop();
+    }
+    return cells;
+  }).filter(cells => delimiter !== "|" || !cells.every(cell => /^:?-{3,}:?$/.test(text(cell).trim())));
+  const width = Math.max(1, ...rows.map(row => row.length));
+  if (!rows.length) rows.push([[]]);
+  return {
+    type: "table",
+    content: rows.map((row, index) => ({
+      type: "tableRow",
+      content: Array.from({ length: width }, (_, column) => ({
+        type: index === 0 ? "tableHeader" : "tableCell",
+        content: [{ type: "paragraph", content: row[column] ?? [] }],
+      })),
+    })),
+  };
+}
+
 export function insertDefaultTable(editor: Editor): void {
+  if (!editor.state.selection.empty) {
+    editor.chain().focus().insertContent(tableFromSelection(editor)).run();
+    return;
+  }
   editor
     .chain()
     .focus()
