@@ -49,6 +49,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y poppler-utils
           echo "CHROMIUM_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+      - name: Test editor and application workflows
+        run: |
+          npm run test:help
+          npm run test:statistics
+          npm run test:zoom
+          npm run test:documents
+          npm run test:file-browser
+          npm run test:new-document
+          npm run test:toolbar
+          npm run test:editor
       - run: npm run test:mermaid
       - run: npm run test:pdf
       - name: Prepare draft release

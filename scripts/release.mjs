@@ -104,4 +104,5 @@ console.log("release: done");
 console.log(`release: next steps:`);
 console.log(`  npm run tauri build`);
 console.log(`  git commit -am \"release: v${nextString}\"`);
-console.log(`  git tag v${nextString}`);
+console.log(`  git tag ${nextString}`);
+console.log(`  git push origin main ${nextString}`);

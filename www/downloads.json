@@ -1,18 +1,18 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "repository": "MartinDejmal/mdedit",
   "assets": [
-    { "name": "mdedit_1.1.0_x64-setup.exe", "alias": "mdedit-windows.exe", "label": "Windows x64 · EXE" },
-    { "name": "mdedit_1.1.0_x64_en-US.msi", "alias": "mdedit-windows.msi", "label": "Windows x64 · MSI" },
-    { "name": "mdedit_1.1.0_x64.dmg", "alias": "mdedit-macos.dmg", "label": "macOS Intel · DMG" },
-    { "name": "mdedit_1.1.0_x64.app.tar.gz", "alias": "mdedit-macos-intel.app.tar.gz", "label": "macOS Intel · archiv aplikace" },
-    { "name": "mdedit_1.1.0_aarch64.dmg", "alias": "mdedit-macos-arm64.dmg", "label": "macOS Apple Silicon · DMG" },
-    { "name": "mdedit_1.1.0_aarch64.app.tar.gz", "alias": "mdedit-macos-arm64.app.tar.gz", "label": "macOS Apple Silicon · archiv aplikace" },
-    { "name": "mdedit_1.1.0_amd64.AppImage", "alias": "mdedit-linux.AppImage", "label": "Linux x64 · AppImage" },
-    { "name": "mdedit_1.1.0_amd64.deb", "alias": "mdedit-linux.deb", "label": "Linux x64 · DEB" },
-    { "name": "mdedit-1.1.0-1.x86_64.rpm", "alias": "mdedit-linux.rpm", "label": "Linux x64 · RPM" },
-    { "name": "mdedit_1.1.0_aarch64.AppImage", "alias": "mdedit-linux-arm64.AppImage", "label": "Linux ARM64 · AppImage" },
-    { "name": "mdedit_1.1.0_arm64.deb", "alias": "mdedit-linux-arm64.deb", "label": "Linux ARM64 · DEB" },
-    { "name": "mdedit-1.1.0-1.aarch64.rpm", "alias": "mdedit-linux-arm64.rpm", "label": "Linux ARM64 · RPM" }
+    { "name": "mdedit_1.2.0_x64-setup.exe", "alias": "mdedit-windows.exe", "label": "Windows x64 · EXE" },
+    { "name": "mdedit_1.2.0_x64_en-US.msi", "alias": "mdedit-windows.msi", "label": "Windows x64 · MSI" },
+    { "name": "mdedit_1.2.0_x64.dmg", "alias": "mdedit-macos.dmg", "label": "macOS Intel · DMG" },
+    { "name": "mdedit_1.2.0_x64.app.tar.gz", "alias": "mdedit-macos-intel.app.tar.gz", "label": "macOS Intel · archiv aplikace" },
+    { "name": "mdedit_1.2.0_aarch64.dmg", "alias": "mdedit-macos-arm64.dmg", "label": "macOS Apple Silicon · DMG" },
+    { "name": "mdedit_1.2.0_aarch64.app.tar.gz", "alias": "mdedit-macos-arm64.app.tar.gz", "label": "macOS Apple Silicon · archiv aplikace" },
+    { "name": "mdedit_1.2.0_amd64.AppImage", "alias": "mdedit-linux.AppImage", "label": "Linux x64 · AppImage" },
+    { "name": "mdedit_1.2.0_amd64.deb", "alias": "mdedit-linux.deb", "label": "Linux x64 · DEB" },
+    { "name": "mdedit-1.2.0-1.x86_64.rpm", "alias": "mdedit-linux.rpm", "label": "Linux x64 · RPM" },
+    { "name": "mdedit_1.2.0_aarch64.AppImage", "alias": "mdedit-linux-arm64.AppImage", "label": "Linux ARM64 · AppImage" },
+    { "name": "mdedit_1.2.0_arm64.deb", "alias": "mdedit-linux-arm64.deb", "label": "Linux ARM64 · DEB" },
+    { "name": "mdedit-1.2.0-1.aarch64.rpm", "alias": "mdedit-linux-arm64.rpm", "label": "Linux ARM64 · RPM" }
   ]
 }
