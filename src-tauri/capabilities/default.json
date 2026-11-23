@@ -10,6 +10,7 @@
     "allow-open-folder-dialog",
     "allow-list-markdown-directory",
     "allow-create-markdown-document",
+    "allow-manage-browser-files",
     "allow-read-text-file",
     "allow-save-text-file",
     "allow-save-file-dialog",

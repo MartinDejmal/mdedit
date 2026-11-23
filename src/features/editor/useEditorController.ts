@@ -1,10 +1,11 @@
+import { useBrowserFileOperations, type BrowserFileOperations } from "../documents/useBrowserFileOperations";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, type Editor } from "@tiptap/react";
 import { CheckMenuItem, Menu, PredefinedMenuItem, Submenu } from "@tauri-apps/api/menu";
 
 import { createEditorExtensions } from "./editorSchema";
 
-import { basename } from "../../lib/utils";
+import { parentDirectory, basename } from "../../lib/utils";
 import { saveAppState } from "../../services/appStateService";
 import * as bridge from "../../services/tauriBridge";
 import { useAppUx } from "../ux/useAppUx";
@@ -55,6 +56,8 @@ function buildWindowTitle(params: {
   return `${prefix}${basename(path ?? "")} - ${APP_NAME}`;
 }
 export interface EditorController {
+  browserLocation: { path: string; version: number } | null;
+  browserOperations: BrowserFileOperations;
   editor: Editor | null;
   recentFiles: string[];
   hasActiveDocument: boolean;
@@ -62,7 +65,7 @@ export interface EditorController {
   handleOpen: () => Promise<void>;
   handleNew: () => Promise<void>;
   handleOpenRecent: (path: string) => Promise<void>;
-  handleOpenBrowserFile: (path: string) => Promise<void>;
+  handleOpenBrowserFile: (path: string) => Promise<string | null>;
   handleReload: () => Promise<void>;
   handleSave: () => Promise<void>;
   handleSaveAs: () => Promise<void>;
@@ -94,7 +97,16 @@ export function useEditorController(): EditorController {
   const [folderRefresh, setFolderRefresh] = useState<{ path: string; version: number } | null>(null);
   const handleSelectBrowserFolder = useCallback((path: string) => setSelectedBrowserFolder(path), []);
   const [isBrowserVisible, setIsBrowserVisible] = useState(false);
-  const handleToggleBrowser = useCallback(() => setIsBrowserVisible((visible) => !visible), []);
+  const [browserLocation, setBrowserLocation] = useState<{ path: string; version: number } | null>(null);
+  const handleToggleBrowser = useCallback(() => {
+    const path = useDocumentStore.getState().currentFilePath;
+    if (!isBrowserVisible && path) {
+      const folder = parentDirectory(path);
+      setSelectedBrowserFolder(folder);
+      setBrowserLocation(previous => ({ path: folder, version: (previous?.version ?? 0) + 1 }));
+    }
+    setIsBrowserVisible(!isBrowserVisible);
+  }, [isBrowserVisible]);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
   const [activeCodeBlockLanguage, setActiveCodeBlockLanguage] = useState<string | null>(null);
   const { isDirty, currentFilePath, isUntitled, hasActiveDocument } =
@@ -138,11 +150,14 @@ export function useEditorController(): EditorController {
     [confirmDiscardUnsavedChanges, editor, notify, setEditorHtml]
   );
 
+  const browserOperations = useBrowserFileOperations(actionContext, browserSwitchInFlight);
+
   const handleOpenBrowserFile = useCallback(async (path: string) => {
-    if (browserSwitchInFlight.current) return;
+    if (browserSwitchInFlight.current) return useDocumentStore.getState().currentFilePath;
     browserSwitchInFlight.current = true;
     try {
       await runOpenBrowserAction(path, actionContext, requestSaveChanges);
+      return useDocumentStore.getState().currentFilePath;
     } finally {
       browserSwitchInFlight.current = false;
     }
@@ -595,6 +610,8 @@ export function useEditorController(): EditorController {
       activeCodeBlockLanguage,
       handleToggleCodeBlock,
       handleSetCodeBlockLanguage,
+      browserLocation,
+      browserOperations,
       selectedBrowserFolder,
       handleSelectBrowserFolder,
       folderRefresh,
@@ -628,6 +645,8 @@ export function useEditorController(): EditorController {
       isDragOver,
       persistedState.recentFiles,
       persistedState.ui.isOutlineVisible,
+      browserLocation,
+      browserOperations,
       selectedBrowserFolder,
       handleSelectBrowserFolder,
       folderRefresh,

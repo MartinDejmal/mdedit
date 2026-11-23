@@ -84,6 +84,10 @@ Testy filtrování, řazení, prázdných/neexistujících složek a cyklických
 cargo test --locked --manifest-path src-tauri/Cargo.toml folder_browser::tests
 ```
 
+Filebrowser se při zobrazení nastaví na složku otevřeného souboru. Tlačítko **Parent folder** posune kořen stromu o úroveň výše, **New folder** vytvoří pojmenovanou složku ve vybrané složce.
+
+Soubory lze přesouvat tažením na složku nebo přes kontextové menu **Move to folder…**. Druhý klik na vybraný soubor (nebo **F2**) otevře přejmenování. **Delete** i kontextové menu žádají potvrzení smazání; u neuloženého otevřeného dokumentu dialog upozorní na ztrátu změn. Přesun a přejmenování zachovávají neuložený obsah a aktualizují cestu pro další uložení. Existující cílový soubor se nikdy nepřepisuje.
+
 ## Export PDF
 
 PDF zachovává nadpisy, kombinované inline formátování, odkazy, vnořené seznamy a úkoly, bloky v tabulkách, zvýraznění kódu, obrázky a Mermaid diagramy. Text zůstává označitelný; patkové a monospace fonty s diakritikou jsou součástí aplikace. Mermaid je rovněž přibalený a nevyžaduje připojení k CDN.

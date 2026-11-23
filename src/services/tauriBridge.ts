@@ -126,3 +126,13 @@ export async function listMarkdownDirectory(path: string): Promise<DirectoryEntr
 export async function createMarkdownDocument(folder: string): Promise<string> {
   return invoke("create_markdown_document", { folder });
 }
+
+export function relocateMarkdownDocument(source: string, folder: string, name: string | null = null): Promise<string> {
+  return invoke("relocate_markdown_document", { source, folder, name });
+}
+export function deleteMarkdownDocument(path: string): Promise<void> {
+  return invoke("delete_markdown_document", { path });
+}
+export function createBrowserDirectory(parent: string, name: string): Promise<string> {
+  return invoke("create_browser_directory", { parent, name });
+}

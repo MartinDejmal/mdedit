@@ -875,3 +875,11 @@ body {
   cursor: pointer;
 }
 .folder-root.selected { background: var(--color-btn-active-bg); border-color: #d4e2f5; color: #1f4d86; }
+.folder-tree-item { touch-action: none; user-select: none; }
+.folder-root.drop-target, .folder-tree-item.drop-target { outline: 2px solid var(--color-accent); background: var(--color-btn-active-bg); }
+.browser-context-menu { position: fixed; z-index: 300; width: 200px; padding: 4px; border: 1px solid var(--color-border); border-radius: 6px; background: white; box-shadow: 0 5px 24px #0003; }
+.browser-context-menu button { display: block; width: 100%; border: 0; border-radius: 4px; padding: 8px 10px; background: transparent; text-align: left; cursor: pointer; }
+.browser-context-menu button:hover, .browser-context-menu button:focus-visible { background: var(--color-btn-active-bg); }
+.browser-drag-label { position: fixed; z-index: 400; pointer-events: none; padding: 6px 10px; border: 1px solid var(--color-accent); border-radius: 4px; background: white; box-shadow: 0 2px 8px #0002; }
+.folder-sidebar-header { gap: 2px; }
+.folder-sidebar-header h2 { margin-left: 2px; }

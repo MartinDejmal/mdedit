@@ -55,3 +55,8 @@ commands.allow = ["list_markdown_directory"]
 identifier = "allow-create-markdown-document"
 description = "Allows creating a new empty Markdown document without overwriting files."
 commands.allow = ["create_markdown_document"]
+
+[[permission]]
+identifier = "allow-manage-browser-files"
+description = "Allows moving, renaming, deleting Markdown files and creating folders."
+commands.allow = ["relocate_markdown_document", "delete_markdown_document", "create_browser_directory"]

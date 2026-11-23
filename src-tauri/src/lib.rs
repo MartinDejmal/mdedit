@@ -47,6 +47,41 @@ async fn create_markdown_document(folder: String) -> Result<String, String> {
     .map_err(|e| e.to_string())?
 }
 
+#[tauri::command]
+async fn relocate_markdown_document(
+    source: String,
+    folder: String,
+    name: Option<String>,
+) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        folder_browser::relocate_markdown_file(
+            std::path::Path::new(&source),
+            std::path::Path::new(&folder),
+            name.as_deref(),
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn delete_markdown_document(path: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        folder_browser::delete_markdown_file(std::path::Path::new(&path))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn create_browser_directory(parent: String, name: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        folder_browser::create_directory(std::path::Path::new(&parent), &name)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 // ---------------------------------------------------------------------------
 // Tauri commands
 // ---------------------------------------------------------------------------
@@ -171,6 +206,9 @@ pub fn run() {
             open_folder_dialog,
             list_markdown_directory,
             create_markdown_document,
+            relocate_markdown_document,
+            delete_markdown_document,
+            create_browser_directory,
             read_text_file,
             save_text_file,
             save_file_dialog,
