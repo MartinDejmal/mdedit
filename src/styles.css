@@ -904,3 +904,8 @@ body {
 .about-content dd { margin: 0; overflow-wrap: anywhere; }
 .about-content details { margin-top: 16px; }
 .about-content pre { margin-top: 10px; padding: 10px; background: #f4f6f9; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+
+.zoom-control { display: inline-flex; align-items: center; gap: 5px; padding: 0 4px; font-size: 12px; color: var(--color-text-muted); }
+.zoom-control select { padding: 4px 6px; border: 1px solid var(--color-border); border-radius: 4px; background: white; color: var(--color-text); }
+/* Zoom belongs to the view wrapper, outside ProseMirror's serialized content. */
+.editor-zoom { min-height: 100%; }

@@ -70,6 +70,10 @@ test("Help and About are bundled, bilingual, accessible and preserve the active 
     let guide = page.frameLocator('iframe.help-content');
     await guide.getByRole('heading', { name: 'mdedit user guide', exact: true }).waitFor();
     assert.equal(await guide.locator('section').count(), 10);
+    assert(await guide.locator('html').evaluate(node => {
+      const event = new WheelEvent('wheel', { bubbles: true, cancelable: true, ctrlKey: true, deltaY: -100 });
+      node.dispatchEvent(event); return event.defaultPrevented;
+    }), 'help does not trigger browser-level Ctrl+wheel zoom');
     assert.equal(await guide.locator('script, img, link[rel=stylesheet]').count(), 0);
     assert.equal(await modal.locator('iframe').getAttribute('sandbox'), 'allow-same-origin');
     await modal.getByRole('button', { name: 'Čeština', exact: true }).click();

@@ -22,6 +22,7 @@ The English user guide is bundled in the application alongside Czech help. Contr
 - Filebrowser zobrazuje složky a `.md` soubory; při otevření se nastaví podle aktuálního souboru. Umí posun kořene výše, novou složku, přejmenování klikem na vybraný řádek/F2, přesun tažením a trvalé smazání s potvrzením. Kontextové menu nabízí stejné souborové akce. Existující cíle se nepřepisují.
 - Přesun a přejmenování zachovávají neuložený text otevřeného souboru a aktualizují cestu pro Save. Operace s celými složkami nad rámec vytvoření/navigace nejsou implementované.
 - Samostatný Outline za filebrowserem s navigací podle nadpisů a zapamatovanou šířkou.
+- Zoom editoru 50–200 % z lišty nebo Ctrl + kolečkem nad editorem. Je pouze zobrazovací, nemění dokument ani exporty; mezi soubory se zachová a po novém spuštění začne na 100 %.
 - Undo/Redo v liště, cyklus H1/H2/H3, převod vybrané položky seznamu na nadpis, Tab/Shift+Tab pro nejbližší položku seznamu, úkoly, odkazy, obrázky URL a kód.
 - Tabulka bez výběru 3×3; s výběrem odpovídá počtu řádků, podporuje TSV a běžné Markdown tabulky a zachovává inline formátování.
 - Mermaid náhled a PDF diagramy fungují offline. HTML export zůstává samostatným dokumentem se styly a CDN pro jeho Mermaid náhled; pro tento náhled potřebuje internet.
@@ -42,6 +43,7 @@ Přepnutí ve filebrowseru nabízí Save / Discard / Cancel. New, běžné Open,
 | Bold / Italic | Ctrl/Cmd+B / Ctrl/Cmd+I |
 | Odsazení seznamu | Tab / Shift+Tab |
 | Přejmenování / smazání v Files | F2 / Delete na řádku souboru |
+| Zoom editoru (také macOS: Ctrl) | Ctrl + kolečko nad editorem |
 | Help | F1 |
 | Zavření nabídky či dialogu | Escape |
 
@@ -69,6 +71,7 @@ Browserové testy používají `playwright-core` a nainstalovaný Chromium/Chrom
 
 ```bash
 npm run test:help
+npm run test:zoom
 npm run test:editor
 npm run test:file-browser
 npm run test:new-document

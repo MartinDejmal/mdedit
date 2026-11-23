@@ -1,3 +1,4 @@
+import { EDITOR_ZOOM_LEVELS } from "../features/editor/useEditorZoom";
 /**
  * Toolbar component.
  */
@@ -37,6 +38,8 @@ const ICON_SIZE = 18;
 
 interface ToolbarProps {
   editor: Editor | null;
+  zoom: number;
+  onZoomChange: (value: number) => void;
   onNew: () => void;
   onOpen: () => void;
   onOpenRecent: (path: string) => void;
@@ -62,6 +65,8 @@ interface ToolbarProps {
 
 export default function Toolbar({
   editor,
+  zoom,
+  onZoomChange,
   onNew,
   onOpen,
   onOpenRecent,
@@ -304,6 +309,15 @@ export default function Toolbar({
           title="Toggle outline"
           icon={<PanelLeft size={ICON_SIZE} strokeWidth={1.9} />}
         />
+      </div>
+      <div className="toolbar-divider" aria-hidden />
+      <div className="toolbar-group" aria-label="Editor zoom">
+        <label className="zoom-control">
+          <span>Zoom:</span>
+          <select aria-label="Editor zoom" title="Editor zoom (Ctrl + mouse wheel)" value={zoom} onChange={event => onZoomChange(Number(event.target.value))}>
+            {EDITOR_ZOOM_LEVELS.map(level => <option key={level} value={level}>{level}%</option>)}
+          </select>
+        </label>
       </div>
     </OverflowToolbar>
   );

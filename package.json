@@ -21,7 +21,8 @@
     "test:new-document": "node --test scripts/new-document.test.mjs",
     "test:file-browser": "node --test scripts/file-browser.test.mjs",
     "test:editor": "node --test scripts/editor-actions.test.mjs",
-    "test:help": "node --test scripts/help.test.mjs"
+    "test:help": "node --test scripts/help.test.mjs",
+    "test:zoom": "node --test scripts/zoom.test.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

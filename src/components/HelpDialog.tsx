@@ -53,6 +53,9 @@ export default function HelpDialog({ view, onClose }: { view: HelpView; onClose:
       onLoad={event => {
         // A sandboxed iframe has its own key events. Forward dismissal without
         // enabling scripts or giving documentation access to the Tauri bridge.
+        event.currentTarget.contentDocument?.addEventListener("wheel", wheel => {
+          if (wheel.ctrlKey) wheel.preventDefault();
+        }, { passive: false });
         event.currentTarget.contentDocument?.addEventListener("keydown", key => {
           if (key.key === "Escape") { key.preventDefault(); onClose(); }
           if (key.key === "F1") key.preventDefault();

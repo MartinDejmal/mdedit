@@ -5,7 +5,7 @@
  * created in App so it can be shared with the Toolbar without prop-drilling
  * through extra wrapper components.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { FilePlus, FolderOpen, Sparkles } from "lucide-react";
 import { EditorContent, type Editor } from "@tiptap/react";
 import { basename } from "../../lib/utils";
@@ -20,6 +20,8 @@ import {
 
 interface EditorProps {
   editor: Editor | null;
+  zoom: number;
+  viewportRef: RefObject<HTMLDivElement>;
   showEmptyState: boolean;
   recentFiles: string[];
   onNew: () => void;
@@ -32,6 +34,8 @@ interface EditorProps {
 
 export default function EditorArea({
   editor,
+  zoom,
+  viewportRef,
   showEmptyState,
   recentFiles,
   onNew,
@@ -101,7 +105,7 @@ export default function EditorArea({
 
   if (showEmptyState) {
     return (
-      <div className="editor-wrapper empty-state-shell">
+      <div ref={viewportRef} className="editor-wrapper empty-state-shell">
         <div className="empty-state-panel">
           <div className="empty-state-title-row">
             <Sparkles size={16} strokeWidth={1.8} aria-hidden />
@@ -149,8 +153,10 @@ export default function EditorArea({
           onWidthChange={onOutlineWidthChange}
         />
       ) : null}
-      <div className="editor-wrapper">
-        <EditorContent editor={editor} className="editor-content" />
+      <div ref={viewportRef} className="editor-wrapper">
+        <div className="editor-zoom" style={{ zoom: zoom / 100 }}>
+          <EditorContent editor={editor} className="editor-content" />
+        </div>
       </div>
     </div>
   );

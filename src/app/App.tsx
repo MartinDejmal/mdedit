@@ -1,3 +1,4 @@
+import { useEditorZoom } from "../features/editor/useEditorZoom";
 import HelpDialog from "../components/HelpDialog";
 import FolderSidebar from "../components/FolderSidebar";
 import Layout from "../components/Layout";
@@ -10,6 +11,7 @@ import { useEditorController } from "../features/editor/useEditorController";
 import { AppUxProvider } from "../features/ux/useAppUx";
 
 function AppContent() {
+  const { zoom, selectZoom, viewportRef } = useEditorZoom();
   const { isDirty, currentFilePath, activeDocument } = useDocumentStore();
   const {
     helpView,
@@ -50,6 +52,8 @@ function AppContent() {
     <Layout isDragOver={isDragOver}>
       <Toolbar
         editor={editor}
+        zoom={zoom}
+        onZoomChange={selectZoom}
         onNew={() => void handleNew()}
         onOpen={() => void handleOpen()}
         onOpenRecent={(path) => void handleOpenRecent(path)}
@@ -85,6 +89,8 @@ function AppContent() {
         />
         <EditorArea
           editor={editor}
+          zoom={zoom}
+          viewportRef={viewportRef}
           showEmptyState={!hasActiveDocument}
           recentFiles={recentFiles}
           onNew={() => void handleNew()}
