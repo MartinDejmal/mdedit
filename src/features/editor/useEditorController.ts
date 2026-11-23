@@ -74,6 +74,8 @@ export interface EditorController {
   activeCodeBlockLanguage: string | null;
   handleToggleCodeBlock: () => void;
   handleSetCodeBlockLanguage: (language: string) => void;
+  isBrowserVisible: boolean;
+  handleToggleBrowser: () => void;
   isOutlineVisible: boolean;
   handleToggleOutline: () => void;
   outlineSidebarWidth: number;
@@ -85,6 +87,8 @@ export function useEditorController(): EditorController {
   const browserSwitchInFlight = useRef(false);
   const closeConfirmInFlightRef = useRef(false);
   const startupReopenDoneRef = useRef(false);
+  const [isBrowserVisible, setIsBrowserVisible] = useState(false);
+  const handleToggleBrowser = useCallback(() => setIsBrowserVisible((visible) => !visible), []);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
   const [activeCodeBlockLanguage, setActiveCodeBlockLanguage] = useState<string | null>(null);
   const { isDirty, currentFilePath, isUntitled, hasActiveDocument } =
@@ -394,6 +398,12 @@ export function useEditorController(): EditorController {
           text: "View",
           items: [
             await CheckMenuItem.new({
+              id: "view-toggle-file-browser",
+              text: "Toggle file browser",
+              checked: isBrowserVisible,
+              action: handleToggleBrowser,
+            }),
+            await CheckMenuItem.new({
               id: "view-toggle-outline",
               text: "Toggle Outline",
               checked: persistedState.ui.isOutlineVisible,
@@ -434,6 +444,8 @@ export function useEditorController(): EditorController {
     persistedState.recentFiles,
     persistedState.ui.isOutlineVisible,
     handleToggleOutline,
+    isBrowserVisible,
+    handleToggleBrowser,
   ]);
 
   useEffect(() => {
@@ -569,6 +581,8 @@ export function useEditorController(): EditorController {
       activeCodeBlockLanguage,
       handleToggleCodeBlock,
       handleSetCodeBlockLanguage,
+      isBrowserVisible,
+      handleToggleBrowser,
       isOutlineVisible: persistedState.ui.isOutlineVisible,
       handleToggleOutline,
       outlineSidebarWidth: persistedState.ui.outlineSidebarWidth,
@@ -597,6 +611,8 @@ export function useEditorController(): EditorController {
       isDragOver,
       persistedState.recentFiles,
       persistedState.ui.isOutlineVisible,
+      isBrowserVisible,
+      handleToggleBrowser,
       persistedState.ui.outlineSidebarWidth,
     ]
   );

@@ -828,3 +828,40 @@ body {
 .folder-file-icon { margin-left: 19px; }
 .folder-message { font-size: 13px; padding: 8px; color: var(--color-text-muted); overflow-wrap: anywhere; }
 .folder-message button { margin-top: 8px; padding: 5px 8px; cursor: pointer; }
+
+/* Keep complete toolbar controls visible; the remaining controls live in >>. */
+.toolbar { position: relative; min-width: 0; }
+.toolbar-items { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden; }
+.toolbar-item { display: inline-flex; align-items: center; flex: 0 0 auto; white-space: nowrap; }
+.toolbar-overflow-button { flex: 0 0 34px; }
+.toolbar-measure {
+  position: absolute;
+  top: 0;
+  left: -100000px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
+}
+.toolbar-overflow-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 12px;
+  z-index: 100;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: min(380px, calc(100vw - 24px));
+  max-height: min(360px, calc(100vh - 70px));
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-toolbar-bg);
+  box-shadow: 0 6px 24px #0002;
+}
+.toolbar-overflow-panel .toolbar-item { max-width: 100%; }
+.toolbar-overflow-panel select { max-width: 100%; }

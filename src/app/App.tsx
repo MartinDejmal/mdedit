@@ -1,4 +1,3 @@
-import { useState } from "react";
 import FolderSidebar from "../components/FolderSidebar";
 import Layout from "../components/Layout";
 import Toolbar from "../components/Toolbar";
@@ -10,7 +9,6 @@ import { useEditorController } from "../features/editor/useEditorController";
 import { AppUxProvider } from "../features/ux/useAppUx";
 
 function AppContent() {
-  const [isBrowserVisible, setIsBrowserVisible] = useState(false);
   const { isDirty, currentFilePath, activeDocument } = useDocumentStore();
   const {
     editor,
@@ -32,6 +30,8 @@ function AppContent() {
     activeCodeBlockLanguage,
     handleToggleCodeBlock,
     handleSetCodeBlockLanguage,
+    isBrowserVisible,
+    handleToggleBrowser,
     isOutlineVisible,
     handleToggleOutline,
     outlineSidebarWidth,
@@ -60,7 +60,7 @@ function AppContent() {
         onToggleCodeBlock={handleToggleCodeBlock}
         onSetCodeBlockLanguage={handleSetCodeBlockLanguage}
         isBrowserVisible={isBrowserVisible}
-        onToggleBrowser={() => setIsBrowserVisible((visible) => !visible)}
+        onToggleBrowser={handleToggleBrowser}
         isOutlineVisible={isOutlineVisible}
         onToggleOutline={handleToggleOutline}
       />

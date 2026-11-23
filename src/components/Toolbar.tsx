@@ -29,6 +29,7 @@ import { SUPPORTED_CODE_BLOCK_LANGUAGES } from "../features/editor/codeBlockSynt
 import { cycleHeading, insertDefaultTable, insertTaskList } from "../features/editor/editorCommands";
 import { basename } from "../lib/utils";
 import IconButton from "./IconButton";
+import OverflowToolbar from "./OverflowToolbar";
 
 const ICON_SIZE = 18;
 
@@ -85,8 +86,14 @@ export default function Toolbar({
   const languageLabel = activeCodeBlockLanguage ?? "plaintext";
 
   return (
-    <div className="toolbar" role="toolbar" aria-label="Editor toolbar">
+    <OverflowToolbar>
       <div className="toolbar-group" aria-label="File actions">
+        <IconButton
+          onClick={onToggleBrowser}
+          active={isBrowserVisible}
+          title="Toggle file browser"
+          icon={<FolderTree size={ICON_SIZE} strokeWidth={1.9} />}
+        />
         <IconButton
           onClick={onNew}
           title="New document (Ctrl/Cmd+N)"
@@ -274,18 +281,12 @@ export default function Toolbar({
 
       <div className="toolbar-group" aria-label="View">
         <IconButton
-          onClick={onToggleBrowser}
-          active={isBrowserVisible}
-          title="Toggle file browser"
-          icon={<FolderTree size={ICON_SIZE} strokeWidth={1.9} />}
-        />
-        <IconButton
           onClick={onToggleOutline}
           active={isOutlineVisible}
           title="Toggle outline"
           icon={<PanelLeft size={ICON_SIZE} strokeWidth={1.9} />}
         />
       </div>
-    </div>
+    </OverflowToolbar>
   );
 }
