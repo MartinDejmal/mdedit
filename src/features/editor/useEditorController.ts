@@ -1,19 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { CheckMenuItem, Menu, PredefinedMenuItem, Submenu } from "@tauri-apps/api/menu";
 
-import {
-  CodeBlockWithSyntax,
-  ImageNode,
-  LinkMark,
-  TableCellNode,
-  TableHeaderNode,
-  TableNode,
-  TableRowNode,
-  TaskItemNode,
-  TaskListNode,
-} from "./editorExtensions";
+import { createEditorExtensions } from "./editorSchema";
 
 import { basename } from "../../lib/utils";
 import { saveAppState } from "../../services/appStateService";
@@ -95,7 +84,6 @@ export function useEditorController(): EditorController {
   const isApplyingRemoteContent = useRef(false);
   const browserSwitchInFlight = useRef(false);
   const closeConfirmInFlightRef = useRef(false);
-  const reconcileRunIdRef = useRef(0);
   const startupReopenDoneRef = useRef(false);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
   const [activeCodeBlockLanguage, setActiveCodeBlockLanguage] = useState<string | null>(null);
@@ -104,30 +92,12 @@ export function useEditorController(): EditorController {
   const { confirm, notify, requestInput, requestSaveChanges } = useAppUx();
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        codeBlock: false,
-      }),
-      CodeBlockWithSyntax,
-      LinkMark,
-      ImageNode,
-      TaskListNode,
-      TaskItemNode,
-      TableNode,
-      TableRowNode,
-      TableHeaderNode,
-      TableCellNode,
-    ],
+    extensions: createEditorExtensions(),
     content: "",
     onUpdate: ({ editor: nextEditor }) => {
       if (isApplyingRemoteContent.current) return;
 
-      const runId = ++reconcileRunIdRef.current;
-      void reconcileCanonicalFromEditorHtml(nextEditor.getHTML()).then(() => {
-        if (runId !== reconcileRunIdRef.current) {
-          return;
-        }
-      });
+      void reconcileCanonicalFromEditorHtml(nextEditor.getHTML());
     },
   });
 

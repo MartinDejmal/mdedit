@@ -16,6 +16,10 @@ import type {
   SaveDocumentResult,
 } from "../../types";
 
+// A conversion started in a previous document must never dirty the next one.
+let documentGeneration = 0;
+let reconciliationVersion = 0;
+
 export type ConfirmDiscardChanges = () => Promise<boolean>;
 export const EMPTY_UNTITLED_EDITOR_HTML = "<p></p>";
 export const EMPTY_UNTITLED_CANONICAL_MARKDOWN = "\n";
@@ -33,6 +37,7 @@ async function loadPathIntoStore(
     await parseMarkdownToEditorContent(rawMarkdown);
   const metadata = await bridge.getFileMetadata(filePath);
 
+  documentGeneration++;
   useDocumentStore.getState().markLoaded({
     rawMarkdown,
     canonicalMarkdown,
@@ -93,6 +98,7 @@ export async function openDocumentFromPath(
 
 /** Creates a fresh untitled document baseline. */
 export function createNewUntitledDocument(): { html: string } {
+  documentGeneration++;
   useDocumentStore.getState().markNewUntitled({
     canonicalMarkdown: EMPTY_UNTITLED_CANONICAL_MARKDOWN,
   });
@@ -176,9 +182,11 @@ export async function reloadDocumentFromDisk(
 export async function reconcileCanonicalFromEditorHtml(
   editorHtml: string
 ): Promise<string> {
+  const generation = documentGeneration;
+  const version = ++reconciliationVersion;
   const canonicalMarkdown = await serializeEditorToMarkdown(editorHtml);
-  useDocumentStore
-    .getState()
-    .reconcileCurrentCanonicalMarkdown(canonicalMarkdown);
+  if (generation === documentGeneration && version === reconciliationVersion) {
+    useDocumentStore.getState().reconcileCurrentCanonicalMarkdown(canonicalMarkdown);
+  }
   return canonicalMarkdown;
 }

@@ -10,6 +10,7 @@
  * lossless for every possible markdown feature. We intentionally accept this
  * in exchange for predictable, centralised conversion behaviour.
  */
+import { normalizeEditorHtml } from "../features/editor/editorSchema";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -176,7 +177,9 @@ const EXPORT_PRINT_CSS = `
 export async function parseMarkdownToEditorContent(
   rawMarkdown: string
 ): Promise<ParsedMarkdownResult> {
-  const editorContent = await markdownToHtml(rawMarkdown);
+  // Establish the saved baseline after the same normalization that setContent
+  // performs. Schema defaults and dropped unsupported HTML are not user edits.
+  const editorContent = normalizeEditorHtml(await markdownToHtml(rawMarkdown));
   const canonicalMarkdown = await serializeEditorToMarkdown(editorContent);
 
   return {
