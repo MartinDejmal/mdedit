@@ -23,6 +23,7 @@ The English user guide is bundled in the application alongside Czech help. Contr
 - Přesun a přejmenování zachovávají neuložený text otevřeného souboru a aktualizují cestu pro Save. Operace s celými složkami nad rámec vytvoření/navigace nejsou implementované.
 - Samostatný Outline za filebrowserem s navigací podle nadpisů a zapamatovanou šířkou.
 - Zoom editoru 50–200 % z lišty nebo Ctrl + kolečkem nad editorem. Je pouze zobrazovací, nemění dokument ani exporty; mezi soubory se zachová a po novém spuštění začne na 100 %.
+- View → Font Settings… nabízí samostatnou volbu místního písma pro text a kód, živý náhled a uložení obou voleb pro editor.
 - Undo/Redo v liště, cyklus H1/H2/H3, převod vybrané položky seznamu na nadpis, Tab/Shift+Tab pro nejbližší položku seznamu, úkoly, odkazy, obrázky URL a kód.
 - Tabulka bez výběru 3×3; s výběrem odpovídá počtu řádků, podporuje TSV a běžné Markdown tabulky a zachovává inline formátování.
 - Mermaid náhled a PDF diagramy fungují offline. HTML export zůstává samostatným dokumentem se styly a CDN pro jeho Mermaid náhled; pro tento náhled potřebuje internet.
@@ -50,14 +51,14 @@ Přepnutí ve filebrowseru otevře nový soubor od začátku a u neuložených z
 
 ## Vývoj a build
 
-Předpoklady: Node.js **22** jako v release CI (ověřeno také s Node 24), npm, Rust **1.94.1** podle [`rust-toolchain.toml`](rust-toolchain.toml) a systémové závislosti Tauri. Windows potřebují MSVC Build Tools a WebView2 Runtime; macOS Xcode Command Line Tools. Na Ubuntu/Debian jsou potřeba zejména `build-essential`, `pkg-config`, `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libssl-dev`, `librsvg2-dev` a podle platformy tray podpory `libayatana-appindicator3-dev`.
+Předpoklady: Node.js **22** jako v release CI (ověřeno také s Node 24), npm, Rust **1.94.1** podle [`rust-toolchain.toml`](rust-toolchain.toml) a systémové závislosti Tauri. Windows potřebují MSVC Build Tools a WebView2 Runtime; macOS Xcode Command Line Tools. Na Ubuntu/Debian jsou potřeba zejména `build-essential`, `pkg-config`, `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libssl-dev`, `libfontconfig1-dev`, `libfreetype-dev`, `librsvg2-dev` a podle platformy tray podpory `libayatana-appindicator3-dev`.
 
 ```bash
 npm ci
 npm run tauri dev
 ```
 
-Samotný frontend spustíte přes `npm run dev` (port 1420). Bez Tauri nefungují nativní dialogy a souborové operace. Nápovědu lze v browseru otevřít přes F1.
+Samotný frontend spustíte přes `npm run dev` (port 1420). Bez Tauri nefungují nativní dialogy a souborové operace. Nápovědu lze v browseru otevřít přes F1. V prohlížeči otevřete nastavení písma tlačítkem Font Settings na nástrojové liště (při nedostatku místa pod »). Zadejte název rodiny nebo v podporovaném prohlížeči zvolte Load installed fonts a povolte přístup.
 
 ```bash
 npm run build

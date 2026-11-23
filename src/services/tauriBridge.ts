@@ -11,6 +11,10 @@ import type { DirectoryEntry, FileMetadata } from "../types";
 
 export type { DragDropEvent };
 
+export function listFontFamilies(): Promise<string[]> {
+  return invoke<string[]>("list_font_families");
+}
+
 /** Shows the OS file-open dialog filtered to Markdown files. */
 export async function openFileDialog(): Promise<string | null> {
   return invoke<string | null>("open_file_dialog");

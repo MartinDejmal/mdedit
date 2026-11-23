@@ -23,6 +23,7 @@ import {
   Save,
   SaveAll,
   Table,
+  Type,
   Unlink,
   PanelLeft,
   FolderTree,
@@ -61,6 +62,7 @@ interface ToolbarProps {
   onToggleBrowser: () => void;
   isOutlineVisible: boolean;
   onToggleOutline: () => void;
+  onShowFontSettings?: () => void;
 }
 
 export default function Toolbar({
@@ -88,6 +90,7 @@ export default function Toolbar({
   onToggleBrowser,
   isOutlineVisible,
   onToggleOutline,
+  onShowFontSettings,
 }: ToolbarProps) {
   const isCodeBlockActive = Boolean(activeCodeBlockLanguage);
   const languageLabel = activeCodeBlockLanguage ?? "plaintext";
@@ -309,6 +312,11 @@ export default function Toolbar({
           title="Toggle outline"
           icon={<PanelLeft size={ICON_SIZE} strokeWidth={1.9} />}
         />
+        {onShowFontSettings && <IconButton
+          onClick={onShowFontSettings}
+          title="Font Settings"
+          icon={<Type size={ICON_SIZE} strokeWidth={1.9} />}
+        />}
       </div>
       <div className="toolbar-divider" aria-hidden />
       <div className="toolbar-group" aria-label="Editor zoom">
