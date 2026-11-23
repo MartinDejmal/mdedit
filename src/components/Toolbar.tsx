@@ -4,6 +4,8 @@
 import type { Editor } from "@tiptap/react";
 import {
   Bold,
+  Undo2,
+  Redo2,
   CheckSquare,
   Code,
   FileCode,
@@ -155,6 +157,22 @@ export default function Toolbar({
         />
       </div>
 
+      <div className="toolbar-divider" aria-hidden />
+
+      <div className="toolbar-group" aria-label="History">
+        <IconButton
+          onClick={() => editor?.chain().focus().undo().run()}
+          disabled={!editor || !editor.can().undo()}
+          title="Undo (Ctrl/Cmd+Z)"
+          icon={<Undo2 size={ICON_SIZE} strokeWidth={1.9} />}
+        />
+        <IconButton
+          onClick={() => editor?.chain().focus().redo().run()}
+          disabled={!editor || !editor.can().redo()}
+          title="Redo (Ctrl/Cmd+Shift+Z)"
+          icon={<Redo2 size={ICON_SIZE} strokeWidth={1.9} />}
+        />
+      </div>
       <div className="toolbar-divider" aria-hidden />
 
       <div className="toolbar-group" aria-label="Formatting">

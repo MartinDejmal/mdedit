@@ -1,3 +1,4 @@
+import { EditorState } from "@tiptap/pm/state";
 import { useBrowserFileOperations, type BrowserFileOperations } from "../documents/useBrowserFileOperations";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, type Editor } from "@tiptap/react";
@@ -128,6 +129,12 @@ export function useEditorController(): EditorController {
       if (!editor) return;
       isApplyingRemoteContent.current = true;
       editor.commands.setContent(html, true);
+      // Undo must start with user edits in this document, not loading a file or
+      // editing a previously opened document. Reinitialize plugin state/history.
+      editor.view.updateState(EditorState.create({
+        schema: editor.schema, doc: editor.state.doc,
+        selection: editor.state.selection, plugins: editor.state.plugins,
+      }));
       isApplyingRemoteContent.current = false;
       editor.commands.focus("start");
     },
