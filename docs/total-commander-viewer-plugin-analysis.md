@@ -1,6 +1,6 @@
 # mdedit jako viewer plugin pro Total Commander
 
-Analýza a návrh, 23. listopadu 2026. Vychází z mdedit 1.1.0, stavu repozitáře v commitu `6d01bbb`. Dokument neobsahuje implementaci ani tvrzení o ověřené kompatibilitě s běžícím Total Commanderem.
+Analýza a návrh, 23. listopadu 2026. Vychází z mdedit 1.1.0, stavu repozitáře v commitu `6d01bbb`. Dokument neobsahuje implementaci ani tvrzení o ověřené kompatibilitě s běžícím Total Commanderem. Při následné aktualizaci uživatelské dokumentace byly popisy licence v README a webu sjednoceny s GPLv3 v LICENSE; původní rozpor níže je historické zjištění, nikoli současný stav těchto textů. Distribuční kompatibilitu případného pluginu je stále nutné posoudit.
 
 ## 1. Závěr a doporučení
 
@@ -13,7 +13,7 @@ Jako rychlou, samostatně použitelnou alternativu lze nejprve nakonfigurovat md
 Před rozhodnutím o implementaci jsou dvě podmínky:
 
 1. Ověřit malým Windows prototypem životní cyklus WLX + WebView2, zejména rychlé přepínání a zavření během inicializace.
-2. Vyjasnit licenci projektu a distribuční kompatibilitu pluginu s hostitelem a závislostmi. V aktuálním repozitáři je rozpor GPLv3/MIT.
+2. Vyjasnit licenci projektu a distribuční kompatibilitu pluginu s hostitelem a závislostmi. Při analýze byl zjištěn rozpor GPLv3/MIT v popisech; ty byly následně sjednoceny s LICENSE.
 
 ## 2. Co už mdedit poskytuje
 
@@ -27,7 +27,7 @@ Před rozhodnutím o implementaci jsou dvě podmínky:
 | Nativní bridge | Čtení, zápis, přesun a mazání souborů, dialogy a export | Viewer má dostat pouze omezený komunikační kanál, nikoli celý bridge editoru. |
 | Windows parent | Tauri 2.10.3 má `parent_raw`; běžné `parent` na Windows nastavuje vlastníka | Externí HWND není samo o sobě vyloučeno, ale owner není totéž co vložené child okno. |
 | Bezpečnost | Tauri konfigurace má nyní `csp: null` | Pro viewer vytvořit vlastní politiku zdrojů a navigace. |
-| Licence | Kořenový `LICENSE` obsahuje GNU GPL verze 3, README stále uvádí MIT | Nelze plánovat distribuci s předpokladem licence MIT. |
+| Licence | Kořenový `LICENSE` obsahuje GNU GPL verze 3, README v době analýzy uvádělo MIT (nyní opraveno) | Nelze plánovat distribuci s předpokladem licence MIT. |
 
 Samotné nastavení Tiptap na read-only nedokazuje, že původní aplikace přestala zapisovat. Viewer nesmí spouštět obnovu posledního dokumentu, perzistenci seznamu souborů, souborové operace ani editační klávesové příkazy.
 
@@ -130,7 +130,7 @@ Balíček pluginu má obsahovat WLX/WLX64 artefakt odpovídající architektuře
 
 WebView2 Evergreen Runtime je externí předpoklad, není totožný s nainstalovaným prohlížečem Edge. Jeho nepřítomnost musí vést ke srozumitelnému výsledku, nikoli pádu TC nebo nekonečnému čekání. Ověřit strategii loaderu, jeho bitness a distribuční podmínky; alternativní Fixed Version distribuce znamená větší balíček a vlastní odpovědnost za aktualizace.
 
-**Licenční stav je nutné vyřešit před zveřejněním.** Současný `LICENSE` uvádí GPLv3; popisy MIT v README a webu tomu neodpovídají. Na základě této analýzy nelze automaticky vyvodit, že spojení GPL komponenty s proprietárním hostitelem nebo WebView2 je distribuovatelná kombinace. Je nutné posoudit charakter propojení, příslušné výjimky a podmínky všech použitých částí. Pokud by byla potřebná výjimka či dual licensing, musí ji umožnit skutečná autorská práva ke všem dotčeným příspěvkům. Oddělený proces sám o sobě není univerzální licenční řešení.
+**Licenční stav je nutné vyřešit před zveřejněním.** `LICENSE` uvádí GPLv3; tehdejší nesprávné popisy MIT v README a webu byly následně opraveny. Na základě této analýzy nelze automaticky vyvodit, že spojení GPL komponenty s proprietárním hostitelem nebo WebView2 je distribuovatelná kombinace. Je nutné posoudit charakter propojení, příslušné výjimky a podmínky všech použitých částí. Pokud by byla potřebná výjimka či dual licensing, musí ji umožnit skutečná autorská práva ke všem dotčeným příspěvkům. Oddělený proces sám o sobě není univerzální licenční řešení.
 
 Projekt sám licenci tímto dokumentem nemění. Při distribuci dále zahrnout licenční informace sdílených JS závislostí, Mermaid a případně přibalených fontů. Referenční SDK z Double Commanderu slouží k pochopení rozhraní, nikoli jako automaticky schválený zdroj ke kopírování implementace či hlaviček bez kontroly jejich podmínek.
 
@@ -170,7 +170,7 @@ Pokud spike neprokáže bezpečný životní cyklus a nezablokované UI, neinves
 3. Má být obsah vždy pouze pro čtení? Pro MVP ano; editace a ukládání by znamenaly nový kontrakt i riziko konfliktů s operacemi TC.
 4. Má veřejné MVP vyžadovat integraci hledání do Listeru a tisk? Návrh odděluje jejich návratové hodnoty a dostupnost od základního zobrazení.
 5. Jaké lokální obrázky mají být povolené mimo složku dokumentu, zvláště u archivů a UNC? Síťový obsah doporučuji zakázat jako výchozí stav.
-6. Jak se sjednotí GPLv3 v `LICENSE` a tvrzení MIT? Jaké podmínky dovolí distribuci výsledné kombinace?
+6. Popisy licence již byly sjednoceny podle GPLv3 v `LICENSE`. Jaké podmínky dovolí distribuci výsledné kombinace pluginu a hostitele?
 
 Tyto otázky nebrání závěru o technické proveditelnosti. Brání však označení návrhu za připravený k veřejnému vydání bez dalšího ověření.
 

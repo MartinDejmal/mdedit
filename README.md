@@ -1,247 +1,105 @@
 # mdedit
 
-Lehký multiplatformní WYSIWYG Markdown editor inspirovaný Typorou. Projekt běží jako desktop aplikace nad **Tauri 2 + React 18 + TypeScript + Tiptap**.
+Desktopový WYSIWYG Markdown editor pro Windows, macOS a Linux: **Tauri 2 + React + TypeScript + Tiptap**. Formátování vidíte při psaní, dokumenty zůstávají na disku a aplikace nepotřebuje účet ani cloudovou službu.
 
-## Aktuální stav projektu (k 9. 4. 2026)
+Tento README popisuje aktuální vývojovou větev. Verzi aplikace určuje [`VERSION`](VERSION); již publikované instalátory mohou obsahovat starší sadu funkcí. Historický přehled vydání je v [`docs/releases`](docs/releases).
 
-mdedit je funkční desktopový editor zaměřený na rychlé psaní Markdownu bez přepínání mezi „edit/preview“ režimem. Aktuální větev obsahuje produkčně použitelný základ s otevřením, editací, uložením, exportem a správou stavu dokumentu.
+## Dokumentace / Documentation
 
-### Co je hotové
+- [Česká uživatelská příručka](docs/user-documentation.html)
+- [English user guide](docs/user-documentation.en.html)
+- V aplikaci: **Help → Help** nebo **F1**, jazyk **Čeština / English**. Nápověda je přibalená a funguje offline. **Help → About** zobrazuje skutečnou verzi, autora, technologie a licenci.
+- [Pravidla přispívání a aktualizací dokumentace](CONTRIBUTING.md), [instrukce pro agenty](AGENTS.md), [záznam kontrol dokumentace](docs/documentation-log.md)
+- [Analýza možného Total Commander WLX pluginu](docs/total-commander-viewer-plugin-analysis.md) je návrh, nikoli existující funkce.
+- Produktový web: [`www/index.html`](www/index.html) / [`www/en.html`](www/en.html). Jde o samostatný statický web, který není automaticky publikován buildem aplikace.
 
-- Otevření souborů `.md`, `.markdown`, `.txt` přes nativní dialog.
-- Vytvoření **nového nepojmenovaného dokumentu** (`Untitled`).
-- Otevření souboru i přes **CLI argument** (např. „Open With“ z OS).
-- Drag-and-drop otevření podporovaných textových/markdown souborů.
-- Uložení (`Save`) i `Save As`.
-- Sledování `dirty` stavu a ochrana proti zahození neuložených změn.
-- Potvrzení při zavírání okna, pokud jsou neuložené změny.
-- Detekce externí změny souboru na disku (focus/visibility check + zvýrazněný reload).
-- Nativní title okna s indikací změn (`*` prefix při neuloženém stavu).
-- Persistovaný seznam „Recent Files“ + obnovení posledního souboru po startu.
-- Panel osnovy (outline sidebar) s navigací podle nadpisů.
-- Export do **HTML** a **PDF**.
-- Toolbar akce pro běžné formátování (bold/italic, nadpisy, seznamy, task list, tabulka, odkazy, obrázky URL, code block).
-- Výběr jazyka aktivního code blocku.
-- Aplikační menu (File/Edit/View) s klávesovými zkratkami.
-- Toast notifikace a potvrzovací dialogy pro hlavní workflow.
+The English user guide is bundled in the application alongside Czech help. Contributors should read [CONTRIBUTING.md](CONTRIBUTING.md); agents must also follow [AGENTS.md](AGENTS.md). Every commit must include an appropriate documentation update or a meaningful documentation-review entry.
 
-### Známá omezení / další směr
+## Současné funkce
 
-- Markdown ↔ HTML převod je praktický (MVP), ne plně bezztrátový pro všechny edge casy.
-- Obrázky jsou aktuálně vkládány primárně přes URL (bez kompletního asset pipeline).
-- Chybí robustnější sada automatických testů (unit/integration/e2e).
-- Témování (light/dark) a další UX polish je stále otevřené téma.
+- Otevření `.md`, `.markdown`, `.txt`, drag-and-drop z OS, argument při spuštění a Recent Files s obnovou posledního dokumentu.
+- New vytvoří při otevřeném filebrowseru prázdný `Untitled.md` ve vybrané složce; kolize řeší číslováním. Jinak vznikne nepojmenovaný dokument. Save a Save As jsou explicitní, nikoli průběžný autosave.
+- Filebrowser zobrazuje složky a `.md` soubory; při otevření se nastaví podle aktuálního souboru. Umí posun kořene výše, novou složku, přejmenování klikem na vybraný řádek/F2, přesun tažením a trvalé smazání s potvrzením. Kontextové menu nabízí stejné souborové akce. Existující cíle se nepřepisují.
+- Přesun a přejmenování zachovávají neuložený text otevřeného souboru a aktualizují cestu pro Save. Operace s celými složkami nad rámec vytvoření/navigace nejsou implementované.
+- Samostatný Outline za filebrowserem s navigací podle nadpisů a zapamatovanou šířkou.
+- Undo/Redo v liště, cyklus H1/H2/H3, převod vybrané položky seznamu na nadpis, Tab/Shift+Tab pro nejbližší položku seznamu, úkoly, odkazy, obrázky URL a kód.
+- Tabulka bez výběru 3×3; s výběrem odpovídá počtu řádků, podporuje TSV a běžné Markdown tabulky a zachovává inline formátování.
+- Mermaid náhled a PDF diagramy fungují offline. HTML export zůstává samostatným dokumentem se styly a CDN pro jeho Mermaid náhled; pro tento náhled potřebuje internet.
+- PDF obsahuje označitelný text, lokální fonty s diakritikou, tabulky, seznamy, checkboxy, obrázky a zvýraznění kódu. Vzdálené obrázky pro PDF vyžadují dostupnost a CORS.
+- Ochrana neuložených změn, Saved/Modified podle normalizovaného obsahu, upozornění na externí změny, reload a funkční zavření okna s potvrzením.
+- Lišta přesouvá nevejdoucí se nástroje do `»`. Menu: File, Edit, View a Help. Jazyky lze přepínat v nápovědě a About; celé rozhraní zatím lokalizované není.
 
-## Přehled repozitáře
-
-### Struktura
-
-```text
-src/
-├── app/                    # Root kompozice aplikace
-├── components/             # Layout, toolbar, status bar, outline UI
-├── features/
-│   ├── documents/          # Open/save/reload/export orchestrace
-│   ├── editor/             # Tiptap editor + extensions + controller
-│   └── ux/                 # Toast + confirm dialog systém
-├── services/               # Tauri bridge, markdown pipeline, persisted app state
-├── stores/                 # Zustand dokumentový store
-├── types/                  # Sdílené typy
-└── lib/                    # Utility
-
-src-tauri/
-├── src/
-│   ├── main.rs             # Binární vstup
-│   └── lib.rs              # Tauri commandy (file ops, metadata, export PDF...)
-├── capabilities/           # Tauri v2 capability granty
-├── permissions/            # Vlastní command permissions
-└── tauri.conf.json         # Konfigurace aplikace
-```
-
-### Technologie
-
-| Vrstva | Technologie |
-|---|---|
-| Desktop shell | Tauri 2 |
-| UI | React 18 + TypeScript |
-| Build | Vite 5 |
-| Editor | Tiptap + StarterKit + vlastní extension vrstva |
-| Stav | Zustand |
-| Markdown pipeline | unified / remark / rehype |
-| Nativní bridge | Tauri commandy v Rustu + rfd |
-
-## Prohlížeč složek
-
-- Tlačítko se souborovým stromem na liště zobrazí panel **Files** vlevo od Outline.
-- **Choose folder** / ikona složky vybere kořenový adresář. Podsložky se načítají při rozbalení; soubory se zobrazují pouze s příponou `.md` (včetně `.MD`). Symbolické odkazy se nepřecházejí.
-- Kliknutí na složku ji vybere jako cíl nového dokumentu. Při otevřeném prohlížeči akce **New** (tlačítko, zkratka i menu) ihned vytvoří prázdný `Untitled.md`, případně `Untitled 2.md` atd., a otevře jej. Existující soubory se nepřepisují. Při skrytém panelu nebo bez vybrané složky zůstává nový dokument nepojmenovaný.
-- Jeden klik otevře soubor v současném editoru. U neuložených změn dialog nabídne **Save**, **Discard** a **Cancel**. Zrušení ukládání nebo chyba ponechá aktuální dokument otevřený.
-- Aktivní soubor je zvýrazněný. Tlačítko obnovení znovu načte obsah kořenové složky; skrytí panelu zachová vybranou složku i rozbalení.
-
-Testy filtrování, řazení, prázdných/neexistujících složek a cyklických odkazů:
-
-```bash
-cargo test --locked --manifest-path src-tauri/Cargo.toml folder_browser::tests
-```
-
-Filebrowser se při zobrazení nastaví na složku otevřeného souboru. Tlačítko **Parent folder** posune kořen stromu o úroveň výše, **New folder** vytvoří pojmenovanou složku ve vybrané složce.
-
-Soubory lze přesouvat tažením na složku nebo přes kontextové menu **Move to folder…**. Druhý klik na vybraný soubor (nebo **F2**) otevře přejmenování. **Delete** i kontextové menu žádají potvrzení smazání; u neuloženého otevřeného dokumentu dialog upozorní na ztrátu změn. Přesun a přejmenování zachovávají neuložený obsah a aktualizují cestu pro další uložení. Existující cílový soubor se nikdy nepřepisuje.
-
-## Export PDF
-
-PDF zachovává nadpisy, kombinované inline formátování, odkazy, vnořené seznamy a úkoly, bloky v tabulkách, zvýraznění kódu, obrázky a Mermaid diagramy. Text zůstává označitelný; patkové a monospace fonty s diakritikou jsou součástí aplikace. Mermaid je rovněž přibalený a nevyžaduje připojení k CDN.
-
-Obrázky se vkládají do PDF. Vzdálený server musí dovolit načtení obrázku přes CORS; nedostupný obrázek export ukončí s vysvětlením místo tichého nahrazení textem.
-
-Regresní testy vytvářejí skutečné PDF v headless Chromium a kontrolují je nástroji Poppler (`pdftotext`, `pdffonts`, `pdfimages`, `pdfinfo`):
-
-```bash
-# Linux: nainstalované chromium a poppler-utils
-npm run test:pdf
-# Pro jinou cestu k prohlížeči nastav CHROMIUM_PATH.
-```
-
-## Úpravy textu
-
-- **Undo / Redo** na nástrojové liště vrací a opakuje úpravy. Historie se při načtení jiného dokumentu vynuluje; tlačítka fungují i v nabídce `>>`.
-- **Heading** na položce seznamu vyvede vybranou položku ze seznamu a změní ji na nadpis. Okolní položky i inline formátování zůstávají zachované; celou akci lze vrátit jedním Undo.
-- **Insert table** s vybraným textem vytvoří tabulku podle počtu vybraných řádků. Tabulátory a Markdown tabulky určují sloupce. Bez výběru vloží původní tabulku 3×3.
-- **Tab / Shift+Tab** zvyšuje a snižuje úroveň nejbližší položky seznamu, včetně úkolových a smíšených seznamů. První položka bez předchozího sourozence se klávesou Tab nemění a fokus zůstává v editoru.
-
-Regresní testy těchto funkcí: `npm run test:editor` (vyžaduje Chromium, případně nastavte `CHROMIUM_PATH`).
+Přepnutí ve filebrowseru nabízí Save / Discard / Cancel. New, běžné Open, reload a zavření okna používají Discard / Keep Editing; chcete-li změny uchovat, nejprve uložte. Smazání souboru nepoužívá koš.
 
 ## Klávesové zkratky
 
-- `Ctrl/Cmd + Z` → Undo
-- `Ctrl/Cmd + Shift + Z` → Redo
-- `Tab / Shift+Tab` v seznamu → zvýšit / snížit úroveň
-- `Ctrl/Cmd + N` → New
-- `Ctrl/Cmd + O` → Open
-- `Ctrl/Cmd + S` → Save
-- `Ctrl/Cmd + Shift + S` → Save As
-- `Ctrl/Cmd + Alt + R` → Reload from disk
+| Akce | Zkratka |
+|---|---|
+| New / Open | Ctrl/Cmd+N / Ctrl/Cmd+O |
+| Save / Save As | Ctrl/Cmd+S / Ctrl/Cmd+Shift+S |
+| Reload | Ctrl/Cmd+Alt+R |
+| Undo / Redo | Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z |
+| Bold / Italic | Ctrl/Cmd+B / Ctrl/Cmd+I |
+| Odsazení seznamu | Tab / Shift+Tab |
+| Přejmenování / smazání v Files | F2 / Delete na řádku souboru |
+| Help | F1 |
+| Zavření nabídky či dialogu | Escape |
 
-## Build a spuštění
+## Vývoj a build
 
-### Předpoklady
-
-- Node.js >= 18
-- Rust (stable toolchain)
-- Linux: `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libssl-dev`
-
-```bash
-# Ubuntu / Debian
-sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev libssl-dev
-```
-
-### Vývoj
+Předpoklady: Node.js **22** jako v release CI (ověřeno také s Node 24), npm, Rust **1.94.1** podle [`rust-toolchain.toml`](rust-toolchain.toml) a systémové závislosti Tauri. Windows potřebují MSVC Build Tools a WebView2 Runtime; macOS Xcode Command Line Tools. Na Ubuntu/Debian jsou potřeba zejména `build-essential`, `pkg-config`, `libgtk-3-dev`, `libwebkit2gtk-4.1-dev`, `libssl-dev`, `librsvg2-dev` a podle platformy tray podpory `libayatana-appindicator3-dev`.
 
 ```bash
-npm install
+npm ci
 npm run tauri dev
 ```
 
-### Build
+Samotný frontend spustíte přes `npm run dev` (port 1420). Bez Tauri nefungují nativní dialogy a souborové operace. Nápovědu lze v browseru otevřít přes F1.
 
 ```bash
 npm run build
 npm run tauri build
 ```
 
+`npm run build` a wrapper `npm run tauri` nejprve spouštějí synchronizaci verze, která může přepsat metadata. Pro kontrolu bez synchronizace lze použít `npx --no-install tsc` a `npx --no-install vite build`; nativní CLI je také v `node_modules/.bin/tauri`. Balíčky vznikají pod `src-tauri/target/release/bundle/`.
+
+## Testy
+
+Browserové testy používají `playwright-core` a nainstalovaný Chromium/Chrome. Nastavte `CHROMIUM_PATH`, pokud prohlížeč není v `/usr/bin/chromium` nebo `/usr/bin/chromium-browser`. PDF testy vyžadují Poppler (`pdftotext`, `pdffonts`, `pdfimages`, `pdfinfo`). Testy souborových operací v browseru mockují Tauri IPC; nenahrazují nativní Windows/macOS/Linux test.
+
+```bash
+npm run test:help
+npm run test:editor
+npm run test:file-browser
+npm run test:new-document
+npm run test:documents
+npm run test:toolbar
+npm run test:mermaid
+npm run test:pdf
+cargo test --locked --manifest-path src-tauri/Cargo.toml folder_browser::tests
+```
+
+Rust testy vyžadují toolchain i systémové závislosti nativního projektu. Release workflow v `.github/workflows` sestavuje Windows x64, macOS Intel/Apple Silicon a Linux x64/ARM64; podpisy a aktuální balíčky ověřujte u konkrétního vydání.
+
+## Struktura repozitáře
+
+| Cesta | Účel |
+|---|---|
+| `src/app`, `src/components` | Aplikační kompozice, lišta, filebrowser a Help/About |
+| `src/features/editor` | Schéma Tiptap, příkazy, controller, Outline, Mermaid node views |
+| `src/features/documents`, `src/stores` | Životní cyklus dokumentů, operace se soubory, export, stav |
+| `src/services` | Tauri bridge, Markdown převod, PDF, preference, Mermaid loader |
+| `src-tauri` | Rust příkazy, oprávnění, konfigurace a nativní filebrowser operace |
+| `docs/user-documentation*.html` | Samostatné příručky i zdroj offline nápovědy importovaný do aplikace |
+| `scripts`, `tests/fixtures` | Verze, release a regresní testy |
+| `www` | Český/anglický produktový web |
+
 ## Verze a release
 
-Projekt používá centrální číslo verze v souboru `VERSION` (v rootu repozitáře).
+Centrální verze je v `VERSION`. `npm run sync:version` ji promítne do `package.json`, `package-lock.json`, Tauri konfigurace a Rust manifestu/lockfilu. `npm run release -- patch`, `minor`, `major` nebo `set x.y.z` mění verzi a metadata. Samotný commit automaticky nevydává nový instalátor; release workflow reaguje na verzi označenou tagem nebo ruční spuštění. Poznámky k vydání patří do `docs/releases/<verze>.md` a popisují skutečně vydávaný snapshot.
 
-- Skript `npm run sync:version` synchronizuje tuto verzi do:
-  - `package.json`
-  - `src-tauri/tauri.conf.json`
-  - `src-tauri/Cargo.toml`
-  - `src-tauri/Cargo.lock`
-- Skript `npm run release -- <mode>` umí verzi zvýšit automaticky (`patch|minor|major`) nebo explicitně nastavit (`set x.y.z`).
-- Při `npm run build` a `npm run tauri ...` se synchronizace spouští automaticky.
-- Verze je zobrazena i v title baru aplikace (`mdedit vX.Y.Z`).
+## Omezení a licence
 
-### Release skript
+Markdown ↔ HTML převod není zcela bezztrátový, není zavedena kompletní správa příloh, dark mode, plná lokalizace editoru ani automatické zálohování. Před úpravami nestandardních či důležitých dokumentů si ponechte kopii.
 
-```bash
-# bump patch verze (např. 1.0.0 -> 1.0.1)
-npm run release:patch
-
-# bump minor/major
-npm run release:minor
-npm run release:major
-
-# explicitní nastavení verze
-npm run release:set -- 1.2.3
-```
-
-### Postup release (příklad 1.0.0)
-
-```bash
-# 1) změň verzi
-echo "1.0.0" > VERSION
-
-# 2) synchronizuj metadata verzí
-npm run sync:version
-
-# 3) build + balíčky
-npm run tauri build
-
-# 4) commit + tag
-git add VERSION package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml
-git commit -m "release: v1.0.0"
-git tag v1.0.0
-```
-
-## Stav commitů a pull requestů
-
-### Souhrn historie
-
-- Celkem commitů: **67**
-- Merge commitů (včetně PR merge): **26**
-- Nemerge commitů: **41**
-- Hlavní autoři dle `git shortlog`: 
-  - Martin Dejmal (44)
-  - copilot-swe-agent[bot] (23)
-
-### Mergované Pull Requesty (chronologicky)
-
-| Datum | PR | Název |
-|---|---:|---|
-| 2026-04-07 | #1 | create-initial-project-structure |
-| 2026-04-07 | #2 | refactor-document-lifecycle-and-save-flow |
-| 2026-04-07 | #3 | implement-canonical-markdown-lifecycle |
-| 2026-04-07 | #4 | enhance-markdown-editor-with-new-features |
-| 2026-04-07 | #6 | fix-open-file-functionality |
-| 2026-04-07 | #7 | implement-external-change-handling-workflow |
-| 2026-04-07 | #8 | add-desktop-ergonomics-features |
-| 2026-04-07 | #10 | fix-save-command-issue |
-| 2026-04-07 | #11 | implement-notification-and-confirm-dialog-system |
-| 2026-04-08 | #12 | update-readme.md-next-steps-section |
-| 2026-04-08 | #13 | implement-reusable-input-dialog-for-links-and-images |
-| 2026-04-08 | #14 | implement-untitled-document-workflow |
-| 2026-04-08 | #15 | add-syntax-highlighting-for-code-blocks |
-| 2026-04-08 | #17 | fix-cannot-enter-text-in-document |
-| 2026-04-08 | #18 | add-export-workflows-for-html-and-pdf |
-| 2026-04-08 | #19 | polish-toolbar-ux-and-icons |
-| 2026-04-08 | #20 | add-navigation-sidebar-for-document-outline |
-| 2026-04-08 | #22 | handle-argument-driven-file-opening |
-| 2026-04-08 | #27 | fix-task-list-tool-issues |
-| 2026-04-08 | #28 | update-toolbar-heading-levels |
-| 2026-04-08 | #29 | add-drag-and-drop-document-opening |
-| 2026-04-09 | #31 | fix-close-window-issue |
-| 2026-04-09 | #33 | fix-outline-pane-generation |
-| 2026-04-09 | #34 | upgrade-pdf-export-to-match-html-layout |
-
-> Pozn.: V historii jsou i 2 technické merge commity z `main` bez PR čísla (`17425b3`, `fe0a4e0`).
-
-### Poslední změny (nejnovější PR)
-
-- **#34 (2026-04-09):** vylepšení PDF exportu na HTML-based multipage pipeline.
-- **#33 (2026-04-09):** oprava negenerování outline panelu při otevření dokumentu.
-- **#31 (2026-04-09):** oprava zavírání okna přes systémové close tlačítko.
-
-## Licence
-
-MIT (viz `LICENSE`).
+Aplikace je distribuována podle **GNU GPL v3**, viz [`LICENSE`](LICENSE). Dřívější texty o MIT neodpovídaly kořenovému licenčnímu souboru a byly opraveny; tato dokumentační oprava licenci samotnou nemění. Závislosti a přibalené fonty mají vlastní licenční podmínky.

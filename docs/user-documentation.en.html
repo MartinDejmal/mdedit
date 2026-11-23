@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en"><head>
+
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mdedit user guide</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#263244;font:16px/1.65 system-ui,-apple-system,sans-serif}
+main{max-width:900px;margin:auto;padding:24px}
+h1,h2,h3{line-height:1.3;color:#17283e}
+h1{font-size:2rem}
+h2{margin-top:2rem;border-bottom:1px solid #dbe3ed;padding-bottom:6px}
+a{color:#1d58ac}
+a:focus-visible{outline:3px solid #376ace;outline-offset:3px}
+nav{padding:16px 20px;background:#f3f6fb;border:1px solid #dbe3ed;border-radius:8px}
+nav ol{margin:0;padding-left:20px}
+code{overflow-wrap:anywhere}
+code,kbd{font-family:ui-monospace,monospace;background:#edf1f7;border-radius:3px;padding:1px 4px}
+table{table-layout:fixed;overflow-wrap:anywhere;border-collapse:collapse;width:100%;font-size:.94rem}
+th,td{border:1px solid #dbe3ed;padding:8px;text-align:left;vertical-align:top}
+th{background:#f3f6fb}
+.note{border-left:4px solid #3469bb;background:#f3f6fb;padding:12px 16px}
+li+li{margin-top:5px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6fb;padding:12px;border-radius:6px}
+footer{border-top:1px solid #dbe3ed;margin-top:32px;padding-top:12px;color:#536279}
+@media(max-width:480px){main{padding:16px}
+body{font-size:14px}
+td,th{padding:5px}
+h1{font-size:1.6rem}
+}
+@media print{nav{display:none}
+main{max-width:none;padding:0}
+h2{break-after:avoid}
+tr{break-inside:avoid}
+}
+</style>
+</head>
+<body><main><h1>mdedit user guide</h1>
+<p>Offline help for the current development branch.</p>
+<nav aria-label="Contents"><h2 style="margin-top:0">Contents</h2>
+<ol><li><a href="#start">Getting started</a></li>
+<li><a href="#workspace">Workspace and help</a></li>
+<li><a href="#files">Opening, creating and saving documents</a></li>
+<li><a href="#unsaved">Unsaved changes and confirmation dialogs</a></li>
+<li><a href="#browser">File browser: folders and file operations</a></li>
+<li><a href="#format">Formatting, lists and tables</a></li>
+<li><a href="#code">Code and Mermaid</a></li>
+<li><a href="#export">HTML and PDF export</a></li>
+<li><a href="#shortcuts">Keyboard shortcuts</a></li>
+<li><a href="#troubleshooting">Limitations and troubleshooting</a></li>
+</ol></nav>
+<section id="start"><h2>Getting started</h2>
+<p>mdedit is a desktop WYSIWYG Markdown editor for Windows, macOS and Linux. See formatting as you type. Documents stay on your disk; no account or cloud service is required.</p>
+<p>This guide describes the current development branch. A published installer may contain an older feature set. Find your exact application version under <strong>Help → About</strong>.</p>
+<p>Choose an installer for your OS and CPU: Windows x64 (EXE/MSI), macOS Intel or Apple Silicon (DMG), Linux x64 or ARM64 (AppImage/DEB/RPM). Mark an AppImage as executable. Unsigned Windows installers and ad-hoc signed, non-notarized macOS packages may trigger system warnings; install only trusted releases.</p>
+<p>The Windows desktop uses the WebView2 Runtime. The built-in help and Mermaid previews do not require internet access.</p>
+</section>
+
+<section id="workspace"><h2>Workspace and help</h2>
+<p>The main menu contains <strong>File, Edit, View and Help</strong>. The toolbar sits underneath. <strong>Toggle file browser</strong> is its first button. If the window is too narrow, <strong>» / More editor tools</strong> on the right opens the remaining controls. An action, outside click or Escape closes the popup.</p>
+<p>The left side can contain <strong>Files</strong>, then the heading <strong>Outline</strong>, followed by the editor. Toggle Outline from View, click a heading to navigate, or drag its right edge to resize it; the width is remembered. The status bar shows the file path, <strong>Saved / Modified</strong>, and external-change warnings.</p>
+<p><strong>Help → Help</strong> or <strong>F1</strong> opens this offline guide. <strong>Čeština / English</strong> switches the language of Help and About, not the entire editor interface. Use Close/Zavřít or Escape to dismiss it. Your document remains unchanged. Native File/Edit/View menus are temporarily disabled while this dialog is open; close help to resume editing. Closing the main window dismisses help and still protects unsaved changes with a confirmation dialog.</p>
+</section>
+
+<section id="files"><h2>Opening, creating and saving documents</h2>
+<ul><li><strong>File → Open…</strong> opens <code>.md</code>, <code>.markdown</code> and <code>.txt</code> files. You can also pass a file path at launch, use your OS “Open with” action, or drag a file from the OS onto the application window.</li>
+<li><strong>File → New</strong>: with Files visible and a folder selected, creates an empty <code>Untitled.md</code> on disk immediately. If the name exists, it uses <code>Untitled 2.md</code>, and so on. The new file opens as Saved. Without a selected folder, or with Files hidden, New creates an untitled document only in the editor.</li>
+<li><strong>Save</strong> saves the current document, asking for a path when it is untitled. <strong>Save As…</strong> always asks for a new path. The app does not automatically save every keystroke.</li>
+<li><strong>Recent Files</strong> lists recently opened files. When launched without a file argument, the app attempts to reopen the last document.</li>
+<li><strong>Reload from disk</strong> reads the current file again. Changes made by another application produce a reload warning; unsaved text is not overwritten automatically.</li>
+</ul><p class="note"><strong>Modified</strong> means changes relative to the saved baseline. Merely opening or normalizing Markdown is not a user edit. Undo can return the document to Saved. Undo/Redo history resets when another document is loaded or the file is reloaded.</p>
+</section>
+
+<section id="unsaved"><h2>Unsaved changes and confirmation dialogs</h2>
+<p>Switching files in Files shows <strong>Save changes before switching files?</strong> only when the current document has changed. <strong>Save</strong> saves and continues, <strong>Discard</strong> drops changes, and <strong>Cancel</strong> keeps editing. Cancelling Save As or a write failure stops the switch.</p>
+<p>New, regular Open, reload and closing the window use <strong>Discard unsaved changes?</strong> with <strong>Discard / Keep Editing</strong>. To preserve changes, select Keep Editing, save, and repeat the action. The window close button respects this protection.</p>
+<p>Deleting the open file through Files is a separate operation: it deletes the disk file and, when the document is modified, also warns that unsaved edits will be lost.</p>
+</section>
+
+<section id="browser"><h2>File browser: folders and file operations</h2>
+<p>Open Files using the first toolbar button or <strong>View → Toggle file browser</strong>. If a saved file is open, the browser starts in its directory. Otherwise choose a folder using <strong>Open folder / Choose folder</strong>. The tree displays subfolders and only <code>.md</code> files, including <code>.MD</code>. Open <code>.markdown</code> and <code>.txt</code> through File → Open; they do not appear in the tree. Symbolic links are not displayed.</p>
+<ul><li>Click a folder to select it and expand/collapse it. Click the root row to select the root. The selected directory is the destination for New and New folder.</li>
+<li><strong>Parent folder</strong> moves the entire tree one directory up; it is disabled at a drive/share root. <strong>Refresh folder</strong> reloads the tree.</li>
+<li><strong>New folder</strong> asks for a name and creates a directory inside the selected folder. Existing destinations are never replaced.</li>
+<li>Click a file to open it. Click an already selected row, or press <strong>F2</strong>, to rename it. Names must end in <code>.md</code> and cannot contain path separators or reserved characters.</li>
+<li>Move a file by dragging it onto a folder or the root row. The destination folder expands after the move. An existing file with the same name causes an error instead of being overwritten.</li>
+<li>Right-click a file for <strong>Open, Rename…, Move to folder…, Delete…</strong>. Move to folder opens a destination picker. A folder context menu can open that folder as the tree root or create a new folder.</li>
+<li><strong>Delete</strong> or Delete… requires confirmation. Deletion is permanent; the app does not use the recycle bin. Confirming deletion of the open document opens an empty untitled document.</li>
+</ul><p>Moving or renaming the open file preserves its unsaved content and Modified state, and updates the path used by Save. These operations apply to files; renaming, moving or recursively deleting entire directories is not currently part of the UI.</p>
+</section>
+
+<section id="format"><h2>Formatting, lists and tables</h2>
+<ul><li>The toolbar provides bold, italic, headings, bullet/ordered/task lists, tables, links, images and code blocks. <strong>Undo / Redo</strong> availability follows the edit history.</li>
+<li>The heading button cycles <strong>normal text → H1 → H2 → H3 → normal text</strong>. In a list item it first removes that item's list wrapping, preserving surrounding items and inline formatting. One Undo restores the conversion.</li>
+<li><strong>Tab / Shift+Tab</strong> indents/outdents the nearest list item, including task and mixed lists. A first item without a preceding sibling cannot nest: Tab leaves it unchanged and keeps focus in the editor. Shift+Tab at the outermost level can turn an item into a paragraph.</li>
+<li>Task list creates a task list at the cursor, or converts selected nonempty lines into tasks. A checkbox changes a task's checked state.</li>
+<li><strong>Insert table</strong> with no selection inserts a 3×3 table with A/B/C headers. With selected text it creates a row per paragraph or hard break. Tabs separate columns; conventional Markdown tables with leading/trailing pipes are also supported, excluding the header separator row from data. The first row becomes the header and shorter rows receive empty cells. Inline formatting and text outside the selection are preserved.</li>
+<li><strong>Insert link</strong> applies a URL to selected text, or inserts the URL when the selection is empty. Remove link removes it. <strong>Insert image from URL</strong> asks for an image URL and optional alternative text; local attachment management is not currently provided.</li>
+</ul></section>
+
+<section id="code"><h2>Code and Mermaid</h2>
+<p>Enable <strong>Code block</strong> and choose a language in the Code selector. Options include plaintext, Mermaid, JavaScript, TypeScript, JSON, HTML, CSS, Bash, SQL, YAML and Markdown.</p>
+<p>Choose <strong>mermaid</strong> for diagrams. The preview below the source updates as you edit and displays an error for invalid syntax. Mermaid is bundled and needs no CDN. For example, <code>flowchart LR</code> followed on the next line by <code>A[Start] --&gt; B[End]</code> creates a simple diagram.</p>
+</section>
+
+<section id="export"><h2>HTML and PDF export</h2>
+<p>Use <strong>File → Export as HTML… / Export as PDF…</strong> or the toolbar icons to export the current editor content, including unsaved edits. A filename is suggested from the document and you choose the destination in a dialog. Export does not mark the source Markdown as saved.</p>
+<p>PDF includes selectable text, bundled serif/monospace fonts with diacritics, syntax highlighting, lists, checkboxes, blocks inside tables, images and vector Mermaid diagrams. Long documents paginate; line wrapping need not be pixel-identical to the editor's viewport.</p>
+<p>Remote images must be available and permit CORS for embedding in PDF. An unavailable image stops export with an error instead of silently omitting content. HTML export is a standalone styled document; its Mermaid preview currently loads a library from a CDN and requires internet access. This differs from the offline editor preview and PDF export.</p>
+</section>
+
+<section id="shortcuts"><h2>Keyboard shortcuts</h2>
+<p>On macOS, use Command instead of Ctrl.</p>
+<table><thead><tr><th>Action</th><th>Shortcut</th></tr>
+</thead><tbody><tr><td>New document</td><td>Ctrl/Cmd+N</td></tr>
+<tr><td>Open</td><td>Ctrl/Cmd+O</td></tr>
+<tr><td>Save / Save As</td><td>Ctrl/Cmd+S / Ctrl/Cmd+Shift+S</td></tr>
+<tr><td>Reload</td><td>Ctrl/Cmd+Alt+R</td></tr>
+<tr><td>Undo / Redo</td><td>Ctrl/Cmd+Z / Ctrl/Cmd+Shift+Z</td></tr>
+<tr><td>Bold / Italic</td><td>Ctrl/Cmd+B / Ctrl/Cmd+I</td></tr>
+<tr><td>List indentation</td><td>Tab / Shift+Tab</td></tr>
+<tr><td>Rename / Delete in Files</td><td>F2 / Delete on a file row</td></tr>
+<tr><td>Help</td><td>F1</td></tr>
+<tr><td>Dismiss a popup or dialog</td><td>Escape</td></tr>
+</tbody></table></section>
+
+<section id="troubleshooting"><h2>Limitations and troubleshooting</h2>
+<ul><li>Markdown ↔ HTML conversion is not lossless for every construct. Keep a copy of important or unusual documents before editing. The app is not a backup or version-control manager.</li>
+<li>A failed operation displays a toast or an error in the tree. Check permissions, directory existence, filename collisions and file availability. Use Refresh to reload the tree.</li>
+<li>For external changes, decide whether to keep your editor content or load the disk version. Confirming Reload can discard unsaved changes.</li>
+<li>Find missing toolbar controls under ». Temporarily hide Files or Outline from View to gain space.</li>
+<li>Check Mermaid syntax and the selected language for diagram errors. Check image URLs and CORS for PDF image errors. Export requires an active document.</li>
+<li>The language switch affects Help and About only. Full editor localization and dark mode are not currently implemented.</li>
+</ul><p>Include the version from Help → About, your operating system and reproduction steps in bug reports. Project: <code>https://github.com/MartinDejmal/mdedit</code>. The application is licensed under <strong>GNU GPL v3</strong> as provided in LICENSE; dependency licenses apply separately.</p>
+</section>
+<footer>Updated 23 November 2026. Check Help → About for your application version.</footer>
+</main>
+</body></html>

@@ -1,3 +1,4 @@
+import HelpDialog from "../components/HelpDialog";
 import FolderSidebar from "../components/FolderSidebar";
 import Layout from "../components/Layout";
 import Toolbar from "../components/Toolbar";
@@ -11,6 +12,8 @@ import { AppUxProvider } from "../features/ux/useAppUx";
 function AppContent() {
   const { isDirty, currentFilePath, activeDocument } = useDocumentStore();
   const {
+    helpView,
+    closeHelp,
     editor,
     recentFiles,
     hasActiveDocument,
@@ -92,6 +95,7 @@ function AppContent() {
           onOutlineWidthChange={handleOutlineWidthChange}
         />
       </div>
+      <HelpDialog view={helpView} onClose={closeHelp} />
       <StatusBar
         isDirty={isDirty}
         filePath={currentFilePath}

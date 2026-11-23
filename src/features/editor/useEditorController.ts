@@ -1,3 +1,4 @@
+import type { HelpView } from "../../components/HelpDialog";
 import { EditorState } from "@tiptap/pm/state";
 import { useBrowserFileOperations, type BrowserFileOperations } from "../documents/useBrowserFileOperations";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -57,6 +58,8 @@ function buildWindowTitle(params: {
   return `${prefix}${basename(path ?? "")} - ${APP_NAME}`;
 }
 export interface EditorController {
+  helpView: HelpView;
+  closeHelp: () => void;
   browserLocation: { path: string; version: number } | null;
   browserOperations: BrowserFileOperations;
   editor: Editor | null;
@@ -90,6 +93,10 @@ export interface EditorController {
 }
 
 export function useEditorController(): EditorController {
+  const [helpView, setHelpView] = useState<HelpView>(null);
+  const showHelp = useCallback(() => setHelpView("help"), []);
+  const showAbout = useCallback(() => setHelpView("about"), []);
+  const closeHelp = useCallback(() => setHelpView(null), []);
   const isApplyingRemoteContent = useRef(false);
   const browserSwitchInFlight = useRef(false);
   const closeConfirmInFlightRef = useRef(false);
@@ -318,6 +325,8 @@ export function useEditorController(): EditorController {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "F1") { event.preventDefault(); showHelp(); return; }
+      if ((event.target as Element)?.closest?.("dialog[open]")) return;
       const mod = event.ctrlKey || event.metaKey;
       if (!mod) return;
 
@@ -343,7 +352,7 @@ export function useEditorController(): EditorController {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleNew, handleOpen, handleReload, handleSave, handleSaveAs]);
+  }, [handleNew, handleOpen, handleReload, handleSave, handleSaveAs, showHelp]);
 
   useEffect(() => {
     let disposed = false;
@@ -366,6 +375,7 @@ export function useEditorController(): EditorController {
 
         const fileSubmenu = await Submenu.new({
           text: "File",
+          enabled: helpView === null,
           items: [
             {
               id: "file-new",
@@ -418,6 +428,7 @@ export function useEditorController(): EditorController {
 
         const editSubmenu = await Submenu.new({
           text: "Edit",
+          enabled: helpView === null,
           items: [
             await PredefinedMenuItem.new({ item: "Undo" }),
             await PredefinedMenuItem.new({ item: "Redo" }),
@@ -432,6 +443,7 @@ export function useEditorController(): EditorController {
 
         const viewSubmenu = await Submenu.new({
           text: "View",
+          enabled: helpView === null,
           items: [
             await CheckMenuItem.new({
               id: "view-toggle-file-browser",
@@ -450,8 +462,15 @@ export function useEditorController(): EditorController {
           ],
         });
 
+        const helpSubmenu = await Submenu.new({
+          text: "Help",
+          items: [
+            { id: "help-guide", text: "Help", accelerator: "F1", action: showHelp },
+            { id: "help-about", text: "About", action: showAbout },
+          ],
+        });
         const menu = await Menu.new({
-          items: [fileSubmenu, editSubmenu, viewSubmenu],
+          items: [fileSubmenu, editSubmenu, viewSubmenu, helpSubmenu],
         });
 
         if (!disposed) {
@@ -468,6 +487,9 @@ export function useEditorController(): EditorController {
       disposed = true;
     };
   }, [
+    showHelp,
+    showAbout,
+    helpView,
     currentFilePath,
     handleNew,
     handleOpen,
@@ -506,6 +528,7 @@ export function useEditorController(): EditorController {
 
         closeConfirmInFlightRef.current = true;
         try {
+          closeHelp();
           if (useDocumentStore.getState().isDirty) {
             const canDiscard = await confirmDiscardUnsavedChanges();
             if (!canDiscard || disposed) return;
@@ -542,7 +565,7 @@ export function useEditorController(): EditorController {
       disposed = true;
       unlisten?.();
     };
-  }, [confirmDiscardUnsavedChanges, notify]);
+  }, [confirmDiscardUnsavedChanges, notify, closeHelp]);
 
   useEffect(() => {
     let isRunning = false;
@@ -598,6 +621,8 @@ export function useEditorController(): EditorController {
 
   return useMemo(
     () => ({
+      helpView,
+      closeHelp,
       editor,
       recentFiles: persistedState.recentFiles,
       hasActiveDocument,
@@ -630,6 +655,8 @@ export function useEditorController(): EditorController {
       handleOutlineWidthChange,
     }),
     [
+      helpView,
+      closeHelp,
       editor,
       handleOpen,
       handleNew,
