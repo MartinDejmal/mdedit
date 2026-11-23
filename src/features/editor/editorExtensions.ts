@@ -1,8 +1,29 @@
-import { Mark, Node, mergeAttributes } from "@tiptap/core";
+import { Extension, Mark, Node, mergeAttributes } from "@tiptap/core";
 import { tableEditing } from "@tiptap/pm/tables";
 import { CodeBlockWithSyntax } from "./codeBlockSyntax";
 
 export { CodeBlockWithSyntax };
+
+/** Resolve Tab against the nearest item, including mixed task/bullet nesting. */
+export const ListIndentation = Extension.create({
+  name: "listIndentation",
+  priority: 1000,
+  addKeyboardShortcuts() {
+    const indent = (outdent: boolean) => {
+      const { $from } = this.editor.state.selection;
+      for (let depth = $from.depth; depth > 0; depth--) {
+        const name = $from.node(depth).type.name;
+        if (name !== "listItem" && name !== "taskItem") continue;
+        if (outdent) this.editor.commands.liftListItem(name);
+        else this.editor.commands.sinkListItem(name);
+        // Keep Tab in the editor even when the first item cannot sink further.
+        return true;
+      }
+      return false;
+    };
+    return { Tab: () => indent(false), "Shift-Tab": () => indent(true) };
+  },
+});
 
 export const LinkMark = Mark.create({
   name: "link",

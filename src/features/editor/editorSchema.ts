@@ -1,7 +1,7 @@
 import { generateHTML, generateJSON } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import {
-  CodeBlockWithSyntax, ImageNode, LinkMark, TableCellNode, TableHeaderNode,
+  CodeBlockWithSyntax, ImageNode, LinkMark, ListIndentation, TableCellNode, TableHeaderNode,
   TableNode, TableRowNode, TaskItemNode, TaskListNode,
 } from "./editorExtensions";
 
@@ -9,7 +9,7 @@ import {
 export function createEditorExtensions() {
   return [
     StarterKit.configure({ codeBlock: false }), CodeBlockWithSyntax,
-    LinkMark, ImageNode, TaskListNode, TaskItemNode,
+    LinkMark, ImageNode, TaskListNode, TaskItemNode, ListIndentation,
     TableNode, TableRowNode, TableHeaderNode, TableCellNode,
   ];
 }

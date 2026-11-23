@@ -152,3 +152,54 @@ test('#47 Table converts selected lines, TSV and Markdown cells while preserving
     assert(defaults.content.every(row => row.content.length === 3));
   } finally { await page.close(); }
 });
+
+
+test('#48 Tab and Shift-Tab indent the nearest list item and keep editor focus', async () => {
+  const page = await openEditor();
+  try {
+    const cursor = async text => {
+      await page.evaluate(text => {
+        const editor = document.querySelector('.ProseMirror').editor;
+        let position;
+        editor.state.doc.descendants((node, pos) => {
+          if (node.isText && node.text.startsWith(text)) position = pos + 1;
+        });
+        editor.chain().focus().setTextSelection(position).run();
+      }, text);
+      await page.waitForTimeout(40);
+    };
+    const depth = () => page.evaluate(() => {
+      const { $from } = document.querySelector('.ProseMirror').editor.state.selection;
+      let count = 0;
+      for (let i = 1; i <= $from.depth; i++) if (['listItem', 'taskItem'].includes($from.node(i).type.name)) count++;
+      return count;
+    });
+    for (const html of [
+      '<ul><li><p>Before</p></li><li><p>Target <strong>bold</strong></p></li></ul>',
+      '<ol start="3"><li><p>Before</p></li><li><p>Target <strong>bold</strong></p></li></ol>',
+      '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>Before</p></li><li data-type="taskItem" data-checked="true"><p>Target <strong>bold</strong></p></li></ul>',
+      '<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>Parent task</p><ul><li><p>Before</p></li><li><p>Target <strong>bold</strong></p></li></ul></li></ul>',
+    ]) {
+      await setContent(page, html);
+      await cursor('Target');
+      const before = await documentJSON(page);
+      const beforeDepth = await depth();
+      await page.keyboard.press('Tab');
+      assert.equal(await depth(), beforeDepth + 1);
+      assert(await page.evaluate(() => Boolean(document.activeElement.closest('.ProseMirror'))));
+      assert(JSON.stringify(await documentJSON(page)).includes('"bold"'));
+      await page.keyboard.press('Shift+Tab');
+      assert.equal(await depth(), beforeDepth);
+      assert.deepEqual(await documentJSON(page), before, 'outdent restores structure and task checked state');
+    }
+    await setContent(page, '<ul><li><p>First</p></li><li><p>Second</p></li></ul>');
+    await cursor('First');
+    const before = await documentJSON(page);
+    await page.keyboard.press('Tab');
+    assert.deepEqual(await documentJSON(page), before, 'first item has no preceding parent to sink under');
+    assert(await page.evaluate(() => Boolean(document.activeElement.closest('.ProseMirror'))));
+    await page.keyboard.press('Shift+Tab');
+    assert.equal((await documentJSON(page)).content[0].type, 'paragraph');
+    assert.equal(await depth(), 0);
+  } finally { await page.close(); }
+});
