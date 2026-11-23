@@ -2,7 +2,7 @@
 
 Desktopový WYSIWYG Markdown editor pro Windows, macOS a Linux: **Tauri 2 + React + TypeScript + Tiptap**. Formátování vidíte při psaní, dokumenty zůstávají na disku a aplikace nepotřebuje účet ani cloudovou službu.
 
-Aktuální verze je **1.2.0**; [poznámky k vydání](docs/releases/1.2.0.md) shrnují změny od 1.1.0. Tento README popisuje aktuální vývojovou větev. Verzi aplikace určuje [`VERSION`](VERSION); již publikované instalátory mohou obsahovat starší sadu funkcí. Historický přehled vydání je v [`docs/releases`](docs/releases).
+Aktuální verze je **1.3.0**; [poznámky k vydání](docs/releases/1.3.0.md) popisují novou volbu fontů od externího přispěvatele a změny od 1.2.0. Tento README popisuje aktuální vývojovou větev. Verzi aplikace určuje [`VERSION`](VERSION); již publikované instalátory mohou obsahovat starší sadu funkcí. Historický přehled vydání je v [`docs/releases`](docs/releases).
 
 ## Dokumentace / Documentation
 
@@ -102,7 +102,7 @@ Rust testy vyžadují toolchain i systémové závislosti nativního projektu. R
 
 ## Verze a release
 
-Centrální verze je v `VERSION`. `npm run sync:version` ji promítne do `package.json`, `package-lock.json`, Tauri konfigurace a Rust manifestu/lockfilu. `npm run release -- patch`, `minor`, `major` nebo `set x.y.z` mění verzi a metadata. Samotný commit automaticky nevydává nový instalátor; release workflow reaguje na tag přesně odpovídající VERSION, bez prefixu `v` (např. `1.2.0`), nebo ruční spuštění. Po commitu změn verze a dokumentace vytvořte `git tag 1.2.0` a odešlete `git push origin main 1.2.0`. Workflow spustí browserové regrese, sestaví všechny cílové platformy a zveřejní draft teprve po úspěšné kontrole požadovaných binárních balíčků. Poznámky k vydání patří do `docs/releases/<verze>.md` a popisují skutečně vydávaný snapshot.
+Centrální verze je v `VERSION`. `npm run sync:version` ji promítne do `package.json`, `package-lock.json`, Tauri konfigurace a Rust manifestu/lockfilu. `npm run release -- patch`, `minor`, `major` nebo `set x.y.z` mění verzi a metadata. Samotný commit automaticky nevydává nový instalátor; release workflow reaguje na tag přesně odpovídající VERSION, bez prefixu `v` (např. `1.3.0`), nebo ruční spuštění. Po commitu změn verze a dokumentace vytvořte `git tag 1.3.0` a odešlete `git push origin main 1.3.0`. Workflow spustí browserové regrese, sestaví všechny cílové platformy a zveřejní draft teprve po úspěšné kontrole požadovaných binárních balíčků. Poznámky k vydání patří do `docs/releases/<verze>.md` a popisují skutečně vydávaný snapshot.
 
 ## Omezení a licence
 
