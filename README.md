@@ -74,6 +74,7 @@ src-tauri/
 
 - Tlačítko se souborovým stromem na liště zobrazí panel **Files** vlevo od Outline.
 - **Choose folder** / ikona složky vybere kořenový adresář. Podsložky se načítají při rozbalení; soubory se zobrazují pouze s příponou `.md` (včetně `.MD`). Symbolické odkazy se nepřecházejí.
+- Kliknutí na složku ji vybere jako cíl nového dokumentu. Při otevřeném prohlížeči akce **New** (tlačítko, zkratka i menu) ihned vytvoří prázdný `Untitled.md`, případně `Untitled 2.md` atd., a otevře jej. Existující soubory se nepřepisují. Při skrytém panelu nebo bez vybrané složky zůstává nový dokument nepojmenovaný.
 - Jeden klik otevře soubor v současném editoru. U neuložených změn dialog nabídne **Save**, **Discard** a **Cancel**. Zrušení ukládání nebo chyba ponechá aktuální dokument otevřený.
 - Aktivní soubor je zvýrazněný. Tlačítko obnovení znovu načte obsah kořenové složky; skrytí panelu zachová vybranou složku i rozbalení.
 

@@ -30,6 +30,9 @@ function AppContent() {
     activeCodeBlockLanguage,
     handleToggleCodeBlock,
     handleSetCodeBlockLanguage,
+    selectedBrowserFolder,
+    handleSelectBrowserFolder,
+    folderRefresh,
     isBrowserVisible,
     handleToggleBrowser,
     isOutlineVisible,
@@ -67,6 +70,9 @@ function AppContent() {
       <div className="workspace-main">
         <FolderSidebar
           visible={isBrowserVisible}
+          selectedFolder={selectedBrowserFolder}
+          onSelectFolder={handleSelectBrowserFolder}
+          folderRefresh={folderRefresh}
           currentFilePath={currentFilePath}
           onOpenFile={handleOpenBrowserFile}
         />

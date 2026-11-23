@@ -50,3 +50,8 @@ commands.allow = ["open_folder_dialog"]
 identifier = "allow-list-markdown-directory"
 description = "Allows listing subdirectories and Markdown files."
 commands.allow = ["list_markdown_directory"]
+
+[[permission]]
+identifier = "allow-create-markdown-document"
+description = "Allows creating a new empty Markdown document without overwriting files."
+commands.allow = ["create_markdown_document"]

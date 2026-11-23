@@ -865,3 +865,13 @@ body {
 }
 .toolbar-overflow-panel .toolbar-item { max-width: 100%; }
 .toolbar-overflow-panel select { max-width: 100%; }
+.folder-root {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.folder-root.selected { background: var(--color-btn-active-bg); border-color: #d4e2f5; color: #1f4d86; }

@@ -74,6 +74,9 @@ export interface EditorController {
   activeCodeBlockLanguage: string | null;
   handleToggleCodeBlock: () => void;
   handleSetCodeBlockLanguage: (language: string) => void;
+  selectedBrowserFolder: string | null;
+  handleSelectBrowserFolder: (path: string) => void;
+  folderRefresh: { path: string; version: number } | null;
   isBrowserVisible: boolean;
   handleToggleBrowser: () => void;
   isOutlineVisible: boolean;
@@ -87,6 +90,9 @@ export function useEditorController(): EditorController {
   const browserSwitchInFlight = useRef(false);
   const closeConfirmInFlightRef = useRef(false);
   const startupReopenDoneRef = useRef(false);
+  const [selectedBrowserFolder, setSelectedBrowserFolder] = useState<string | null>(null);
+  const [folderRefresh, setFolderRefresh] = useState<{ path: string; version: number } | null>(null);
+  const handleSelectBrowserFolder = useCallback((path: string) => setSelectedBrowserFolder(path), []);
   const [isBrowserVisible, setIsBrowserVisible] = useState(false);
   const handleToggleBrowser = useCallback(() => setIsBrowserVisible((visible) => !visible), []);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
@@ -149,8 +155,16 @@ export function useEditorController(): EditorController {
   const { isDragOver } = useDragDropHandler(actionContext);
 
   const handleNew = useCallback(async () => {
-    await runNewAction(actionContext);
-  }, [actionContext]);
+    if (browserSwitchInFlight.current) return;
+    browserSwitchInFlight.current = true;
+    try {
+      const folder = isBrowserVisible ? selectedBrowserFolder : null;
+      const path = await runNewAction(actionContext, folder);
+      if (path && folder) setFolderRefresh((previous) => ({ path: folder, version: (previous?.version ?? 0) + 1 }));
+    } finally {
+      browserSwitchInFlight.current = false;
+    }
+  }, [actionContext, isBrowserVisible, selectedBrowserFolder]);
 
   const handleOpenRecent = useCallback(
     async (path: string) => {
@@ -581,6 +595,9 @@ export function useEditorController(): EditorController {
       activeCodeBlockLanguage,
       handleToggleCodeBlock,
       handleSetCodeBlockLanguage,
+      selectedBrowserFolder,
+      handleSelectBrowserFolder,
+      folderRefresh,
       isBrowserVisible,
       handleToggleBrowser,
       isOutlineVisible: persistedState.ui.isOutlineVisible,
@@ -611,6 +628,9 @@ export function useEditorController(): EditorController {
       isDragOver,
       persistedState.recentFiles,
       persistedState.ui.isOutlineVisible,
+      selectedBrowserFolder,
+      handleSelectBrowserFolder,
+      folderRefresh,
       isBrowserVisible,
       handleToggleBrowser,
       persistedState.ui.outlineSidebarWidth,

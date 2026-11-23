@@ -17,7 +17,8 @@
     "test:pdf": "node --test scripts/pdf-export.test.mjs",
     "test:mermaid": "node --test scripts/mermaid-preview.test.mjs",
     "test:documents": "node --test scripts/document-switch.test.mjs",
-    "test:toolbar": "node --test scripts/toolbar.test.mjs"
+    "test:toolbar": "node --test scripts/toolbar.test.mjs",
+    "test:new-document": "node --test scripts/new-document.test.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

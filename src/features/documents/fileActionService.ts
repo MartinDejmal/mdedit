@@ -1,3 +1,4 @@
+import { createMarkdownDocument } from "../../services/tauriBridge";
 import {
   loadAppState,
   pushRecentFile,
@@ -88,8 +89,12 @@ export async function runOpenAction(
   }
 }
 
-export async function runNewAction(context: FileActionContext): Promise<void> {
+export async function runNewAction(context: FileActionContext, folder: string | null = null): Promise<string | undefined> {
   try {
+    const html = context.getEditorHtml();
+    if (html !== null && useDocumentStore.getState().hasActiveDocument) {
+      await context.reconcileCanonicalFromEditorHtml(html);
+    }
     const { isDirty } = useDocumentStore.getState();
 
     if (isDirty) {
@@ -99,12 +104,22 @@ export async function runNewAction(context: FileActionContext): Promise<void> {
       }
     }
 
+    if (folder) {
+      const path = await createMarkdownDocument(folder);
+      const opened = await openDocumentFromPath(path);
+      if (opened.kind !== "opened" || opened.html === undefined) {
+        throw new Error(opened.message ?? "Could not open the new document.");
+      }
+      context.setEditorHtml(opened.html);
+      context.onStateChanged(pushRecentFile(path));
+      return path;
+    }
     const result = createNewUntitledDocument();
     context.setEditorHtml(result.html);
   } catch (error) {
     context.notify.error({
       title: "New document failed",
-      message: error instanceof Error ? error.message : "Unknown error.",
+      message: error instanceof Error ? error.message : typeof error === "string" ? error : "Unknown error.",
     });
   }
 }

@@ -6,6 +6,9 @@ import type { DirectoryEntry } from "../types";
 
 interface FolderSidebarProps {
   visible: boolean;
+  selectedFolder: string | null;
+  onSelectFolder: (path: string) => void;
+  folderRefresh: { path: string; version: number } | null;
   currentFilePath: string | null;
   onOpenFile: (path: string) => Promise<void>;
 }
@@ -16,7 +19,7 @@ interface FolderState {
   error?: string;
 }
 
-export default function FolderSidebar({ visible, currentFilePath, onOpenFile }: FolderSidebarProps) {
+export default function FolderSidebar({ visible, selectedFolder, onSelectFolder, folderRefresh, currentFilePath, onOpenFile }: FolderSidebarProps) {
   const [root, setRoot] = useState<string | null>(null);
   const [folders, setFolders] = useState<Record<string, FolderState>>({});
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -39,6 +42,15 @@ export default function FolderSidebar({ visible, currentFilePath, onOpenFile }: 
     }
   };
 
+  useEffect(() => {
+    if (!folderRefresh || !root) return;
+    const normalize = (path: string) => path.replace(/\\/g, "/").replace(/\/+$/, "");
+    const folder = folderRefresh.path;
+    if (normalize(folder) !== normalize(root) && !normalize(folder).startsWith(normalize(root) + "/")) return;
+    setExpanded((state) => new Set([...state, folder]));
+    void loadFolder(folder);
+  }, [folderRefresh]);
+
   const chooseFolder = async () => {
     if (busy.current) return;
     busy.current = true;
@@ -49,6 +61,7 @@ export default function FolderSidebar({ visible, currentFilePath, onOpenFile }: 
       if (!path) return;
       const version = ++generation.current;
       setRoot(path);
+      onSelectFolder(path);
       setFolders({});
       setExpanded(new Set());
       await loadFolder(path, version);
@@ -73,6 +86,7 @@ export default function FolderSidebar({ visible, currentFilePath, onOpenFile }: 
   };
 
   const toggleFolder = (path: string) => {
+    onSelectFolder(path);
     const opening = !expanded.has(path);
     setExpanded((state) => {
       const next = new Set(state);
@@ -95,13 +109,17 @@ export default function FolderSidebar({ visible, currentFilePath, onOpenFile }: 
           <li key={entry.path}>
             <button
               type="button"
-              className={`folder-tree-item ${entry.path === currentFilePath ? "active" : ""}`}
+              className={`folder-tree-item ${entry.path === currentFilePath || (entry.isDirectory && entry.path === selectedFolder) ? "active" : ""}`}
               style={{ paddingLeft: 8 + depth * 16 }}
               title={entry.path}
               aria-expanded={entry.isDirectory ? expanded.has(entry.path) : undefined}
+              aria-pressed={entry.isDirectory ? selectedFolder === entry.path : undefined}
               aria-current={!entry.isDirectory && entry.path === currentFilePath ? "page" : undefined}
               disabled={!entry.isDirectory && switching}
-              onClick={() => entry.isDirectory ? toggleFolder(entry.path) : void openFile(entry.path)}
+              onClick={() => {
+                if (entry.isDirectory) toggleFolder(entry.path);
+                else { onSelectFolder(path); void openFile(entry.path); }
+              }}
             >
               {entry.isDirectory ? <>
                 {expanded.has(entry.path) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -133,7 +151,7 @@ export default function FolderSidebar({ visible, currentFilePath, onOpenFile }: 
       </div>
       {error ? <p className="folder-message" role="alert">{error}</p> : null}
       {root ? <>
-        <div className="folder-root" title={root}><FolderOpen size={16} /><strong>{basename(root) || root}</strong></div>
+        <button type="button" className={`folder-root ${selectedFolder === root ? "selected" : ""}`} title={root} aria-pressed={selectedFolder === root} onClick={() => onSelectFolder(root)}><FolderOpen size={16} /><strong>{basename(root) || root}</strong></button>
         <nav aria-label="Markdown files" aria-busy={switching}>{renderFolder(root, 0)}</nav>
       </> : <div className="folder-message">
         <p>Choose a folder to browse its Markdown files.</p>

@@ -18,7 +18,7 @@ struct FileMetadata {
 }
 
 mod folder_browser;
-use folder_browser::{markdown_directory_entries, DirectoryEntry};
+use folder_browser::{create_markdown_file, markdown_directory_entries, DirectoryEntry};
 
 #[tauri::command]
 async fn open_folder_dialog() -> Option<String> {
@@ -33,6 +33,15 @@ async fn open_folder_dialog() -> Option<String> {
 async fn list_markdown_directory(path: String) -> Result<Vec<DirectoryEntry>, String> {
     tauri::async_runtime::spawn_blocking(move || {
         markdown_directory_entries(std::path::Path::new(&path))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn create_markdown_document(folder: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        create_markdown_file(std::path::Path::new(&folder))
     })
     .await
     .map_err(|e| e.to_string())?
@@ -161,6 +170,7 @@ pub fn run() {
             open_file_dialog,
             open_folder_dialog,
             list_markdown_directory,
+            create_markdown_document,
             read_text_file,
             save_text_file,
             save_file_dialog,

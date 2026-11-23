@@ -122,3 +122,7 @@ export async function openFolderDialog(): Promise<string | null> {
 export async function listMarkdownDirectory(path: string): Promise<DirectoryEntry[]> {
   return invoke("list_markdown_directory", { path });
 }
+
+export async function createMarkdownDocument(folder: string): Promise<string> {
+  return invoke("create_markdown_document", { folder });
+}
