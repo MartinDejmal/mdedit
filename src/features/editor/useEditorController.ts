@@ -189,6 +189,15 @@ export function useEditorController(): EditorController {
     if (browserSwitchInFlight.current) return useDocumentStore.getState().currentFilePath;
     browserSwitchInFlight.current = true;
     try {
+      // A directory can legally end in .md. Confirm its filesystem type before
+      // opening as a document, including when a cached row is out of date.
+      const metadata = await bridge.getFileMetadata(path).catch(() => null);
+      if (metadata?.isDirectory) {
+        setSelectedBrowserFolder(path);
+        setBrowserLocation(previous => ({ path, version: (previous?.version ?? 0) + 1 }));
+        setIsBrowserVisible(true);
+        return useDocumentStore.getState().currentFilePath;
+      }
       await runOpenBrowserAction(path, {
         ...actionContext,
         setEditorHtml: (html) => {

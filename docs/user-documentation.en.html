@@ -98,7 +98,7 @@ tr{break-inside:avoid}
 </section>
 
 <section id="browser"><h2>File browser: folders and file operations</h2>
-<p>Open Files using the first toolbar button or <strong>View → Toggle file browser</strong>. If a saved file is open, the browser starts in its directory. Otherwise choose a folder using <strong>Open folder / Choose folder</strong>. The tree displays subfolders and only <code>.md</code> files, including <code>.MD</code>. Open <code>.markdown</code> and <code>.txt</code> through File → Open; they do not appear in the tree. Symbolic links are not displayed.</p>
+<p>Open Files using the first toolbar button or <strong>View → Toggle file browser</strong>. If a saved file is open, the browser starts in its directory. Otherwise choose a folder using <strong>Open folder / Choose folder</strong>. The tree displays subfolders and only <code>.md</code> files, including <code>.MD</code>. Open <code>.markdown</code> and <code>.txt</code> through File → Open; they do not appear in the tree. Symbolic links are not displayed. Folders named notes.md or .md remain directories: expand them and create documents inside them normally. Filesystem metadata determines their type, not the suffix; even a stale file-like row cannot open a directory as Markdown.</p>
 <ul><li>Click a folder to select it and expand/collapse it. Click the root row to select the root. The selected directory is the destination for New and New folder.</li>
 <li><strong>Parent folder</strong> moves the entire tree one directory up; it is disabled at a drive/share root. <strong>Refresh folder</strong> reloads the tree.</li>
 <li><strong>New folder</strong> asks for a name and creates a directory inside the selected folder. Existing destinations are never replaced.</li>

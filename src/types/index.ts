@@ -2,6 +2,7 @@
 
 /** Native file metadata fetched from Tauri backend. */
 export interface FileMetadata {
+  isDirectory: boolean;
   /** Last-modified timestamp in Unix epoch milliseconds. */
   modifiedMs: number | null;
 }

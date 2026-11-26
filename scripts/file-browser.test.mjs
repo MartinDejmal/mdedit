@@ -18,7 +18,9 @@ test("file browser navigates, renames, moves, creates folders and confirms delet
       const callbacks = new Map();
       window.menus = new Map();
       window.files = { '/work/a.md': 'Original text', '/work/dest/c.md': 'Keep target' };
-      window.directories = new Set(['/', '/work', '/work/dest']);
+      window.directories = new Set(['/', '/work', '/work/dest', '/work/notes.md', '/work/.md', '/work/stale.md']);
+      files['/work/notes.md/inside.md'] = 'Inside';
+      files['/work/.md/hidden.md'] = 'Hidden';
       window.created = [];
       window.failCreation = false;
       window.activateNew = () => {
@@ -44,7 +46,7 @@ test("file browser navigates, renames, moves, creates folders and confirms delet
           if (command === 'open_folder_dialog') return '/work/dest';
           if (command === 'list_markdown_directory') {
             const parent = path => path.slice(0, path.lastIndexOf('/')) || '/';
-            return [...directories].filter(path => path !== args.path && parent(path) === args.path).map(path => ({ path, name: path.split('/').pop(), isDirectory: true }))
+            return [...directories].filter(path => path !== args.path && parent(path) === args.path).map(path => ({ path, name: path.split('/').pop(), isDirectory: path !== '/work/stale.md' }))
               .concat(Object.keys(files).filter(path => parent(path) === args.path).map(path => ({ path, name: path.split('/').pop(), isDirectory: false })));
           }
           if (command === 'relocate_markdown_document') {
@@ -68,7 +70,7 @@ test("file browser navigates, renames, moves, creates folders and confirms delet
             return path;
           }
           if (command === 'read_text_file') return files[args.path];
-          if (command === 'get_file_metadata') return { modifiedMs: 1 };
+          if (command === 'get_file_metadata') return { modifiedMs: 1, isDirectory: directories.has(args.path) };
           throw new Error('Unsupported mock: ' + command);
         },
       };
@@ -84,6 +86,19 @@ test("file browser navigates, renames, moves, creates folders and confirms delet
     await waitPath('/work/a.md');
     await page.getByRole('button', { name: 'Toggle file browser', exact: true }).click();
     await page.getByRole('button', { name: 'work', exact: true }).waitFor();
+    await row('/work/notes.md').click();
+    await row('/work/notes.md/inside.md').waitFor();
+    assert.equal(await row('/work/notes.md').getAttribute('aria-expanded'), 'true');
+    await row('/work/.md').click();
+    await row('/work/.md/hidden.md').waitFor();
+    assert.equal(await page.locator('.status-path').getAttribute('title'), '/work/a.md');
+    assert.equal(await dialog.count(), 0, 'folders never open a document or save dialog');
+    // A stale file-like row is reclassified from actual filesystem metadata.
+    await row('/work/stale.md').click();
+    await page.getByRole('button', { name: 'stale.md', exact: true }).waitFor();
+    assert.equal(await page.locator('.status-path').getAttribute('title'), '/work/a.md');
+    await page.getByRole('button', { name: 'Parent folder', exact: true }).click();
+    await row('/work/a.md').waitFor();
     await row('/work/a.md').click();
     await dialog.getByRole('textbox').fill('renamed.md');
     await dialog.getByRole('button', { name: 'Rename', exact: true }).click();
@@ -106,7 +121,7 @@ test("file browser navigates, renames, moves, creates folders and confirms delet
     await page.getByRole('menuitem', { name: 'Rename…', exact: true }).click();
     await dialog.getByRole('textbox').fill('c.md');
     await dialog.getByRole('button', { name: 'Rename', exact: true }).click();
-    await page.getByText('Destination already exists', { exact: true }).waitFor();
+    await page.getByText('Destination already exists', { exact: true }).waitFor({ timeout: 5000 });
     assert.equal(await page.locator('.status-path').getAttribute('title'), '/work/dest/renamed.md');
     await row('/work/dest/renamed.md').click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Delete…', exact: true }).click();

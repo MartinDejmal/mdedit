@@ -10,6 +10,9 @@ pub struct DirectoryEntry {
 
 // Read one level at a time. Do not follow symlinks into cycles or outside the tree.
 pub fn markdown_directory_entries(path: &std::path::Path) -> Result<Vec<DirectoryEntry>, String> {
+    if !path.is_dir() {
+        return Err("Select an existing directory, including directories whose names end in .md.".into());
+    }
     let mut entries = Vec::new();
     for entry in std::fs::read_dir(path).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
@@ -234,6 +237,28 @@ mod tests {
                 .len(),
             1
         );
+    }
+
+    #[test]
+    fn markdown_named_directories_remain_directories() {
+        let root = Fixture::new();
+        for name in ["notes.md", ".md", "UPPER.MD"] {
+            let folder = root.0.join(name);
+            std::fs::create_dir(&folder).unwrap();
+            let file = create_markdown_file(&folder).unwrap();
+            assert!(std::path::Path::new(&file).is_file());
+            let children = markdown_directory_entries(&folder).unwrap();
+            assert_eq!(children.len(), 1);
+            assert!(!children[0].is_directory);
+            assert!(delete_markdown_file(&folder).is_err());
+            assert!(folder.is_dir());
+        }
+        let entries = markdown_directory_entries(&root.0).unwrap();
+        assert_eq!(entries.len(), 3);
+        assert!(entries.iter().all(|entry| entry.is_directory));
+        let file = root.0.join("regular.md");
+        std::fs::write(&file, "text").unwrap();
+        assert!(markdown_directory_entries(&file).is_err());
     }
 
     #[test]

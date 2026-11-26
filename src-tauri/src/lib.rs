@@ -14,6 +14,7 @@ use std::time::UNIX_EPOCH;
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct FileMetadata {
+    is_directory: bool,
     modified_ms: Option<u64>,
 }
 
@@ -208,7 +209,10 @@ async fn get_file_metadata(path: String) -> Result<FileMetadata, String> {
         .and_then(|m| m.duration_since(UNIX_EPOCH).ok())
         .map(|d| d.as_millis() as u64);
 
-    Ok(FileMetadata { modified_ms })
+    Ok(FileMetadata {
+        modified_ms,
+        is_directory: metadata.is_dir(),
+    })
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

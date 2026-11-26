@@ -19,7 +19,7 @@ The English user guide is bundled in the application alongside Czech help. Contr
 
 - Otevření `.md`, `.markdown`, `.txt`, drag-and-drop z OS, argument při spuštění a Recent Files s obnovou posledního dokumentu.
 - New vytvoří při otevřeném filebrowseru prázdný `Untitled.md` ve vybrané složce; kolize řeší číslováním. Jinak vznikne nepojmenovaný dokument. Save a Save As jsou explicitní, nikoli průběžný autosave.
-- Filebrowser zobrazuje složky a `.md` soubory; při otevření se nastaví podle aktuálního souboru. Umí posun kořene výše, novou složku, přejmenování klikem na vybraný řádek/F2, přesun tažením a trvalé smazání s potvrzením. Kontextové menu nabízí stejné souborové akce. Existující cíle se nepřepisují.
+- Filebrowser zobrazuje složky (včetně názvů `notes.md` a `.md`) a `.md` soubory; při otevření se nastaví podle aktuálního souboru. Umí posun kořene výše, novou složku, přejmenování klikem na vybraný řádek/F2, přesun tažením a trvalé smazání s potvrzením. Kontextové menu nabízí stejné souborové akce. Existující cíle se nepřepisují.
 - Přesun a přejmenování zachovávají neuložený text otevřeného souboru a aktualizují cestu pro Save. Operace s celými složkami nad rámec vytvoření/navigace nejsou implementované.
 - Samostatný Outline za filebrowserem s navigací podle nadpisů a zapamatovanou šířkou.
 - Settings sdružuje vzhled System/Light/Dark a fonty; volby se pamatují mezi spuštěními.
