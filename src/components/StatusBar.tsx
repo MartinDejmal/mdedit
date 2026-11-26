@@ -7,6 +7,7 @@ import { useDocumentStatistics } from "../features/editor/useDocumentStatistics"
 import { basename } from "../lib/utils";
 
 interface StatusBarProps {
+  source?: { text: string; cursor: number };
   editor: Editor | null;
   markdown: string;
   isDirty: boolean;
@@ -16,6 +17,7 @@ interface StatusBarProps {
 }
 
 export default function StatusBar({
+  source,
   editor,
   markdown,
   isDirty,
@@ -23,7 +25,14 @@ export default function StatusBar({
   hasActiveDocument,
   hasExternalChangeWarning,
 }: StatusBarProps) {
-  const statistics = useDocumentStatistics(editor);
+  const renderedStatistics = useDocumentStatistics(editor);
+  const statistics = useMemo(() => {
+    if (!source) return renderedStatistics;
+    const text = source.text.replace(/\r\n?/g, "\n");
+    const prefix = source.text.slice(0, source.cursor).replace(/\r\n?/g, "\n").split("\n");
+    return { lines: text.split("\n").length, words: (text.match(/[\p{L}\p{M}\p{N}]+(?:['’][\p{L}\p{M}\p{N}]+)*/gu) ?? []).length,
+      characters: Array.from(text).length, line: prefix.length, column: Array.from(prefix[prefix.length - 1]).length + 1 };
+  }, [source?.text, source?.cursor, renderedStatistics]);
   const byteSize = useMemo(() => new TextEncoder().encode(markdown).byteLength, [markdown]);
   const filename = filePath
     ? basename(filePath)

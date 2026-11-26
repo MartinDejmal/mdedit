@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { closeHistory } from "@tiptap/pm/history";
-import { searchDocument, searchKey, replacementText } from "../features/editor/search";
+import { searchDocument, searchText, searchKey, replacementText } from "../features/editor/search";
 
 export function openFind(replace = false) { window.dispatchEvent(new CustomEvent("mdedit:find", { detail: replace })); }
 
-export default function FindBar({ editor, enabled, filePath }: { editor: Editor | null; enabled: boolean; filePath: string | null }) {
+export default function FindBar({ editor, enabled, filePath, source }: { editor: Editor | null; enabled: boolean; filePath: string | null; source?: { text: string; onChange: (text: string) => void } }) {
   const [open, setOpen] = useState(false);
   const [replace, setReplace] = useState(false);
   const [query, setQuery] = useState("");
@@ -15,11 +15,11 @@ export default function FindBar({ editor, enabled, filePath }: { editor: Editor 
   const [revision, setRevision] = useState(0);
   const [active, setActive] = useState(0);
   const input = useRef<HTMLInputElement>(null);
-  const result = editor && open && enabled ? searchDocument(editor.state.doc, query, regex, matchCase) : { matches: [], error: "" };
+  const result = editor && open && enabled ? source ? searchText(source.text, query, regex, matchCase) : searchDocument(editor.state.doc, query, regex, matchCase) : { matches: [], error: "" };
   const index = result.matches.length ? Math.min(active, result.matches.length - 1) : 0;
-  const close = () => { setOpen(false); editor?.commands.focus(); };
+  const close = () => { setOpen(false); if (source) document.querySelector<HTMLTextAreaElement>(".source-editor")?.focus(); else editor?.commands.focus(); };
 
-  useEffect(() => { setOpen(false); }, [filePath]);
+  useEffect(() => { setOpen(false); }, [filePath, Boolean(source)]);
   useEffect(() => {
     const show = (event: Event) => {
       if (!enabled || document.querySelector("dialog[open]")) return;
@@ -45,15 +45,27 @@ export default function FindBar({ editor, enabled, filePath }: { editor: Editor 
   }, [editor]);
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    editor.view.dispatch(editor.state.tr.setMeta(searchKey, { matches: result.matches, active: index }));
-    if (open && result.matches[index]) {
+    editor.view.dispatch(editor.state.tr.setMeta(searchKey, { matches: source ? [] : result.matches, active: index }));
+    if (open && source && result.matches[index]) {
+      const node = document.querySelector<HTMLTextAreaElement>(".source-editor");
+      const match = result.matches[index];
+      node?.setSelectionRange(match.from, match.to);
+      if (node) node.scrollTop = Math.max(0, (source.text.slice(0, match.from).split("\n").length - 3) * parseFloat(getComputedStyle(node).lineHeight));
+    } else if (open && !source && result.matches[index]) {
       editor.chain().setTextSelection({ from: result.matches[index].from, to: result.matches[index].to }).scrollIntoView().run();
     }
     // Recompute decorations on content/search changes, not on selection-only transactions.
-  }, [editor, open, enabled, query, regex, matchCase, active, revision]);
+  }, [editor, open, enabled, query, regex, matchCase, active, revision, source?.text, Boolean(source)]);
 
   function replaceMatches(all: boolean) {
     if (!editor || !result.matches.length) return;
+    if (source) {
+      let text = source.text;
+      const matches = all ? result.matches : [result.matches[index]];
+      for (const match of [...matches].reverse()) text = text.slice(0, match.from) + replacementText(match, replacement, regex) + text.slice(match.to);
+      source.onChange(text);
+      return;
+    }
     let tr = closeHistory(editor.state.tr);
     const matches = all ? result.matches : [result.matches[index]];
     for (const match of [...matches].reverse()) tr = tr.insertText(replacementText(match, replacement, regex), match.from, match.to);

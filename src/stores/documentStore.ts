@@ -77,6 +77,7 @@ export const useDocumentStore = create<DocumentStore>((set) => ({
       hasActiveDocument: true,
       activeDocument: {
         ...state.activeDocument,
+        rawLoadedContent: canonicalMarkdown,
         kind: path ? "file" : "untitled",
         path,
         name: path ? basename(path) : null,

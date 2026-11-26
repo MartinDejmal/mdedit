@@ -24,24 +24,31 @@ export const SearchHighlights = Extension.create({
   },
 });
 
-export function searchDocument(doc: Node, query: string, regex: boolean, matchCase: boolean): { matches: SearchMatch[]; error: string } {
+export function searchText(text: string, query: string, regex: boolean, matchCase: boolean): { matches: SearchMatch[]; error: string } {
   if (!query) return { matches: [], error: "" };
   let expression: RegExp;
   try { expression = new RegExp(regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), matchCase ? "gu" : "giu"); }
   catch (error) { return { matches: [], error: error instanceof Error ? error.message : "Invalid regular expression" }; }
   const matches: SearchMatch[] = [];
+  for (const match of text.matchAll(expression)) {
+    if (!match[0].length) continue;
+    matches.push({ from: match.index!, to: match.index! + match[0].length, value: match[0], captures: match.slice(1), groups: match.groups });
+  }
+  return { matches, error: "" };
+}
+
+export function searchDocument(doc: Node, query: string, regex: boolean, matchCase: boolean): { matches: SearchMatch[]; error: string } {
+  const matches: SearchMatch[] = [];
+  let error = "";
   doc.descendants((node, pos) => {
     if (!node.isTextblock) return;
     const text = node.textBetween(0, node.content.size, "", leaf => leaf.type.name === "hardBreak" ? "\n" : "\ufffc");
-    for (const match of text.matchAll(expression)) {
-      // Ignore empty matches; anchors/lookarounds alone must not loop or insert forever.
-      if (!match[0].length) continue;
-      matches.push({ from: pos + 1 + match.index!, to: pos + 1 + match.index! + match[0].length,
-        value: match[0], captures: match.slice(1), groups: match.groups });
-    }
+    const result = searchText(text, query, regex, matchCase);
+    error = result.error;
+    matches.push(...result.matches.map(match => ({ ...match, from: match.from + pos + 1, to: match.to + pos + 1 })));
     return false;
   });
-  return { matches, error: "" };
+  return { matches, error };
 }
 
 export function replacementText(match: SearchMatch, value: string, regex: boolean) {

@@ -53,6 +53,8 @@ jobs:
         run: |
           npm run test:help
           npm run test:statistics
+          npm run test:search
+          npm run test:source
           npm run test:zoom
           npm run test:documents
           npm run test:file-browser

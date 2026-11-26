@@ -1,3 +1,5 @@
+import { useSourceBuffer } from "./useSourceBuffer";
+import { parseMarkdownToEditorContent } from "../../services/markdownService";
 import { openFind } from "../../components/FindBar";
 import type { HelpView } from "../../components/HelpDialog";
 import { EditorState } from "@tiptap/pm/state";
@@ -28,7 +30,7 @@ import {
   runOpenFromArgAction,
   createDiscardChangesConfirmOptions,
 } from "../documents/fileActionService";
-import { reconcileCanonicalFromEditorHtml } from "../documents/documentService";
+import { reconcileCanonicalFromEditorHtml, registerEditorProjection } from "../documents/documentService";
 import {
   getActiveCodeBlockLanguage,
   insertImage,
@@ -59,6 +61,16 @@ function buildWindowTitle(params: {
   return `${prefix}${basename(path ?? "")} - ${APP_NAME}`;
 }
 export interface EditorController {
+  sourceMode: boolean;
+  sourceText: string;
+  sourceDocumentRevision: number;
+  sourceCanUndo: boolean;
+  sourceCanRedo: boolean;
+  changeSource: (text: string) => void;
+  undoSource: () => void;
+  redoSource: () => void;
+  toggleSource: () => Promise<void>;
+  switchingMode: boolean;
   activeDialog: HelpView | "settings";
   showSettings: () => void;
   appearanceSettings: AppearanceSettings;
@@ -97,6 +109,9 @@ export interface EditorController {
 }
 
 export function useEditorController(): EditorController {
+  const source = useSourceBuffer();
+  const modeTicket = useRef(0);
+  const [switchingMode, setSwitchingMode] = useState(false);
   const [activeDialog, setActiveDialog] = useState<HelpView | "settings">(null);
   const showSettings = useCallback(() => {
     if (!document.querySelector("dialog[open]")) setActiveDialog("settings");
@@ -144,7 +159,7 @@ export function useEditorController(): EditorController {
     extensions: createEditorExtensions(),
     content: "",
     onUpdate: ({ editor: nextEditor }) => {
-      if (isApplyingRemoteContent.current) return;
+      if (isApplyingRemoteContent.current || source.modeRef.current) return;
 
       void reconcileCanonicalFromEditorHtml(nextEditor.getHTML());
     },
@@ -153,6 +168,7 @@ export function useEditorController(): EditorController {
   const setEditorHtml = useCallback(
     (html: string) => {
       if (!editor) return;
+      modeTicket.current++;
       isApplyingRemoteContent.current = true;
       editor.commands.setContent(html, true);
       // Undo must start with user edits in this document, not loading a file or
@@ -162,10 +178,39 @@ export function useEditorController(): EditorController {
         selection: editor.state.selection, plugins: editor.state.plugins,
       }));
       isApplyingRemoteContent.current = false;
-      editor.commands.focus("start");
+      if (source.modeRef.current) {
+        const state = useDocumentStore.getState();
+        source.reset(state.isDirty ? state.currentCanonicalMarkdown : state.activeDocument.rawLoadedContent);
+      } else editor.commands.focus("start");
     },
-    [editor]
+    [editor, source.modeRef, source.reset]
   );
+
+  const toggleSource = useCallback(async () => {
+    if (!editor || !useDocumentStore.getState().hasActiveDocument || switchingMode || document.querySelector("dialog[open]")) return;
+    const ticket = ++modeTicket.current;
+    setSwitchingMode(true);
+    try {
+      if (!source.modeRef.current) {
+        const doc = editor.state.doc;
+        await reconcileCanonicalFromEditorHtml(editor.getHTML());
+        if (ticket !== modeTicket.current || editor.state.doc !== doc) return;
+        const state = useDocumentStore.getState();
+        source.reset(state.isDirty ? state.currentCanonicalMarkdown : state.activeDocument.rawLoadedContent);
+        source.setMode(true);
+      } else {
+        const markdown = source.textRef.current;
+        const parsed = await parseMarkdownToEditorContent(markdown);
+        if (ticket !== modeTicket.current || markdown !== source.textRef.current) return;
+        setEditorHtml(parsed.editorContent);
+        registerEditorProjection(editor.getHTML(), markdown);
+        source.setMode(false);
+        editor.commands.focus("start");
+      }
+    } catch (error) {
+      notify.error({ title: "Could not switch editor mode", message: String(error) });
+    } finally { setSwitchingMode(false); }
+  }, [editor, switchingMode, setEditorHtml, source.modeRef, source.textRef, source.reset, source.setMode, notify]);
 
   const confirmDiscardUnsavedChanges = useCallback(async () => {
     return confirm(createDiscardChangesConfirmOptions());
@@ -175,12 +220,13 @@ export function useEditorController(): EditorController {
     () => ({
       getEditorHtml: () => editor?.getHTML() ?? null,
       setEditorHtml,
-      reconcileCanonicalFromEditorHtml,
+      reconcileCanonicalFromEditorHtml: (html: string) => source.modeRef.current
+        ? Promise.resolve(useDocumentStore.getState().currentCanonicalMarkdown) : reconcileCanonicalFromEditorHtml(html),
       confirmDiscardChanges: () => confirmDiscardUnsavedChanges(),
       notify,
       onStateChanged: setPersistedState,
     }),
-    [confirmDiscardUnsavedChanges, editor, notify, setEditorHtml]
+    [confirmDiscardUnsavedChanges, editor, notify, setEditorHtml, source.modeRef]
   );
 
   const browserOperations = useBrowserFileOperations(actionContext, browserSwitchInFlight);
@@ -254,13 +300,18 @@ export function useEditorController(): EditorController {
     await runSaveAsAction(actionContext);
   }, [actionContext]);
 
+  const exportContext = useCallback(async () => {
+    if (!source.modeRef.current) return actionContext;
+    const { editorContent } = await parseMarkdownToEditorContent(source.textRef.current);
+    return { ...actionContext, getEditorHtml: () => editorContent };
+  }, [actionContext, source.modeRef, source.textRef]);
   const handleExportHtml = useCallback(async () => {
-    await runExportHtmlAction(actionContext);
-  }, [actionContext]);
+    await runExportHtmlAction(await exportContext());
+  }, [exportContext]);
 
   const handleExportPdf = useCallback(async () => {
-    await runExportPdfAction(actionContext);
-  }, [actionContext]);
+    await runExportPdfAction(await exportContext());
+  }, [exportContext]);
 
   const handleInsertLink = useCallback(async () => {
     if (!editor) return;
@@ -371,6 +422,11 @@ export function useEditorController(): EditorController {
       if (!mod) return;
 
       const key = event.key.toLowerCase();
+      if (source.modeRef.current && (key === "z" || key === "y") && !(event.target instanceof HTMLInputElement)) {
+        event.preventDefault();
+        if (key === "y" || event.shiftKey) source.redo(); else source.undo();
+        return;
+      }
 
       if (key === "n" && !event.shiftKey) {
         event.preventDefault();
@@ -392,7 +448,7 @@ export function useEditorController(): EditorController {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleNew, handleOpen, handleReload, handleSave, handleSaveAs, showHelp, activeDialog]);
+  }, [handleNew, handleOpen, handleReload, handleSave, handleSaveAs, showHelp, activeDialog, source.modeRef, source.undo, source.redo]);
 
   useEffect(() => {
     let disposed = false;
@@ -470,8 +526,8 @@ export function useEditorController(): EditorController {
           text: "Edit",
           enabled: activeDialog === null,
           items: [
-            await PredefinedMenuItem.new({ item: "Undo" }),
-            await PredefinedMenuItem.new({ item: "Redo" }),
+            { id: "edit-undo", text: "Undo", accelerator: "CmdOrCtrl+Z", action: () => { if (document.activeElement instanceof HTMLInputElement) document.execCommand("undo"); else if (source.modeRef.current) source.undo(); else editor?.commands.undo(); } },
+            { id: "edit-redo", text: "Redo", accelerator: "CmdOrCtrl+Shift+Z", action: () => { if (document.activeElement instanceof HTMLInputElement) document.execCommand("redo"); else if (source.modeRef.current) source.redo(); else editor?.commands.redo(); } },
             await PredefinedMenuItem.new({ item: "Separator" }),
             { id: "edit-find", text: "Find…", accelerator: "CmdOrCtrl+F", action: () => openFind() },
             { id: "edit-replace", text: "Find and Replace…", accelerator: "CmdOrCtrl+H", action: () => openFind(true) },
@@ -501,6 +557,7 @@ export function useEditorController(): EditorController {
                 handleToggleOutline();
               },
             }),
+            await CheckMenuItem.new({ id: "view-source", text: "Markdown source", checked: source.mode, enabled: hasActiveDocument, action: () => void toggleSource() }),
             { id: "view-settings", text: "Settings…", action: showSettings },
           ],
         });
@@ -534,6 +591,7 @@ export function useEditorController(): EditorController {
     showHelp,
     showAbout,
     showSettings,
+    source.mode, source.modeRef, source.undo, source.redo, toggleSource, hasActiveDocument,
     activeDialog,
     currentFilePath,
     handleNew,
@@ -666,6 +724,9 @@ export function useEditorController(): EditorController {
 
   return useMemo(
     () => ({
+      sourceMode: source.mode, sourceText: source.text, sourceDocumentRevision: source.documentRevision,
+      sourceCanUndo: source.canUndo, sourceCanRedo: source.canRedo,
+      changeSource: source.change, undoSource: source.undo, redoSource: source.redo, toggleSource, switchingMode,
       appearanceSettings: persistedState.settings,
       applySettings,
       activeDialog,
@@ -703,6 +764,7 @@ export function useEditorController(): EditorController {
       handleOutlineWidthChange,
     }),
     [
+      source.mode, source.text, source.documentRevision, source.canUndo, source.canRedo, source.change, source.undo, source.redo, toggleSource, switchingMode,
       persistedState.settings,
       applySettings,
       activeDialog,

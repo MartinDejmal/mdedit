@@ -19,6 +19,23 @@ import type {
 // A conversion started in a previous document must never dirty the next one.
 let documentGeneration = 0;
 let reconciliationVersion = 0;
+let editorProjection: { generation: number; html: string; markdown: string } | null = null;
+
+/** Keep source formatting when the rendered projection has not been edited. */
+export function registerEditorProjection(html: string, markdown: string) {
+  reconciliationVersion++;
+  editorProjection = { generation: documentGeneration, html, markdown };
+}
+
+export function reconcileSourceMarkdown(markdown: string): string {
+  reconciliationVersion++;
+  const state = useDocumentStore.getState();
+  const baseline = state.activeDocument.rawLoadedContent;
+  const unchanged = markdown === baseline.replace(/\r\n?/g, "\n");
+  const content = unchanged ? baseline : markdown;
+  useDocumentStore.setState({ currentCanonicalMarkdown: content, isDirty: !unchanged });
+  return content;
+}
 
 export type ConfirmDiscardChanges = () => Promise<boolean>;
 export const EMPTY_UNTITLED_EDITOR_HTML = "<p></p>";
@@ -182,6 +199,9 @@ export async function reloadDocumentFromDisk(
 export async function reconcileCanonicalFromEditorHtml(
   editorHtml: string
 ): Promise<string> {
+  if (editorProjection?.generation === documentGeneration && editorProjection.html === editorHtml) {
+    return reconcileSourceMarkdown(editorProjection.markdown);
+  }
   const generation = documentGeneration;
   const version = ++reconciliationVersion;
   const canonicalMarkdown = await serializeEditorToMarkdown(editorHtml);

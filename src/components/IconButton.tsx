@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 interface IconButtonProps {
   icon: ReactNode;
   active?: boolean;
+  pressed?: boolean;
   disabled?: boolean;
   onClick: () => void;
   title: string;
@@ -12,6 +13,7 @@ interface IconButtonProps {
 export default function IconButton({
   icon,
   active = false,
+  pressed,
   disabled = false,
   onClick,
   title,
@@ -23,6 +25,7 @@ export default function IconButton({
       onClick={onClick}
       title={title}
       aria-label={title}
+      aria-pressed={pressed}
       disabled={disabled}
       className={`icon-button ${active ? "active" : ""} ${className}`.trim()}
     >

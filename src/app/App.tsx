@@ -1,3 +1,4 @@
+import { useState } from "react";
 import FindBar, { openFind } from "../components/FindBar";
 import { useAppTheme } from "../features/editor/useAppTheme";
 import { useEditorZoom } from "../features/editor/useEditorZoom";
@@ -16,9 +17,12 @@ import { useEditorController } from "../features/editor/useEditorController";
 import { AppUxProvider } from "../features/ux/useAppUx";
 
 function AppContent() {
+  const [sourceCursor, setSourceCursor] = useState(0);
   const { zoom, selectZoom, viewportRef } = useEditorZoom();
   const { isDirty, currentFilePath, activeDocument, currentCanonicalMarkdown } = useDocumentStore();
   const {
+    sourceMode, sourceText, sourceDocumentRevision, changeSource, toggleSource, switchingMode,
+    sourceCanUndo, sourceCanRedo, undoSource, redoSource,
     activeDialog,
     showSettings,
     closeDialog,
@@ -61,8 +65,11 @@ function AppContent() {
   return (
     <Layout isDragOver={isDragOver}>
       <Toolbar
+        sourceMode={sourceMode} onToggleSource={() => void toggleSource()} canToggleSource={hasActiveDocument && !switchingMode}
+        onUndo={sourceMode ? undoSource : undefined} onRedo={sourceMode ? redoSource : undefined}
+        canUndo={sourceCanUndo} canRedo={sourceCanRedo}
         onFind={() => openFind()}
-        editor={editor}
+        editor={sourceMode ? null : editor}
         zoom={zoom}
         onZoomChange={selectZoom}
         onNew={() => void handleNew()}
@@ -88,7 +95,7 @@ function AppContent() {
         onToggleOutline={handleToggleOutline}
         onShowSettings={isTauri() ? undefined : showSettings}
       />
-      <FindBar editor={editor} enabled={hasActiveDocument} filePath={currentFilePath} />
+      <FindBar source={sourceMode ? { text: sourceText, onChange: changeSource } : undefined} editor={editor} enabled={hasActiveDocument} filePath={currentFilePath} />
       <div className="workspace-main" style={editorFontStyle(appearanceSettings)}>
         <FolderSidebar
           visible={isBrowserVisible}
@@ -101,6 +108,8 @@ function AppContent() {
           onOpenFile={handleOpenBrowserFile}
         />
         <EditorArea
+          sourceMode={sourceMode} sourceText={sourceText} sourceDocumentRevision={sourceDocumentRevision}
+          onSourceChange={changeSource} onSourceCursor={setSourceCursor}
           editor={editor}
           zoom={zoom}
           viewportRef={viewportRef}
@@ -120,6 +129,7 @@ function AppContent() {
       <HelpDialog theme={resolvedTheme} view={activeDialog === "settings" ? null : activeDialog} onClose={closeDialog} />
       <StatusBar
         editor={editor}
+        source={sourceMode ? { text: sourceText, cursor: sourceCursor } : undefined}
         markdown={currentCanonicalMarkdown}
         isDirty={isDirty}
         filePath={currentFilePath}

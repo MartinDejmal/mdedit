@@ -5,6 +5,7 @@
  * created in App so it can be shared with the Toolbar without prop-drilling
  * through extra wrapper components.
  */
+import SourceEditor from "../../components/SourceEditor";
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { FilePlus, FolderOpen, Sparkles } from "lucide-react";
 import { EditorContent, type Editor } from "@tiptap/react";
@@ -19,6 +20,11 @@ import {
 } from "./outline";
 
 interface EditorProps {
+  sourceMode: boolean;
+  sourceText: string;
+  sourceDocumentRevision: number;
+  onSourceChange: (text: string) => void;
+  onSourceCursor: (offset: number) => void;
   editor: Editor | null;
   zoom: number;
   viewportRef: RefObject<HTMLDivElement>;
@@ -33,6 +39,7 @@ interface EditorProps {
 }
 
 export default function EditorArea({
+  sourceMode, sourceText, sourceDocumentRevision, onSourceChange, onSourceCursor,
   editor,
   zoom,
   viewportRef,
@@ -144,7 +151,7 @@ export default function EditorArea({
 
   return (
     <div className="editor-main">
-      {isOutlineVisible ? (
+      {isOutlineVisible && !sourceMode ? (
         <OutlineSidebar
           headings={outlineHeadings}
           activeHeadingId={activeHeadingId}
@@ -155,7 +162,8 @@ export default function EditorArea({
       ) : null}
       <div ref={viewportRef} className="editor-wrapper">
         <div className="editor-zoom" style={{ zoom: zoom / 100 }}>
-          <EditorContent editor={editor} className="editor-content" />
+          {sourceMode && <SourceEditor text={sourceText} onChange={onSourceChange} documentRevision={sourceDocumentRevision} onCursor={onSourceCursor} />}
+          <div hidden={sourceMode}><EditorContent editor={editor} className="editor-content" /></div>
         </div>
       </div>
     </div>

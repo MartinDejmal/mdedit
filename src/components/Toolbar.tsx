@@ -38,6 +38,13 @@ import OverflowToolbar from "./OverflowToolbar";
 const ICON_SIZE = 18;
 
 interface ToolbarProps {
+  sourceMode: boolean;
+  onToggleSource: () => void;
+  canToggleSource: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   onFind: () => void;
   editor: Editor | null;
   zoom: number;
@@ -67,6 +74,7 @@ interface ToolbarProps {
 }
 
 export default function Toolbar({
+  sourceMode, onToggleSource, canToggleSource, onUndo, onRedo, canUndo, canRedo,
   onFind,
   editor,
   zoom,
@@ -171,14 +179,14 @@ export default function Toolbar({
 
       <div className="toolbar-group" aria-label="History">
         <IconButton
-          onClick={() => editor?.chain().focus().undo().run()}
-          disabled={!editor || !editor.can().undo()}
+          onClick={onUndo ?? (() => editor?.chain().focus().undo().run())}
+          disabled={onUndo ? !canUndo : !editor || !editor.can().undo()}
           title="Undo (Ctrl/Cmd+Z)"
           icon={<Undo2 size={ICON_SIZE} strokeWidth={1.9} />}
         />
         <IconButton
-          onClick={() => editor?.chain().focus().redo().run()}
-          disabled={!editor || !editor.can().redo()}
+          onClick={onRedo ?? (() => editor?.chain().focus().redo().run())}
+          disabled={onRedo ? !canRedo : !editor || !editor.can().redo()}
           title="Redo (Ctrl/Cmd+Shift+Z)"
           icon={<Redo2 size={ICON_SIZE} strokeWidth={1.9} />}
         />
@@ -308,6 +316,7 @@ export default function Toolbar({
       <div className="toolbar-divider" aria-hidden />
 
       <div className="toolbar-group" aria-label="View">
+        <IconButton onClick={onToggleSource} active={sourceMode} pressed={sourceMode} disabled={!canToggleSource} title="Toggle Markdown source" icon={<FileCode size={ICON_SIZE} />} />
         <IconButton onClick={onFind} title="Find (Ctrl/Cmd+F)" icon={<span aria-hidden>⌕</span>} />
         <IconButton
           onClick={onToggleOutline}
