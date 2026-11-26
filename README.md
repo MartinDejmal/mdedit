@@ -25,6 +25,7 @@ The English user guide is bundled in the application alongside Czech help. Contr
 - Settings sdružuje vzhled System/Light/Dark a fonty; volby se pamatují mezi spuštěními.
 - Zoom editoru 50–200 % z lišty nebo Ctrl + kolečkem nad editorem. Je pouze zobrazovací, nemění dokument ani exporty; mezi soubory se zachová a po novém spuštění začne na 100 %.
 - [View → Settings…](docs/user-documentation.html#fonts) nabízí vyhledávání nainstalovaných fontů a samostatnou volbu pro nadpisy/běžný text a inline/blokový kód, živý náhled, návrat k výchozím písmům a uložení obou voleb mezi spuštěními. OK použije volby pro všechny dokumenty, Cancel/Escape je zahodí. Nastavení nemění Markdown, stav uložení ani HTML/PDF exporty; při nedostupném seznamu lze zadat název rodiny ručně.
+- Find/Replace (Ctrl/Cmd+F / Ctrl/Cmd+H), regulární výrazy, zvýraznění, náhrada všech shod jedním krokem Undo.
 - Undo/Redo v liště, cyklus H1/H2/H3, převod vybrané položky seznamu na nadpis, Tab/Shift+Tab pro nejbližší položku seznamu, úkoly, odkazy, obrázky URL a kód.
 - Tabulka bez výběru 3×3; s výběrem odpovídá počtu řádků, podporuje TSV a běžné Markdown tabulky a zachovává inline formátování.
 - Mermaid náhled a PDF diagramy fungují offline. HTML export zůstává samostatným dokumentem se styly a CDN pro jeho Mermaid náhled; pro tento náhled potřebuje internet.
@@ -76,6 +77,7 @@ Browserové testy používají `playwright-core` a nainstalovaný Chromium/Chrom
 npm run test:help
 npm run test:zoom
 npm run test:statistics
+npm run test:search
 npm run test:editor
 npm run test:file-browser
 npm run test:new-document

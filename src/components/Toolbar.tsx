@@ -38,6 +38,7 @@ import OverflowToolbar from "./OverflowToolbar";
 const ICON_SIZE = 18;
 
 interface ToolbarProps {
+  onFind: () => void;
   editor: Editor | null;
   zoom: number;
   onZoomChange: (value: number) => void;
@@ -66,6 +67,7 @@ interface ToolbarProps {
 }
 
 export default function Toolbar({
+  onFind,
   editor,
   zoom,
   onZoomChange,
@@ -306,6 +308,7 @@ export default function Toolbar({
       <div className="toolbar-divider" aria-hidden />
 
       <div className="toolbar-group" aria-label="View">
+        <IconButton onClick={onFind} title="Find (Ctrl/Cmd+F)" icon={<span aria-hidden>⌕</span>} />
         <IconButton
           onClick={onToggleOutline}
           active={isOutlineVisible}

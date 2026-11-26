@@ -1,3 +1,4 @@
+import FindBar, { openFind } from "../components/FindBar";
 import { useAppTheme } from "../features/editor/useAppTheme";
 import { useEditorZoom } from "../features/editor/useEditorZoom";
 import { isTauri } from "@tauri-apps/api/core";
@@ -60,6 +61,7 @@ function AppContent() {
   return (
     <Layout isDragOver={isDragOver}>
       <Toolbar
+        onFind={() => openFind()}
         editor={editor}
         zoom={zoom}
         onZoomChange={selectZoom}
@@ -86,6 +88,7 @@ function AppContent() {
         onToggleOutline={handleToggleOutline}
         onShowSettings={isTauri() ? undefined : showSettings}
       />
+      <FindBar editor={editor} enabled={hasActiveDocument} filePath={currentFilePath} />
       <div className="workspace-main" style={editorFontStyle(appearanceSettings)}>
         <FolderSidebar
           visible={isBrowserVisible}

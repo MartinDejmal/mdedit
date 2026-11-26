@@ -23,6 +23,7 @@
     "test:editor": "node --test scripts/editor-actions.test.mjs",
     "test:help": "node --test scripts/help.test.mjs",
     "test:zoom": "node --test scripts/zoom.test.mjs",
+    "test:search": "node --test scripts/search.test.mjs",
     "test:statistics": "node --test scripts/statistics.test.mjs"
   },
   "dependencies": {

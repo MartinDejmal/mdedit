@@ -1,3 +1,4 @@
+import { openFind } from "../../components/FindBar";
 import type { HelpView } from "../../components/HelpDialog";
 import { EditorState } from "@tiptap/pm/state";
 import { useBrowserFileOperations, type BrowserFileOperations } from "../documents/useBrowserFileOperations";
@@ -463,6 +464,8 @@ export function useEditorController(): EditorController {
             await PredefinedMenuItem.new({ item: "Undo" }),
             await PredefinedMenuItem.new({ item: "Redo" }),
             await PredefinedMenuItem.new({ item: "Separator" }),
+            { id: "edit-find", text: "Find…", accelerator: "CmdOrCtrl+F", action: () => openFind() },
+            { id: "edit-replace", text: "Find and Replace…", accelerator: "CmdOrCtrl+H", action: () => openFind(true) },
             await PredefinedMenuItem.new({ item: "Cut" }),
             await PredefinedMenuItem.new({ item: "Copy" }),
             await PredefinedMenuItem.new({ item: "Paste" }),

@@ -966,3 +966,11 @@ body {
 :root[data-theme="dark"] .font-save-error { color: #ffaaa3; }
 
 :root[data-theme="dark"] .cm-variable { color: #dba6e8; }
+
+.find-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 12px; background: var(--color-toolbar-bg); border-bottom: 1px solid var(--color-border); font-size: 13px; }
+.find-bar label { display: inline-flex; align-items: center; gap: 4px; }
+.find-bar input:not([type="checkbox"]) { width: 180px; padding: 4px; }
+.find-bar button { padding: 4px 6px; }
+.find-bar input, .find-bar button { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 3px; }
+.search-match { background: #ffe385; color: #222; }
+.search-current { background: #ffb65c; outline: 1px solid #ad6500; }

@@ -1,3 +1,4 @@
+import { SearchHighlights } from "./search";
 import { generateHTML, generateJSON } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import {
@@ -10,7 +11,7 @@ export function createEditorExtensions() {
   return [
     StarterKit.configure({ codeBlock: false }), CodeBlockWithSyntax,
     LinkMark, ImageNode, TaskListNode, TaskItemNode, ListIndentation,
-    TableNode, TableRowNode, TableHeaderNode, TableCellNode,
+    TableNode, TableRowNode, TableHeaderNode, TableCellNode, SearchHighlights,
   ];
 }
 
