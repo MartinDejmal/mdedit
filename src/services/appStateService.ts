@@ -3,7 +3,12 @@ export interface EditorFontSettings {
   codeFontFamily: string | null;
 }
 
-export interface AppSettings extends EditorFontSettings {
+export type ThemePreference = "system" | "light" | "dark";
+export interface AppearanceSettings extends EditorFontSettings {
+  theme: ThemePreference;
+}
+
+export interface AppSettings extends AppearanceSettings {
   reopenLastFileOnStartup: boolean;
 }
 
@@ -26,6 +31,7 @@ const DEFAULT_STATE: PersistedAppState = {
   recentFiles: [],
   lastOpenedFilePath: null,
   settings: {
+    theme: "system",
     editorFontFamily: null,
     codeFontFamily: null,
     reopenLastFileOnStartup: true,
@@ -57,6 +63,7 @@ function normalizeState(candidate: unknown): PersistedAppState {
     lastOpenedFilePath:
       typeof draft.lastOpenedFilePath === "string" ? draft.lastOpenedFilePath : null,
     settings: {
+      theme: draft.settings?.theme === "light" || draft.settings?.theme === "dark" ? draft.settings.theme : "system",
       editorFontFamily: typeof draft.settings?.editorFontFamily === "string"
         ? draft.settings.editorFontFamily.trim() || null : null,
       codeFontFamily: typeof draft.settings?.codeFontFamily === "string"

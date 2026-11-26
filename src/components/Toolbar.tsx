@@ -62,7 +62,7 @@ interface ToolbarProps {
   onToggleBrowser: () => void;
   isOutlineVisible: boolean;
   onToggleOutline: () => void;
-  onShowFontSettings?: () => void;
+  onShowSettings?: () => void;
 }
 
 export default function Toolbar({
@@ -90,7 +90,7 @@ export default function Toolbar({
   onToggleBrowser,
   isOutlineVisible,
   onToggleOutline,
-  onShowFontSettings,
+  onShowSettings,
 }: ToolbarProps) {
   const isCodeBlockActive = Boolean(activeCodeBlockLanguage);
   const languageLabel = activeCodeBlockLanguage ?? "plaintext";
@@ -312,9 +312,9 @@ export default function Toolbar({
           title="Toggle outline"
           icon={<PanelLeft size={ICON_SIZE} strokeWidth={1.9} />}
         />
-        {onShowFontSettings && <IconButton
-          onClick={onShowFontSettings}
-          title="Font Settings"
+        {onShowSettings && <IconButton
+          onClick={onShowSettings}
+          title="Settings"
           icon={<Type size={ICON_SIZE} strokeWidth={1.9} />}
         />}
       </div>

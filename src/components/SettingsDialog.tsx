@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { editorFontStyle } from "../lib/editorFontStyle";
-import type { EditorFontSettings } from "../services/appStateService";
+import type { AppearanceSettings } from "../services/appStateService";
 import { listFontFamilies } from "../services/tauriBridge";
 
 interface FontAccessWindow extends Window {
@@ -9,15 +9,15 @@ interface FontAccessWindow extends Window {
 }
 
 interface Props {
-  settings: EditorFontSettings;
-  onApply: (settings: EditorFontSettings) => boolean;
+  settings: AppearanceSettings;
+  onApply: (settings: AppearanceSettings) => boolean;
   onClose: () => void;
 }
 
-export default function FontSettingsDialog({ settings, onApply, onClose }: Props) {
+export default function SettingsDialog({ settings, onApply, onClose }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [draft, setDraft] = useState(settings);
-  const [field, setField] = useState<keyof EditorFontSettings>("editorFontFamily");
+  const [field, setField] = useState<"editorFontFamily" | "codeFontFamily">("editorFontFamily");
   const [search, setSearch] = useState("");
   const [families, setFamilies] = useState<string[]>([]);
   const desktop = isTauri();
@@ -30,7 +30,7 @@ export default function FontSettingsDialog({ settings, onApply, onClose }: Props
     setDraft(previous => ({ ...previous, [field]: value || null }));
   }
 
-  function selectField(next: keyof EditorFontSettings) {
+  function selectField(next: "editorFontFamily" | "codeFontFamily") {
     setField(next);
     setSearch("");
   }
@@ -43,6 +43,7 @@ export default function FontSettingsDialog({ settings, onApply, onClose }: Props
 
   function applySettings() {
     const saved = onApply({
+      theme: draft.theme,
       editorFontFamily: findInstalledFamily(draft.editorFontFamily) ?? (draft.editorFontFamily?.trim() || null),
       codeFontFamily: findInstalledFamily(draft.codeFontFamily) ?? (draft.codeFontFamily?.trim() || null),
     });
@@ -103,7 +104,14 @@ export default function FontSettingsDialog({ settings, onApply, onClose }: Props
         onClose();
       }
     }}>
-    <div className="help-dialog-header"><h2 id="font-title">Font Settings</h2></div>
+    <div className="help-dialog-header"><h2 id="font-title">Settings</h2></div>
+    <div className="settings-appearance">
+      <label htmlFor="appearance-theme">Appearance</label>
+      <select id="appearance-theme" value={draft.theme} onChange={event => setDraft(previous => ({ ...previous, theme: event.target.value as AppearanceSettings["theme"] }))}>
+        <option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
+      </select>
+      <h3>Fonts</h3>
+    </div>
     <div className="font-switch" role="group" aria-label="Font settings category">
       <button type="button" aria-pressed={!editingCode} aria-describedby="font-text-description"
         onClick={() => selectField("editorFontFamily")}>Text</button>
@@ -150,7 +158,7 @@ export default function FontSettingsDialog({ settings, onApply, onClose }: Props
         </>}
       </section>
     </div>
-    {saveFailed && <p className="font-save-error" role="alert">Could not save the font settings. Select OK to try again.</p>}
+    {saveFailed && <p className="font-save-error" role="alert">Could not save settings. Select OK to try again.</p>}
     <div className="font-actions">
       <button type="button" onClick={onClose}>Cancel</button>
       <button type="button" onClick={applySettings}>OK</button>

@@ -1,6 +1,7 @@
+import { useAppTheme } from "../features/editor/useAppTheme";
 import { useEditorZoom } from "../features/editor/useEditorZoom";
 import { isTauri } from "@tauri-apps/api/core";
-import FontSettingsDialog from "../components/FontSettingsDialog";
+import SettingsDialog from "../components/SettingsDialog";
 import { editorFontStyle } from "../lib/editorFontStyle";
 import HelpDialog from "../components/HelpDialog";
 import FolderSidebar from "../components/FolderSidebar";
@@ -18,10 +19,10 @@ function AppContent() {
   const { isDirty, currentFilePath, activeDocument, currentCanonicalMarkdown } = useDocumentStore();
   const {
     activeDialog,
-    showFontSettings,
+    showSettings,
     closeDialog,
-    fontSettings,
-    applyEditorFonts,
+    appearanceSettings,
+    applySettings,
     editor,
     recentFiles,
     hasActiveDocument,
@@ -54,6 +55,8 @@ function AppContent() {
     handleOutlineWidthChange,
   } = useEditorController();
 
+  const resolvedTheme = useAppTheme(appearanceSettings.theme);
+
   return (
     <Layout isDragOver={isDragOver}>
       <Toolbar
@@ -81,9 +84,9 @@ function AppContent() {
         onToggleBrowser={handleToggleBrowser}
         isOutlineVisible={isOutlineVisible}
         onToggleOutline={handleToggleOutline}
-        onShowFontSettings={isTauri() ? undefined : showFontSettings}
+        onShowSettings={isTauri() ? undefined : showSettings}
       />
-      <div className="workspace-main" style={editorFontStyle(fontSettings)}>
+      <div className="workspace-main" style={editorFontStyle(appearanceSettings)}>
         <FolderSidebar
           visible={isBrowserVisible}
           location={browserLocation}
@@ -108,10 +111,10 @@ function AppContent() {
           onOutlineWidthChange={handleOutlineWidthChange}
         />
       </div>
-      {activeDialog === "fonts" && (
-        <FontSettingsDialog settings={fontSettings} onApply={applyEditorFonts} onClose={closeDialog} />
+      {activeDialog === "settings" && (
+        <SettingsDialog settings={appearanceSettings} onApply={applySettings} onClose={closeDialog} />
       )}
-      <HelpDialog view={activeDialog === "fonts" ? null : activeDialog} onClose={closeDialog} />
+      <HelpDialog theme={resolvedTheme} view={activeDialog === "settings" ? null : activeDialog} onClose={closeDialog} />
       <StatusBar
         editor={editor}
         markdown={currentCanonicalMarkdown}

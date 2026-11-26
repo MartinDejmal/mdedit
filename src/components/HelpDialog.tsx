@@ -5,7 +5,7 @@ import license from "../../LICENSE?raw";
 
 export type HelpView = "help" | "about" | null;
 
-export default function HelpDialog({ view, onClose }: { view: HelpView; onClose: () => void }) {
+export default function HelpDialog({ view, onClose, theme = "light" }: { view: HelpView; onClose: () => void; theme?: "light" | "dark" }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [language, setLanguage] = useState<"cs" | "en">(() => {
     try {
@@ -48,7 +48,7 @@ export default function HelpDialog({ view, onClose }: { view: HelpView; onClose:
     {view === "help" ? <iframe
       key={language}
       title={cs ? "Uživatelská příručka mdedit" : "mdedit user guide"}
-      srcDoc={cs ? czechHelp : englishHelp}
+      srcDoc={(cs ? czechHelp : englishHelp).replace("</head>", `${theme === "dark" ? '<style>html{color-scheme:dark}body{background:#20242c;color:#e6e8ec}nav,code,kbd,th{background:#2b313b}a{color:#8abaff}th,td{border-color:#505866}</style>' : ""}</head>`)}
       sandbox="allow-same-origin"
       onLoad={event => {
         // A sandboxed iframe has its own key events. Forward dismissal without

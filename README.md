@@ -22,8 +22,9 @@ The English user guide is bundled in the application alongside Czech help. Contr
 - Filebrowser zobrazuje složky a `.md` soubory; při otevření se nastaví podle aktuálního souboru. Umí posun kořene výše, novou složku, přejmenování klikem na vybraný řádek/F2, přesun tažením a trvalé smazání s potvrzením. Kontextové menu nabízí stejné souborové akce. Existující cíle se nepřepisují.
 - Přesun a přejmenování zachovávají neuložený text otevřeného souboru a aktualizují cestu pro Save. Operace s celými složkami nad rámec vytvoření/navigace nejsou implementované.
 - Samostatný Outline za filebrowserem s navigací podle nadpisů a zapamatovanou šířkou.
+- Settings sdružuje vzhled System/Light/Dark a fonty; volby se pamatují mezi spuštěními.
 - Zoom editoru 50–200 % z lišty nebo Ctrl + kolečkem nad editorem. Je pouze zobrazovací, nemění dokument ani exporty; mezi soubory se zachová a po novém spuštění začne na 100 %.
-- [View → Font Settings…](docs/user-documentation.html#fonts) nabízí vyhledávání nainstalovaných fontů a samostatnou volbu pro nadpisy/běžný text a inline/blokový kód, živý náhled, návrat k výchozím písmům a uložení obou voleb mezi spuštěními. OK použije volby pro všechny dokumenty, Cancel/Escape je zahodí. Nastavení nemění Markdown, stav uložení ani HTML/PDF exporty; při nedostupném seznamu lze zadat název rodiny ručně.
+- [View → Settings…](docs/user-documentation.html#fonts) nabízí vyhledávání nainstalovaných fontů a samostatnou volbu pro nadpisy/běžný text a inline/blokový kód, živý náhled, návrat k výchozím písmům a uložení obou voleb mezi spuštěními. OK použije volby pro všechny dokumenty, Cancel/Escape je zahodí. Nastavení nemění Markdown, stav uložení ani HTML/PDF exporty; při nedostupném seznamu lze zadat název rodiny ručně.
 - Undo/Redo v liště, cyklus H1/H2/H3, převod vybrané položky seznamu na nadpis, Tab/Shift+Tab pro nejbližší položku seznamu, úkoly, odkazy, obrázky URL a kód.
 - Tabulka bez výběru 3×3; s výběrem odpovídá počtu řádků, podporuje TSV a běžné Markdown tabulky a zachovává inline formátování.
 - Mermaid náhled a PDF diagramy fungují offline. HTML export zůstává samostatným dokumentem se styly a CDN pro jeho Mermaid náhled; pro tento náhled potřebuje internet.
@@ -58,7 +59,7 @@ npm ci
 npm run tauri dev
 ```
 
-Samotný frontend spustíte přes `npm run dev` (port 1420). Bez Tauri nefungují nativní dialogy a souborové operace. Nápovědu lze v browseru otevřít přes F1. V prohlížeči otevřete nastavení písma tlačítkem Font Settings na nástrojové liště (při nedostatku místa pod »). Zadejte název rodiny nebo v podporovaném prohlížeči zvolte Load installed fonts a povolte přístup.
+Samotný frontend spustíte přes `npm run dev` (port 1420). Bez Tauri nefungují nativní dialogy a souborové operace. Nápovědu lze v browseru otevřít přes F1. V prohlížeči otevřete nastavení písma tlačítkem Settings na nástrojové liště (při nedostatku místa pod »). Zadejte název rodiny nebo v podporovaném prohlížeči zvolte Load installed fonts a povolte přístup.
 
 ```bash
 npm run build
@@ -106,6 +107,6 @@ Centrální verze je v `VERSION`. `npm run sync:version` ji promítne do `packag
 
 ## Omezení a licence
 
-Markdown ↔ HTML převod není zcela bezztrátový, není zavedena kompletní správa příloh, dark mode, plná lokalizace editoru ani automatické zálohování. Před úpravami nestandardních či důležitých dokumentů si ponechte kopii.
+Markdown ↔ HTML převod není zcela bezztrátový, není zavedena kompletní správa příloh, plná lokalizace editoru ani automatické zálohování. Před úpravami nestandardních či důležitých dokumentů si ponechte kopii.
 
 Aplikace je distribuována podle **GNU GPL v3**, viz [`LICENSE`](LICENSE). Dřívější texty o MIT neodpovídaly kořenovému licenčnímu souboru a byly opraveny; tato dokumentační oprava licenci samotnou nemění. Závislosti a přibalené fonty mají vlastní licenční podmínky.

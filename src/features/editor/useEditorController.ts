@@ -8,7 +8,7 @@ import { CheckMenuItem, Menu, PredefinedMenuItem, Submenu } from "@tauri-apps/ap
 import { createEditorExtensions } from "./editorSchema";
 
 import { parentDirectory, basename } from "../../lib/utils";
-import { saveAppState, type EditorFontSettings } from "../../services/appStateService";
+import { saveAppState, type AppearanceSettings } from "../../services/appStateService";
 import * as bridge from "../../services/tauriBridge";
 import { useAppUx } from "../ux/useAppUx";
 import { useDocumentStore } from "../../stores/documentStore";
@@ -58,10 +58,10 @@ function buildWindowTitle(params: {
   return `${prefix}${basename(path ?? "")} - ${APP_NAME}`;
 }
 export interface EditorController {
-  activeDialog: HelpView | "fonts";
-  showFontSettings: () => void;
-  fontSettings: EditorFontSettings;
-  applyEditorFonts: (fonts: EditorFontSettings) => boolean;
+  activeDialog: HelpView | "settings";
+  showSettings: () => void;
+  appearanceSettings: AppearanceSettings;
+  applySettings: (fonts: AppearanceSettings) => boolean;
   closeDialog: () => void;
   browserLocation: { path: string; version: number } | null;
   browserOperations: BrowserFileOperations;
@@ -96,9 +96,9 @@ export interface EditorController {
 }
 
 export function useEditorController(): EditorController {
-  const [activeDialog, setActiveDialog] = useState<HelpView | "fonts">(null);
-  const showFontSettings = useCallback(() => {
-    if (!document.querySelector("dialog[open]")) setActiveDialog("fonts");
+  const [activeDialog, setActiveDialog] = useState<HelpView | "settings">(null);
+  const showSettings = useCallback(() => {
+    if (!document.querySelector("dialog[open]")) setActiveDialog("settings");
   }, []);
   const showHelp = useCallback(() => setActiveDialog("help"), []);
   const showAbout = useCallback(() => setActiveDialog("about"), []);
@@ -122,7 +122,7 @@ export function useEditorController(): EditorController {
     setIsBrowserVisible(!isBrowserVisible);
   }, [isBrowserVisible]);
   const [persistedState, setPersistedState] = useState(getInitialPersistedState);
-  const applyEditorFonts = useCallback((fonts: EditorFontSettings) => {
+  const applySettings = useCallback((fonts: AppearanceSettings) => {
     const current = getInitialPersistedState();
     const next = { ...current, settings: { ...current.settings, ...fonts } };
     try {
@@ -355,7 +355,7 @@ export function useEditorController(): EditorController {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "F1") { event.preventDefault(); if (activeDialog !== "fonts") showHelp(); return; }
+      if (event.key === "F1") { event.preventDefault(); if (activeDialog !== "settings") showHelp(); return; }
       if ((event.target as Element)?.closest?.("dialog[open]")) return;
       const mod = event.ctrlKey || event.metaKey;
       if (!mod) return;
@@ -489,13 +489,13 @@ export function useEditorController(): EditorController {
                 handleToggleOutline();
               },
             }),
-            { id: "view-font-settings", text: "Font Settings…", action: showFontSettings },
+            { id: "view-settings", text: "Settings…", action: showSettings },
           ],
         });
 
         const helpSubmenu = await Submenu.new({
           text: "Help",
-          enabled: activeDialog !== "fonts",
+          enabled: activeDialog !== "settings",
           items: [
             { id: "help-guide", text: "Help", accelerator: "F1", action: showHelp },
             { id: "help-about", text: "About", action: showAbout },
@@ -521,7 +521,7 @@ export function useEditorController(): EditorController {
   }, [
     showHelp,
     showAbout,
-    showFontSettings,
+    showSettings,
     activeDialog,
     currentFilePath,
     handleNew,
@@ -654,10 +654,10 @@ export function useEditorController(): EditorController {
 
   return useMemo(
     () => ({
-      fontSettings: persistedState.settings,
-      applyEditorFonts,
+      appearanceSettings: persistedState.settings,
+      applySettings,
       activeDialog,
-      showFontSettings,
+      showSettings,
       closeDialog,
       editor,
       recentFiles: persistedState.recentFiles,
@@ -692,9 +692,9 @@ export function useEditorController(): EditorController {
     }),
     [
       persistedState.settings,
-      applyEditorFonts,
+      applySettings,
       activeDialog,
-      showFontSettings,
+      showSettings,
       closeDialog,
       editor,
       handleOpen,

@@ -53,7 +53,7 @@ tr{break-inside:avoid}
 </ol></nav>
 <section id="start"><h2>Začínáme</h2>
 <p>mdedit je desktopový WYSIWYG editor Markdownu pro Windows, macOS a Linux. Formátování vidíte přímo při psaní. Soubory zůstávají na vašem disku; aplikace nevyžaduje účet ani cloudovou službu.</p>
-<p>Tato příručka popisuje mdedit 1.3.0, včetně volby písma pro text a kód, správy souborů, zoomu editoru, statistik a offline nápovědy. Starší instalátory mohou obsahovat menší sadu funkcí. Přesnou verzi své aplikace najdete v <strong>Help → About</strong>.</p>
+<p>Tato příručka popisuje aktuální vývojovou větev po 1.3.0, včetně volby písma pro text a kód, správy souborů, zoomu editoru, statistik a offline nápovědy. Starší instalátory mohou obsahovat menší sadu funkcí. Přesnou verzi své aplikace najdete v <strong>Help → About</strong>.</p>
 <p>Instalátor vyberte pro svůj systém a procesor: Windows x64 (EXE/MSI), macOS Intel či Apple Silicon (DMG), Linux x64 či ARM64 (AppImage/DEB/RPM). AppImage označte jako spustitelný. Nepodepsané Windows a ad-hoc podepsané, nenotarizované macOS balíčky mohou vyvolat upozornění systému; instalujte pouze důvěryhodné vydání.</p>
 <p>Windows desktop používá WebView2 Runtime. Samotná nápověda a Mermaid náhledy nepotřebují internet.</p>
 </section>
@@ -67,13 +67,15 @@ tr{break-inside:avoid}
 <p><strong>Help → Help</strong> nebo <strong>F1</strong> otevře tuto offline nápovědu. Přepínač <strong>Čeština / English</strong> mění jazyk nápovědy a About, nikoli celé rozhraní editoru. Zavřete ji tlačítkem Close/Zavřít nebo Escape. Otevřený dokument se tím nemění. Po dobu dialogu jsou nativní nabídky File/Edit/View dočasně vypnuté; pro práci s dokumentem nápovědu nejprve zavřete. Zavření hlavního okna nápovědu skryje a případné neuložené změny dál chrání potvrzovací dialog.</p>
 <p><strong>Zoom:</strong> v rozbalovacím seznamu lišty vyberte 50–200 %, nebo nad editační plochou použijte <strong>Ctrl + kolečko</strong> (nahoru zvětší, dolů zmenší). Pro zoom se používá Ctrl také na macOS. Nevejde-li se seznam na lištu, je pod ».</p>
 <p>Zoom mění pouze zobrazení editoru, nikoli lištu, Files či Outline, obsah Markdownu, stav Saved/Modified, historii Undo ani HTML/PDF export. Zachová se při přepínání i vytváření dokumentů v rámci běhu aplikace; při novém spuštění je vždy 100 %. Neukládá se do nastavení ani do souboru.</p>
+<h3 id="appearance">Vzhled a Settings</h3>
+<p>Otevřete <strong>View → Settings…</strong> (v browserovém náhledu tlačítko Settings na liště). Appearance nabízí <strong>System</strong> (výchozí), <strong>Light</strong> a <strong>Dark</strong>. System ihned sleduje změny systému. OK uloží vzhled i oba fonty mezi spuštěními, Cancel/Escape změny zahodí. Vzhled mění aplikaci a offline nápovědu, nikoli obsah dokumentu nebo exporty.</p>
 <h3 id="fonts">Výběr písma pro text a kód</h3>
-<p>V desktopové aplikaci otevřete <strong>View → Font Settings…</strong>. Dialog načte rodiny písem nainstalované v systému; nic nestahuje. Pole <strong>Search fonts</strong> filtruje seznam podle názvu.</p>
+<p>V desktopové aplikaci otevřete <strong>View → Settings…</strong>. Dialog načte rodiny písem nainstalované v systému; nic nestahuje. Pole <strong>Search fonts</strong> filtruje seznam podle názvu.</p>
 <ol><li>Zvolte <strong>Text</strong> pro nadpisy a běžný text, nebo <strong>Code</strong> pro kód v textu i kódové bloky. Každá kategorie má vlastní volbu.</li>
 <li>Vyberte rodinu v seznamu. Náhled ukáže nadpis, běžný, tučný a kurzivní text, nebo ukázku kódu. Změna se zatím týká pouze náhledu.</li>
 <li>Stiskněte <strong>OK</strong>: obě volby se uloží a použijí pro všechny dokumenty i po novém spuštění aplikace. <strong>Cancel</strong> nebo <strong>Escape</strong> změny zahodí. Pokud uložení selže, dialog volby zachová; tlačítkem OK je můžete uložit znovu.</li></ol>
 <p>Pro návrat k výchozímu písmu vyberte v kategorii Text <strong>Editor default</strong>, v kategorii Code <strong>Monospace default</strong>, a potvrďte OK. Obě kategorie lze obnovit nezávisle. Není-li uložená rodina dostupná, seznam ji označí <strong>(unavailable)</strong> a editor použije náhradní písmo; zvolte dostupnou rodinu nebo výchozí volbu.</p>
-<p>Pokud systém seznam neposkytne, zadejte přesný název nainstalované rodiny do <strong>Installed font family name</strong>. Vymazání pole obnoví výchozí písmo. Při spuštění samotného frontendu v prohlížeči otevřete dialog tlačítkem <strong>Font Settings</strong> na liště (v úzkém okně pod <strong>»</strong>). Podporuje-li prohlížeč přístup k místním písmům, lze použít <strong>Load installed fonts</strong> a udělit oprávnění. Po zamítnutí lze dál zadat název ručně nebo oprávnění změnit v nastavení webu v prohlížeči.</p>
+<p>Pokud systém seznam neposkytne, zadejte přesný název nainstalované rodiny do <strong>Installed font family name</strong>. Vymazání pole obnoví výchozí písmo. Při spuštění samotného frontendu v prohlížeči otevřete dialog tlačítkem <strong>Settings</strong> na liště (v úzkém okně pod <strong>»</strong>). Podporuje-li prohlížeč přístup k místním písmům, lze použít <strong>Load installed fonts</strong> a udělit oprávnění. Po zamítnutí lze dál zadat název ručně nebo oprávnění změnit v nastavení webu v prohlížeči.</p>
 <p>Výběr mění pouze písmo v editoru. Neoznačí dokument jako Modified, nezmění obsah Markdownu, historii Undo, statistiky ani fonty HTML/PDF exportů. Nastavení fontu se pamatuje mezi spuštěními; zobrazovací zoom se naopak po spuštění vrací na 100 %.</p>
 </section>
 
@@ -145,7 +147,7 @@ tr{break-inside:avoid}
 <li>Pokud byla data změněna zvenčí, nejprve rozhodněte, zda chcete zachovat svůj text, nebo načíst diskovou verzi. Reload může po potvrzení neuložené změny zahodit.</li>
 <li>Chybějící ikony hledejte pod »; dočasně lze panel Files či Outline skrýt přes View.</li>
 <li>U chyby Mermaid ověřte syntaxi a zvolený jazyk. U PDF chyby obrázku ověřte URL a CORS. Bez aktivního dokumentu není co exportovat.</li>
-<li>Nápověda přepíná pouze svůj jazyk. Kompletní lokalizace editoru ani dark mode nejsou nyní zavedené.</li>
+<li>Nápověda přepíná pouze svůj jazyk. Kompletní lokalizace editoru nyní není zavedená. Vzhled změníte přes Settings.</li>
 </ul><p>Hlášení chyby doplňte verzí z Help → About, operačním systémem a kroky k reprodukci. Projekt: <code>https://github.com/MartinDejmal/mdedit</code>. Licence aplikace je <strong>GNU GPL v3</strong> podle souboru LICENSE; licence závislostí se posuzují samostatně.</p>
 </section>
 <footer>Aktualizováno 23. listopadu 2026. Verzi aplikace zjistíte v Help → About.</footer>
